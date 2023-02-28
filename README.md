@@ -1,5 +1,19 @@
 # Xenx Compiler
-
+## Working structure
+### declare variable
+```
+<name>: <datatype> = <value>;
+```
+### return statement
+```
+return <variable|literal>;
+```
+### function declaration
+```
+func <name>(<argname1>: <datatype1>, <argname2>: <datatype2>): <function_datatype> => {
+    <body>
+}
+```
 ## AST structure
 ### Done
 #### a: int = 0;
