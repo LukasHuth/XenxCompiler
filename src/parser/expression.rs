@@ -72,6 +72,7 @@ impl Clone for Expression
         }
     }
 }
+#[allow(unreachable_patterns)]
 impl Clone for Syntax {
     fn clone(&self) -> Self {
         unsafe {
@@ -104,6 +105,7 @@ impl Clone for Syntax {
         }
     }
 }
+#[allow(dead_code)]
 impl Expression
 {
     pub fn new_integer_literal(value: i32) -> Expression
@@ -217,8 +219,8 @@ impl Expression
         }
     }
 
-    pub(crate) fn new_function_expr(name: String, type_: String, args: Vec<Expression>, inside: Vec<Expression>) -> Expression {
-        Self::new_integer_literal(0)
+    pub(crate) fn new_function_expr(_name: String, _type_: String, _args: Vec<Expression>, _inside: Vec<Expression>) -> Expression {
+        todo!("Implement function decleration expression");
     }
 
     pub(crate) fn new_return_expr(number_literal: Expression) -> Expression {

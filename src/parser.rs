@@ -84,7 +84,7 @@ impl Parser
             if self.peek().token == LexerToken::ReturnKeyword
             {
                 self.match_token(LexerToken::ReturnKeyword);
-                if(self.peek().token == LexerToken::Identifier)
+                if self.peek().token == LexerToken::Identifier
                 {
                     let identifier = self.match_token(LexerToken::Identifier);
                     let variable_expr = Expression::new_variable_expr(identifier.text);

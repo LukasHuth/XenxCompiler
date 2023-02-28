@@ -40,6 +40,7 @@ impl Token
             text: text
         }
     }
+    #[allow(dead_code)]
     fn token_to_string(&self) -> String
     {
         match self.token
@@ -57,17 +58,14 @@ impl Token
             _ => "BadToken".to_string()
         }
     }
+    #[allow(dead_code)]
     pub fn to_string(&self) -> String
     {
         if self.token == LexerToken::Identifier || self.token == LexerToken::IntegerLiteral
         {
-            return self.to_string_with_text();
+            return "<Token: ".to_string() + self.token_to_string().as_str() + " Text: " + &self.text + ">";
         }
         return "<Token: ".to_string() + "" + self.token_to_string().as_str() + ">";
-    }
-    fn to_string_with_text(&self) -> String
-    {
-        return "<Token: ".to_string() + self.token_to_string().as_str() + " Text: " + &self.text + ">";
     }
     pub fn clone(&self) -> Token
     {
