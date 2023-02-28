@@ -21,7 +21,7 @@ impl Parser
     pub fn parse(&mut self) -> Vec<Expression>
     {
         let mut statements = Vec::<Expression>::new();
-        while !self.is_at_end()
+        while !self.is_at_end() && self.peek().token != LexerToken::Closebrace
         {
             if self.peek().token == LexerToken::Identifier
             {
@@ -32,16 +32,14 @@ impl Parser
                     // println!("Colon: {}", self.peek_off(1).text);
                     self.match_token(LexerToken::Colon);
                     let type_: Token;
-                    if self.peek().token == LexerToken::IntKeyword
+                    type_ = self.match_token(LexerToken::Keyword);
+                    if !type_.is_data_type()
                     {
-                        type_ = self.match_token(LexerToken::IntKeyword);
-                    }
-                    else
-                    {
-                        type_ = self.match_token(LexerToken::FloatKeyword);
+                        panic!("Invalid type");
                     }
                     self.match_token(LexerToken::Equals);
-                    let value = self.match_token(LexerToken::IntegerLiteral);
+                    let value = self.match_token(LexerToken::Literal);
+                    println!("Value: {}", value.text);
                     self.match_token(LexerToken::Semicolon);
                     let number_literal = Expression::new_integer_literal(value.text.parse::<i32>().unwrap());
                     let text = String::from(&identifier.text).to_owned();
@@ -53,7 +51,7 @@ impl Parser
                 else
                 if self.peek().token == LexerToken::Openparenthesis
                 {
-                    println!("Function call: {}", identifier.text);
+                    // println!("Function call: {}", identifier.text);
                     self.match_token(LexerToken::Openparenthesis);
                     let mut arguments = Vec::<Expression>::new();
                     while self.peek().token != LexerToken::Closeparenthesis
@@ -66,38 +64,71 @@ impl Parser
                         }
                     }
                     self.match_token(LexerToken::Closeparenthesis);
-                    if self.peek().token == LexerToken::Semicolon
+                    if self.peek().token == LexerToken::Semicolon // Function call
                     {
                         self.match_token(LexerToken::Semicolon);
                         let function_call = Expression::new_call_expr(identifier.text, arguments);
                         statements.push(function_call);
                     }
-                    // else
-                    // {
-                    //     self.match_token(LexerToken::Colon);
-                    //     let type_ = self.match_token(LexerToken::IntKeyword);
-                    //     self.match_token(LexerToken::Openbrace);
-                    // }
                 }
             }
             else
-            if self.peek().token == LexerToken::ReturnKeyword
+            if self.peek().token == LexerToken::Keyword
             {
-                self.match_token(LexerToken::ReturnKeyword);
-                if self.peek().token == LexerToken::Identifier
+                let key = self.match_token(LexerToken::Keyword);
+                if key.text == "return"
                 {
-                    let identifier = self.match_token(LexerToken::Identifier);
-                    let variable_expr = Expression::new_variable_expr(identifier.text);
-                    let expression = Expression::new_return_expr(variable_expr);
-                    statements.push(expression);
+                    if self.peek().token == LexerToken::Identifier
+                    {
+                        let identifier = self.match_token(LexerToken::Identifier);
+                        let variable_expr = Expression::new_variable_expr(identifier.text);
+                        let expression = Expression::new_return_expr(variable_expr);
+                        statements.push(expression);
+                        self.match_token(LexerToken::Semicolon);
+                        continue;
+                    }
+                    let value = self.match_token(LexerToken::Literal);
                     self.match_token(LexerToken::Semicolon);
-                    continue;
+                    let number_literal = Expression::new_integer_literal(value.text.parse::<i32>().unwrap());
+                    let expression = Expression::new_return_expr(number_literal);
+                    statements.push(expression);
                 }
-                let value = self.match_token(LexerToken::IntegerLiteral);
-                self.match_token(LexerToken::Semicolon);
-                let number_literal = Expression::new_integer_literal(value.text.parse::<i32>().unwrap());
-                let expression = Expression::new_return_expr(number_literal);
-                statements.push(expression);
+                else
+                if key.text == "func"
+                {
+                    println!("Function definition");
+                    let identifier = self.match_token(LexerToken::Identifier);
+                    self.match_token(LexerToken::Openparenthesis);
+                    let mut arguments = Vec::<Expression>::new();
+                    while self.peek().token != LexerToken::Closeparenthesis
+                    {
+                        let argument = self.match_token(LexerToken::Identifier);
+                        self.match_token(LexerToken::Colon);
+                        let type_ = self.match_token(LexerToken::Keyword);
+                        if !type_.is_data_type()
+                        {
+                            panic!("Invalid type");
+                        }
+                        arguments.push(Expression::new_arg_variable_expr(argument.text, type_.text));
+                        if self.peek().token != LexerToken::Closeparenthesis
+                        {
+                            self.match_token(LexerToken::Comma);
+                        }
+                    }
+                    self.match_token(LexerToken::Closeparenthesis);
+                    self.match_token(LexerToken::Colon);
+                    let type_ = self.match_token(LexerToken::Keyword);
+                    if !type_.is_data_type()
+                    {
+                        panic!("Invalid type");
+                    }
+                    self.match_token(LexerToken::Arrow);
+                    self.match_token(LexerToken::Openbrace);
+                    let body = self.parse();
+                    self.match_token(LexerToken::Closebrace);
+                    let function_definition = Expression::new_function_expr(identifier.text, type_.text, arguments, body);
+                    statements.push(function_definition);
+                }
             }
             else
             {
@@ -114,7 +145,7 @@ impl Parser
         }
         else
         {
-            panic!("Expected token: {}, got: {}", token.to_string(), self.peek().token.to_string());
+            panic!("Expected token: {}, got: {}, text: '{}'", token.to_string(), self.peek().token.to_string(), self.peek().text);
         }
     }
     fn next_token(&mut self) -> Token

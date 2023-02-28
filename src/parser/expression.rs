@@ -11,6 +11,8 @@ pub union Syntax
     call_expr: ManuallyDrop<CallExpression>,
     assignment_expr: ManuallyDrop<AssignmentExpression>,
     return_expr: ManuallyDrop<ReturnExpression>,
+    arg_variable_expr: ManuallyDrop<ArgVariableExpression>,
+    function_declaration_expr: ManuallyDrop<FunctionDeclarationExpr>,
 }
 #[derive(Clone)]
 pub struct BinaryExpression
@@ -44,6 +46,20 @@ pub struct AssignmentExpression
     name: Expression,
 }
 #[derive(Clone)]
+pub struct ArgVariableExpression
+{
+    type_: String,
+    name: String
+}
+#[derive(Clone)]
+pub struct FunctionDeclarationExpr
+{
+    name: String,
+    type_: String,
+    args: Vec<Expression>,
+    inside: Vec<Expression>,
+}
+#[derive(Clone)]
 pub enum ExpressionTag
 {
     IntegerLiteral,
@@ -54,6 +70,8 @@ pub enum ExpressionTag
     CallExpr,
     AssignmentExpr,
     ReturnExpr,
+    ArgVariableExpr,
+    FunctionDeclarationExpr,
 }
 // #[derive(Clone)]
 pub struct Expression
@@ -100,6 +118,12 @@ impl Clone for Syntax {
                 },
                 Syntax { return_expr } => Syntax {
                     return_expr: (*return_expr).clone(),
+                },
+                Syntax { arg_variable_expr } => Syntax {
+                    arg_variable_expr: (*arg_variable_expr).clone(),
+                },
+                Syntax { function_declaration_expr } => Syntax {
+                    function_declaration_expr: (*function_declaration_expr).clone(),
                 },
             }
         }
@@ -216,13 +240,27 @@ impl Expression
             ExpressionTag::CallExpr => unsafe { syntax.call_expr.to_string() },
             ExpressionTag::AssignmentExpr => unsafe { syntax.assignment_expr.to_string() },
             ExpressionTag::ReturnExpr => unsafe { syntax.return_expr.to_string() },
+            ExpressionTag::ArgVariableExpr => unsafe { syntax.arg_variable_expr.to_string() },
+            ExpressionTag::FunctionDeclarationExpr => unsafe { syntax.function_declaration_expr.to_string() },
         }
     }
 
     pub(crate) fn new_function_expr(_name: String, _type_: String, _args: Vec<Expression>, _inside: Vec<Expression>) -> Expression {
-        todo!("Implement function decleration expression");
+        Expression
+        {
+            tag: ExpressionTag::FunctionDeclarationExpr,
+            syntax: Box::new(Syntax
+            {
+                function_declaration_expr: ManuallyDrop::new(FunctionDeclarationExpr
+                {
+                    name: _name,
+                    type_: _type_,
+                    args: _args,
+                    inside: _inside,
+                }),
+            }),
+        }
     }
-
     pub(crate) fn new_return_expr(number_literal: Expression) -> Expression {
         Expression
         {
@@ -232,6 +270,21 @@ impl Expression
                 return_expr: ManuallyDrop::new(ReturnExpression
                 {
                     value: number_literal,
+                }),
+            }),
+        }
+    }
+    pub(crate) fn new_arg_variable_expr(name: String, type_: String) -> Expression
+    {
+        Expression
+        {
+            tag: ExpressionTag::ArgVariableExpr,
+            syntax: Box::new(Syntax
+            {
+                arg_variable_expr: ManuallyDrop::new(ArgVariableExpression
+                {
+                    name: name,
+                    type_: type_,
                 }),
             }),
         }
@@ -276,5 +329,41 @@ impl ReturnExpression
     pub fn to_string(&self) -> String
     {
         format!("ReturnExpression: (value:{})", self.value.to_string())
+    }
+}
+impl ArgVariableExpression
+{
+    pub fn to_string(&self) -> String
+    {
+        format!("ArgVariableExpression: (name:{} type:{})", self.name, self.type_)
+    }
+}
+impl FunctionDeclarationExpr
+{
+    pub fn to_string(&self) -> String
+    {
+        let mut args = String::new();
+        let mut i = 0;
+        for arg in &self.args
+        {
+            args.push_str(&arg.to_string());
+            if i < self.args.len() - 1
+            {
+                args.push_str(", ");
+            }
+            i+=1;
+        }
+        let mut inside = String::new();
+        i = 0;
+        for arg in &self.inside
+        {
+            inside.push_str(&arg.to_string());
+            if i < (self.inside.len() - 1)
+            {
+                inside.push_str(", ");
+            }
+            i+=1;
+        }
+        format!("FunctionDeclarationExpr: (name:{} type:{} args:'{}' inside:'{}')", self.name, self.type_, args, inside)
     }
 }

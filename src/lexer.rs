@@ -73,6 +73,14 @@ impl Lexer
                     text = "==".to_string();
                     return Token::new(token, text);
                 }
+                else
+                if self.peek(0) == '>'
+                {
+                    self.next();
+                    token = LexerToken::Arrow;
+                    text = "=>".to_string();
+                    return Token::new(token, text);
+                }
                 token = LexerToken::Equals;
                 text = "=".to_string();
                 return Token::new(token, text);
@@ -114,11 +122,26 @@ impl Lexer
                 return Token::new(token, text);
             },
             '0'..='9' => {
-                while self.peek(0).is_numeric()
+                let mut is_float = false;
+                while self.peek(0).is_numeric() || (self.peek(0) == '.' && !is_float)
+                {
+                    if self.peek(0) == '.'
+                    {
+                        is_float = true;
+                    }
+                    self.next();
+                }
+                token = LexerToken::Literal;
+                text = self.input[start..self.position].to_string();
+                return Token::new(token, text);
+            },
+            '"' => {
+                while self.peek(0) != '"'
                 {
                     self.next();
                 }
-                token = LexerToken::IntegerLiteral;
+                self.next();
+                token = LexerToken::Literal;
                 text = self.input[start..self.position].to_string();
                 return Token::new(token, text);
             },
@@ -128,17 +151,14 @@ impl Lexer
                     self.next();
                 }
                 text = self.input[start..self.position].to_string();
-                if text == "int"
+                if text == "return" || text == "float" || text == "int" || text == "func" || text == "bool" || text == "string"
                 {
-                    token = LexerToken::IntKeyword;
+                    token = LexerToken::Keyword;
                 }
-                else if text == "float"
+                else
+                if text == "true" || text == "false"
                 {
-                    token = LexerToken::FloatKeyword;
-                }
-                else if text == "return"
-                {
-                    token = LexerToken::ReturnKeyword;
+                    token = LexerToken::Literal;
                 }
                 else
                 {

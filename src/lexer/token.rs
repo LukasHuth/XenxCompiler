@@ -12,11 +12,8 @@ pub enum LexerToken
     Openparenthesis,
     Closeparenthesis,
     Semicolon,
-    IntKeyword=0xF1,
-    ReturnKeyword=0xF2,
-    FloatKeyword=0xF4,
     Identifier,
-    IntegerLiteral,
+    Literal,
     BadToken,
     Less,
     LessEquals,
@@ -29,6 +26,8 @@ pub enum LexerToken
     EOF,
     Colon,
     Comma,
+    Keyword,
+    Arrow,
 }
 impl Token
 {
@@ -40,6 +39,14 @@ impl Token
             text: text
         }
     }
+    pub fn is_data_type(&self) -> bool
+    {
+        if self.token != LexerToken::Keyword
+        {
+            return false;
+        }
+        return self.text == "int" || self.text == "string" || self.text == "bool" || self.text == "float";
+    }
     #[allow(dead_code)]
     fn token_to_string(&self) -> String
     {
@@ -50,18 +57,28 @@ impl Token
             LexerToken::Openparenthesis => "Openparenthesis".to_string(),
             LexerToken::Closeparenthesis => "Closeparenthesis".to_string(),
             LexerToken::Semicolon => "Semicolon".to_string(),
-            LexerToken::IntKeyword => "IntKeyword".to_string(),
-            LexerToken::ReturnKeyword => "ReturnKeyword".to_string(),
+            LexerToken::Keyword => "Keyword".to_string(),
             LexerToken::Identifier => "Identifier".to_string(),
-            LexerToken::IntegerLiteral => "IntegerLiteral".to_string(),
+            LexerToken::Literal => "IntegerLiteral".to_string(),
             LexerToken::EOF => "EOF".to_string(),
+            LexerToken::Colon => "Colon".to_string(),
+            LexerToken::Comma => "Comma".to_string(),
+            LexerToken::Less => "Less".to_string(),
+            LexerToken::LessEquals => "LessEquals".to_string(),
+            LexerToken::Greater => "Greater".to_string(),
+            LexerToken::GreaterEquals => "GreaterEquals".to_string(),
+            LexerToken::Equals => "Equals".to_string(),
+            LexerToken::EqualsEquals => "EqualsEquals".to_string(),
+            LexerToken::Bang => "Bang".to_string(),
+            LexerToken::BangEquals => "BangEquals".to_string(),
+            LexerToken::Arrow => "Arrow".to_string(),
             _ => "BadToken".to_string()
         }
     }
     #[allow(dead_code)]
     pub fn to_string(&self) -> String
     {
-        if self.token == LexerToken::Identifier || self.token == LexerToken::IntegerLiteral
+        if self.token == LexerToken::Identifier || self.token == LexerToken::Literal
         {
             return "<Token: ".to_string() + self.token_to_string().as_str() + " Text: " + &self.text + ">";
         }
@@ -84,10 +101,21 @@ impl fmt::Display for LexerToken {
             LexerToken::Closeparenthesis => write!(f, "Closeparenthesis"),
             LexerToken::Openparenthesis => write!(f, "Openparenthesis"),
             LexerToken::Semicolon => write!(f, "Semicolon"),
-            LexerToken::IntKeyword => write!(f, "IntKeyword"),
-            LexerToken::ReturnKeyword => write!(f, "ReturnKeyword"),
+            LexerToken::Keyword => write!(f, "IntKeyword"),
             LexerToken::Identifier => write!(f, "Identifier"),
-            LexerToken::IntegerLiteral => write!(f, "IntegerLiteral"),
+            LexerToken::Literal => write!(f, "IntegerLiteral"),
+            LexerToken::EOF => write!(f, "EOF"),
+            LexerToken::Colon => write!(f, "Colon"),
+            LexerToken::Comma => write!(f, "Comma"),
+            LexerToken::Less => write!(f, "Less"),
+            LexerToken::LessEquals => write!(f, "LessEquals"),
+            LexerToken::Greater => write!(f, "Greater"),
+            LexerToken::GreaterEquals => write!(f, "GreaterEquals"),
+            LexerToken::Equals => write!(f, "Equals"),
+            LexerToken::EqualsEquals => write!(f, "EqualsEquals"),
+            LexerToken::Bang => write!(f, "Bang"),
+            LexerToken::BangEquals => write!(f, "BangEquals"),
+            LexerToken::Arrow => write!(f, "Arrow"),
             _ => write!(f, "BadToken"),
         }
     }

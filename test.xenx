@@ -1,4 +1,4 @@
-main():int {
-    a: float = 70;
-    return a;
+func main(argc:int, argv: bool):int => {
+    a: float = 12;
+    return b;
 }
