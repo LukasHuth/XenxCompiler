@@ -1,4 +1,5 @@
 func main(argc:int, argv: bool):int => {
-    a: float = 12;
-    return b;
+    a: int = !(1 == 1);
+    a = 7;
+    return a + 5;
 }

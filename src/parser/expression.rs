@@ -1,9 +1,11 @@
 use std::mem::ManuallyDrop;
+use crate::lexer::token::Token;
 #[repr(C)]
 // #[derive(Clone)]
 pub union Syntax
 {
     integer_literal: i32,
+    boolean_literal: bool,
     string_literal: ManuallyDrop<String>,
     variable_expr: ManuallyDrop<String>,
     binary_expr: ManuallyDrop<BinaryExpression>,
@@ -13,13 +15,22 @@ pub union Syntax
     return_expr: ManuallyDrop<ReturnExpression>,
     arg_variable_expr: ManuallyDrop<ArgVariableExpression>,
     function_declaration_expr: ManuallyDrop<FunctionDeclarationExpr>,
+    if_expr: ManuallyDrop<IfExpression>,
+    overwrite_variable_expr: ManuallyDrop<OverwriteVariableExpression>,
 }
 #[derive(Clone)]
 pub struct BinaryExpression
 {
-    operator: String,
+    operator: Token,
     left: Expression,
     right: Expression,
+}
+#[derive(Clone)]
+pub struct IfExpression
+{
+    condition: Expression,
+    then_branch: Vec<Expression>,
+    else_branch: Vec<Expression>,
 }
 #[derive(Clone)]
 pub struct ReturnExpression
@@ -29,7 +40,7 @@ pub struct ReturnExpression
 #[derive(Clone)]
 pub struct UnaryExpression
 {
-    operator: String,
+    operator: Token,
     operand: Expression,
 }
 #[derive(Clone)]
@@ -44,6 +55,12 @@ pub struct AssignmentExpression
     type_: String,
     value: Expression,
     name: Expression,
+}
+#[derive(Clone)]
+pub struct OverwriteVariableExpression
+{
+    value: Expression,
+    name: String,
 }
 #[derive(Clone)]
 pub struct ArgVariableExpression
@@ -64,6 +81,7 @@ pub enum ExpressionTag
 {
     IntegerLiteral,
     StringLiteral,
+    BooleanLiteral,
     VariableExpr,
     BinaryExpr,
     UnaryExpr,
@@ -72,6 +90,8 @@ pub enum ExpressionTag
     ReturnExpr,
     ArgVariableExpr,
     FunctionDeclarationExpr,
+    IfExpr,
+    OverwriteVariableExpr,
 }
 // #[derive(Clone)]
 pub struct Expression
@@ -125,6 +145,12 @@ impl Clone for Syntax {
                 Syntax { function_declaration_expr } => Syntax {
                     function_declaration_expr: (*function_declaration_expr).clone(),
                 },
+                Syntax { if_expr } => Syntax {
+                    if_expr: (*if_expr).clone(),
+                },
+                Syntax { overwrite_variable_expr: override_variable_expr } => Syntax {
+                    overwrite_variable_expr: (*override_variable_expr).clone(),
+                },
             }
         }
     }
@@ -165,7 +191,7 @@ impl Expression
             })
         }
     }
-    pub fn new_binary_expr(operator: String, left: Expression, right: Expression) -> Expression
+    pub fn new_binary_expr(left: Expression, operator: Token, right: Expression) -> Expression
     {
         Expression
         {
@@ -181,7 +207,7 @@ impl Expression
             })
         }
     }
-    pub fn new_unary_expr(operator: String, operand: Expression) -> Expression
+    pub fn new_unary_expr(operator: Token, operand: Expression) -> Expression
     {
         Expression
         {
@@ -234,6 +260,7 @@ impl Expression
         {
             ExpressionTag::IntegerLiteral => unsafe { syntax.integer_literal.to_string() },
             ExpressionTag::StringLiteral => unsafe { syntax.string_literal.to_string() },
+            ExpressionTag::BooleanLiteral => unsafe { syntax.boolean_literal.to_string() },
             ExpressionTag::VariableExpr => unsafe { syntax.variable_expr.to_string() },
             ExpressionTag::BinaryExpr => unsafe { syntax.binary_expr.to_string() },
             ExpressionTag::UnaryExpr => unsafe { syntax.unary_expr.to_string() },
@@ -242,6 +269,8 @@ impl Expression
             ExpressionTag::ReturnExpr => unsafe { syntax.return_expr.to_string() },
             ExpressionTag::ArgVariableExpr => unsafe { syntax.arg_variable_expr.to_string() },
             ExpressionTag::FunctionDeclarationExpr => unsafe { syntax.function_declaration_expr.to_string() },
+            ExpressionTag::IfExpr => unsafe { syntax.if_expr.to_string() },
+            ExpressionTag::OverwriteVariableExpr => unsafe { syntax.overwrite_variable_expr.to_string() },
         }
     }
 
@@ -289,19 +318,50 @@ impl Expression
             }),
         }
     }
+    pub(crate) fn new_if_expr(condition: Expression, then: Vec<Expression>, else_: Vec<Expression>) -> Expression {
+        Expression
+        {
+            tag: ExpressionTag::IfExpr,
+            syntax: Box::new(Syntax
+            {
+                if_expr: ManuallyDrop::new(IfExpression { condition: condition, then_branch: then, else_branch: else_ }),
+            }),
+        }
+    }
+    pub(crate) fn new_overwrite_variable_expression(name: String, value: Expression) -> Expression {
+        Expression
+        {
+            tag: ExpressionTag::OverwriteVariableExpr,
+            syntax: Box::new(Syntax
+            {
+                overwrite_variable_expr: ManuallyDrop::new(OverwriteVariableExpression { name: name, value: value }),
+            }),
+        }
+    }
+    pub(crate) fn new_boolean_literal(lit: bool) -> Expression
+    {
+        Expression
+        {
+            tag: ExpressionTag::BooleanLiteral,
+            syntax: Box::new(Syntax
+            {
+                boolean_literal: lit,
+            })
+        }
+    }
 }
 impl BinaryExpression
 {
     pub fn to_string(&self) -> String
     {
-        format!("BinaryExpression: ({} {} {})", self.operator, self.left.to_string(), self.right.to_string())
+        format!("BinaryExpression: ({} {} {})", self.left.to_string(), self.operator.text, self.right.to_string())
     }
 }
 impl UnaryExpression
 {
     pub fn to_string(&self) -> String
     {
-        format!("UnaryExpression: ({} {})", self.operator, self.operand.to_string())
+        format!("UnaryExpression: ({} {})", self.operator.text, self.operand.to_string())
     }
 }
 impl CallExpression
@@ -343,27 +403,47 @@ impl FunctionDeclarationExpr
     pub fn to_string(&self) -> String
     {
         let mut args = String::new();
-        let mut i = 0;
         for arg in &self.args
         {
+            args.push_str("\t\t");
             args.push_str(&arg.to_string());
-            if i < self.args.len() - 1
-            {
-                args.push_str(", ");
-            }
-            i+=1;
+            args.push('\n');
         }
         let mut inside = String::new();
-        i = 0;
         for arg in &self.inside
         {
+            inside.push_str("\t\t");
             inside.push_str(&arg.to_string());
-            if i < (self.inside.len() - 1)
-            {
-                inside.push_str(", ");
-            }
-            i+=1;
+            inside.push('\n');
         }
-        format!("FunctionDeclarationExpr: (name:{} type:{} args:'{}' inside:'{}')", self.name, self.type_, args, inside)
+        format!("FunctionDeclarationExpr: (\n\tname:{} \n\ttype:{} \n\targs:\n{} \n\tinside:\n{})", self.name, self.type_, args, inside)
+    }
+}
+impl IfExpression
+{
+    pub fn to_string(&self) -> String
+    {
+        let mut then = String::new();
+        for arg in &self.then_branch
+        {
+            then.push_str("\t\t");
+            then.push_str(&arg.to_string());
+            then.push('\n');
+        }
+        let mut else_ = String::new();
+        for arg in &self.else_branch
+        {
+            else_.push_str("\t\t");
+            else_.push_str(&arg.to_string());
+            else_.push('\n');
+        }
+        format!("IfExpression: (\n\tcondition:{} \n\tthen:\n{} \n\telse:\n{})", self.condition.to_string(), then, else_)
+    }
+}
+impl OverwriteVariableExpression
+{
+    pub fn to_string(&self) -> String
+    {
+        format!("OverwriteVariableExpression: (name:{} value:{})", self.name, self.value.to_string())
     }
 }

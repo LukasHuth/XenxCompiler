@@ -1,4 +1,5 @@
 use std::fmt;
+#[derive(Clone)]
 pub struct Token
 {
     pub token: LexerToken,
@@ -28,6 +29,10 @@ pub enum LexerToken
     Comma,
     Keyword,
     Arrow,
+    Plus,
+    Minus,
+    Star,
+    Slash,
 }
 impl Token
 {
@@ -39,6 +44,22 @@ impl Token
             text: text
         }
     }
+    pub fn precedence(&self) -> i32
+    {
+        if self.token == LexerToken::EqualsEquals || self.token == LexerToken::BangEquals
+        {
+            return 1;
+        }
+        if self.token == LexerToken::Plus || self.token == LexerToken::Minus
+        {
+            return 2;
+        }
+        if self.token == LexerToken::Star || self.token == LexerToken::Slash
+        {
+            return 3;
+        }
+        return 0;
+    }
     pub fn is_data_type(&self) -> bool
     {
         if self.token != LexerToken::Keyword
@@ -46,6 +67,14 @@ impl Token
             return false;
         }
         return self.text == "int" || self.text == "string" || self.text == "bool" || self.text == "float";
+    }
+    pub fn is_boolean(&self) -> bool
+    {
+        if self.token != LexerToken::Literal
+        {
+            return false;
+        }
+        return self.text == "true" || self.text == "false";
     }
     #[allow(dead_code)]
     fn token_to_string(&self) -> String

@@ -40,6 +40,26 @@ impl Lexer
                 text = "}".to_string();
                 return Token::new(token, text);
             },
+            '+' => {
+                token = LexerToken::Plus;
+                text = "+".to_string();
+                return Token::new(token, text);
+            },
+            '-' => {
+                token = LexerToken::Minus;
+                text = "-".to_string();
+                return Token::new(token, text);
+            },
+            '*' => {
+                token = LexerToken::Star;
+                text = "*".to_string();
+                return Token::new(token, text);
+            },
+            '/' => {
+                token = LexerToken::Slash;
+                text = "/".to_string();
+                return Token::new(token, text);
+            },
             ',' => {
                 token = LexerToken::Comma;
                 text = ",".to_string();
@@ -152,6 +172,7 @@ impl Lexer
                 }
                 text = self.input[start..self.position].to_string();
                 if text == "return" || text == "float" || text == "int" || text == "func" || text == "bool" || text == "string"
+                    || text == "if" || text == "else"
                 {
                     token = LexerToken::Keyword;
                 }
