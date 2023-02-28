@@ -1,5 +1,13 @@
-func main(argc:int, argv: bool):int => {
-    a: int = !(1 == 1);
-    a = 7;
+func main(argc:int):int => {
+    if (argc <= 2)
+    {
+        return 0;
+    }
+    a : int = 1;
+    a : int = 5 + 3;
+    a : int = 5 * x;
+    a : int = x + y;
+    a : int = 1 + 2 * 3;
+    a:int = (1+2)*3;
     return a + 5;
 }

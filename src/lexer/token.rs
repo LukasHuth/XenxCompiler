@@ -1,4 +1,5 @@
 use std::fmt;
+
 #[derive(Clone)]
 pub struct Token
 {
@@ -47,6 +48,8 @@ impl Token
     pub fn precedence(&self) -> i32
     {
         if self.token == LexerToken::EqualsEquals || self.token == LexerToken::BangEquals
+        || self.token == LexerToken::Less || self.token == LexerToken::LessEquals || self.token == LexerToken::Greater
+        || self.token == LexerToken::GreaterEquals
         {
             return 1;
         }

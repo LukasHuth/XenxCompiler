@@ -95,6 +95,7 @@ else
 }
 ```
 ### TODO
+- || and &&
 
 ### Done
 - b: int = a;
