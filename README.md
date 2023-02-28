@@ -1,56 +1,76 @@
 # Xenx Compiler
 
 ## AST structure
-
+### Done
+#### a: int = 0;
 ```
 {
-    name: function decleration
-    childs: 
-    [
+    tag: AssignmentExpr,
+    syntax:
+    {
+        assignment_expr:
         {
-            "name": int
-            childs: []
-        }
-        {
-            "name": body
-            childs:
-            [
+            type_: "a"
+            value:
+            {
+                tag: IntegerLiteral,
+                syntax:
                 {
-                    name: decleration
-                    childs:
-                    [
-                        {
-                            name: int
-                            childs: []
-                        }
-                        {
-                            name: a
-                            childs: []
-                        }
-                        {
-                            name: 2
-                            childs: []
-                        }
-                    ]
+                    integer_literal: 0
                 }
-                {
-                    name: return
-                    childs:
-                    [
-                        {
-                            name: identifier
-                            childs:
-                            [
-                                {
-                                    name: a
-                                    childs: []
-                                }
-                            ]
-                        }
-                    ]
-                }
-            ]
+            }
         }
-    ]
+    }
 }
 ```
+#### return 2;
+```
+{
+    tag: ReturnExpr,
+    syntax:
+    {
+        return_expr:
+        {
+            value:
+            {
+                tag: IntegerLiteral,
+                syntax:
+                {
+                    integer_literal: 2
+                }
+            }
+        }
+    }
+}
+```
+
+#### return a;
+```
+{
+    tag: ReturnExpr,
+    syntax:
+    {
+        return_expr:
+        {
+            value:
+            {
+                tag: VariableExpr,
+                syntax:
+                {
+                    variable_expr: "a"
+                }
+            }
+        }
+    }
+}
+```
+### TODO
+- b: int = a;
+- c: int = a + b;
+- d: bool = true;
+- e: bool = d;
+- f: bool = !e;
+- g: bool = e == f;
+- h: bool = 1 >= 2;
+- i: int = 1 + 2 * 3
+- j: int = ( 1 + 2 ) * 3;
