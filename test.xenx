@@ -1,7 +1,4 @@
-int main() {
-    if(a=a)
-    {
-        int a = 2;
-    }
-    return 2;
+main():int {
+    a: float = 70;
+    return a;
 }

@@ -40,6 +40,16 @@ impl Lexer
                 text = "}".to_string();
                 return Token::new(token, text);
             },
+            ',' => {
+                token = LexerToken::Comma;
+                text = ",".to_string();
+                return Token::new(token, text);
+            },
+            ':' => {
+                token = LexerToken::Colon;
+                text = ":".to_string();
+                return Token::new(token, text);
+            },
             '(' => {
                 token = LexerToken::Openparenthesis;
                 text = "(".to_string();
@@ -121,6 +131,10 @@ impl Lexer
                 if text == "int"
                 {
                     token = LexerToken::IntKeyword;
+                }
+                else if text == "float"
+                {
+                    token = LexerToken::FloatKeyword;
                 }
                 else if text == "return"
                 {

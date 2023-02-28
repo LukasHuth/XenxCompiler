@@ -25,19 +25,12 @@ fn main() {
     // }
     let mut parser = parser::Parser::new(tokens);
     let statements = parser.parse();
+    println!("statements: {}", statements.len());
     for statement in statements
     {
-        match statement.expression
-        {
-            parser::expression::ExpressionType::IfStatement => {
-                println!("If statement: {}", statement.children[0].to_string());
-            }
-            _ => {
-                continue;
-            }
-        }
+        println!("{}", statement.to_string());
     }
-    println!("Hello, world!");
+    // println!("Hello, world!");
 }
 #[allow(dead_code)]
 fn export_arguments(mut args: Vec<String>) -> (HashMap<String, String>, Vec<String>) {

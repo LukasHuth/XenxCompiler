@@ -1,6 +1,4 @@
 use std::fmt;
-
-use super::Lexer;
 pub struct Token
 {
     pub token: LexerToken,
@@ -14,8 +12,9 @@ pub enum LexerToken
     Openparenthesis,
     Closeparenthesis,
     Semicolon,
-    IntKeyword,
-    ReturnKeyword,
+    IntKeyword=0xF1,
+    ReturnKeyword=0xF2,
+    FloatKeyword=0xF4,
     Identifier,
     IntegerLiteral,
     BadToken,
@@ -28,6 +27,8 @@ pub enum LexerToken
     Bang,
     BangEquals,
     EOF,
+    Colon,
+    Comma,
 }
 impl Token
 {
