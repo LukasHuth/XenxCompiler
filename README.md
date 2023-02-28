@@ -14,6 +14,22 @@ func <name>(<argname1>: <datatype1>, <argname2>: <datatype2>): <function_datatyp
     <body>
 }
 ```
+### redeclaration
+```
+<name> = <value>;
+```
+### if else
+```
+if(<condition>)
+{
+    <body>
+}
+else
+{
+    <body>
+}
+```
+- "else if" is not supported at the moment
 ## AST structure
 ### Done
 #### a: int = 0;
@@ -79,12 +95,16 @@ func <name>(<argname1>: <datatype1>, <argname2>: <datatype2>): <function_datatyp
 }
 ```
 ### TODO
+
+### Done
 - b: int = a;
 - c: int = a + b;
 - d: bool = true;
 - e: bool = d;
-- f: bool = !e;
 - g: bool = e == f;
 - h: bool = 1 >= 2;
 - i: int = 1 + 2 * 3
 - j: int = ( 1 + 2 ) * 3;
+- f: bool = !e;
+- k: int = -1;
+- l: int = -(5+6);
