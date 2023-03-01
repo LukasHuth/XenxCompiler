@@ -14,6 +14,7 @@ fn main() {
         println!("Usage: {} <input>", args[0]);
     }
     let filename = &args[1];
+    // let filename = "test.xenx";
     println!("Reading file: {}", filename);
     // let filename = "../../../".to_string()+filename;
     let context = std::fs::read_to_string(filename).expect("Unable to read file");

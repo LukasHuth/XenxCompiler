@@ -14,7 +14,7 @@ impl Parser
         Parser
         {
             tokens: tokens,
-            current: 0
+            current: 0,
         }
     }
     // Do this as AST not like this
@@ -129,36 +129,7 @@ impl Parser
                 }
                 else if key.text == "if"
                 {
-                    self.match_token(LexerToken::Openparenthesis);
-                    let condition = self.parse_expression();
-                    self.match_token(LexerToken::Closeparenthesis);
-                    self.match_token(LexerToken::Openbrace);
-                    let body = self.parse();
-                    self.match_token(LexerToken::Closebrace);
-                    let mut else_expression: Vec<Expression> = Vec::new();
-                    let mut has_else = false;
-                    if self.peek().token == LexerToken::Keyword && self.peek().text == "else"
-                    {
-                        self.match_token(LexerToken::Keyword);
-                        self.match_token(LexerToken::Openbrace);
-                        let else_body = self.parse();
-                        self.match_token(LexerToken::Closebrace);
-                        else_expression = else_body;
-                        has_else = true;
-                    }
-                    let if_statement: Expression;
-                    if has_else
-                    {
-                        if else_expression.len() == 0
-                        {
-                            panic!("Empty else statement");
-                        }
-                        if_statement = Expression::new_if_expr(condition, body, else_expression);
-                    }
-                    else
-                    {
-                        if_statement = Expression::new_if_expr(condition, body, Vec::new());
-                    }
+                    let if_statement = self.parse_if_statement(false);
                     statements.push(if_statement);
                 }
             }
@@ -168,6 +139,36 @@ impl Parser
             }
         }
         return statements;
+    }
+    fn parse_if_statement(&mut self, inside: bool) -> Expression
+    {
+        self.match_token(LexerToken::Openparenthesis);
+        let condition = self.parse_expression();
+        self.match_token(LexerToken::Closeparenthesis);
+        self.match_token(LexerToken::Openbrace);
+        let body = self.parse();
+        self.match_token(LexerToken::Closebrace);
+        if self.peek().token == LexerToken::Keyword && self.peek().text == "else"
+        {
+            self.match_token(LexerToken::Keyword);
+            if self.peek().token == LexerToken::Openbrace
+            {
+                self.match_token(LexerToken::Openbrace);
+                let else_body = self.parse();
+                if !inside
+                {
+                    self.match_token(LexerToken::Closebrace);
+                }
+                return Expression::new_if_expr(condition, body, else_body);
+            }
+            else
+            {
+                self.match_token(LexerToken::Keyword);
+                let else_if_statement = self.parse_if_statement(true);
+                return Expression::new_if_expr(condition, body, vec![else_if_statement]);
+            }
+        }
+        Expression::new_if_expr(condition, body, Vec::new())
     }
     fn parse_binary_expression(&mut self, precedence: i32) -> Expression
     {

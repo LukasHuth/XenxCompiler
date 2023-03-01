@@ -3,11 +3,14 @@ func main(argc:int):int => {
     {
         return 0;
     }
-    a : int = 1;
-    a : int = 5 + 3;
-    a : int = 5 * x;
-    a : int = x + y;
-    a : int = 1 + 2 * 3;
-    a:int = (1+2)*3;
+    else
+    if(1 == 1)
+    {
+        return 1;
+    }
+    else
+    {
+        return 2;
+    }
     return a + 5;
 }
