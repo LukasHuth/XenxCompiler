@@ -1,5 +1,5 @@
 func main(argc:int):int => {
-    if (argc <= 2)
+    if (argc <= 2 || a == 2)
     {
         return 0;
     }
