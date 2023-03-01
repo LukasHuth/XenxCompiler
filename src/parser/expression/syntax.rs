@@ -8,7 +8,8 @@ use super::{
     AssignmentExpression,
     OverwriteVariableExpression,
     ArgVariableExpression,
-    FunctionDeclarationExpression
+    FunctionDeclarationExpression,
+    VariableExpression,
 };
 #[repr(C)]
 // #[derive(Clone)]
@@ -16,8 +17,9 @@ pub union Syntax
 {
     pub integer_literal: i32,
     pub boolean_literal: bool,
+    pub float_literal: f32,
     pub string_literal: ManuallyDrop<String>,
-    pub variable_expr: ManuallyDrop<String>,
+    pub variable_expr: ManuallyDrop<VariableExpression>,
     pub binary_expr: ManuallyDrop<BinaryExpression>,
     pub unary_expr: ManuallyDrop<UnaryExpression>,
     pub call_expr: ManuallyDrop<CallExpression>,
@@ -38,6 +40,12 @@ impl Clone for Syntax {
                 },
                 Syntax { string_literal } => Syntax {
                     string_literal: (*string_literal).clone(),
+                },
+                Syntax { boolean_literal } => Syntax {
+                    boolean_literal: *boolean_literal,
+                },
+                Syntax { float_literal } => Syntax {
+                    float_literal: *float_literal,
                 },
                 Syntax { variable_expr } => Syntax {
                     variable_expr: (*variable_expr).clone(),

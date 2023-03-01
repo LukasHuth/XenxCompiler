@@ -1,14 +1,12 @@
 use std::fmt;
 
 #[derive(Clone)]
-pub struct Token
-{
+pub struct Token {
     pub token: LexerToken,
-    pub text: String
+    pub text: String,
 }
-#[derive(Debug, PartialEq,Copy,Clone)]
-pub enum LexerToken
-{
+#[derive(Debug, PartialEq, Copy, Clone)]
+pub enum LexerToken {
     Openbrace,
     Closebrace,
     Openparenthesis,
@@ -41,59 +39,73 @@ pub enum LexerToken
     OpenSquareBracket,
     CloseSquareBracket,
 }
-impl Token
-{
-    pub fn new(token: LexerToken, text: String) -> Token
-    {
-        Token
-        {
+impl Token {
+    pub fn new(token: LexerToken, text: String) -> Token {
+        Token {
             token: token,
-            text: text
+            text: text,
         }
     }
-    pub fn precedence(&self) -> i32
-    {
-        if self.token == LexerToken::PipePipe || self.token == LexerToken::AmpersandAmpersand
-        {
+    pub fn precedence(&self) -> i32 {
+        if self.token == LexerToken::PipePipe || self.token == LexerToken::AmpersandAmpersand {
             return 1;
         }
-        if self.token == LexerToken::EqualsEquals || self.token == LexerToken::BangEquals
-        || self.token == LexerToken::Less || self.token == LexerToken::LessEquals || self.token == LexerToken::Greater
-        || self.token == LexerToken::GreaterEquals
+        if self.token == LexerToken::EqualsEquals
+            || self.token == LexerToken::BangEquals
+            || self.token == LexerToken::Less
+            || self.token == LexerToken::LessEquals
+            || self.token == LexerToken::Greater
+            || self.token == LexerToken::GreaterEquals
         {
             return 2;
         }
-        if self.token == LexerToken::Plus || self.token == LexerToken::Minus
-        {
+        if self.token == LexerToken::Plus || self.token == LexerToken::Minus {
             return 3;
         }
-        if self.token == LexerToken::Star || self.token == LexerToken::Slash
-        {
+        if self.token == LexerToken::Star || self.token == LexerToken::Slash {
             return 4;
         }
         return 0;
     }
-    pub fn is_data_type(&self) -> bool
-    {
-        if self.token != LexerToken::Keyword
-        {
+    pub fn is_data_type(&self) -> bool {
+        if self.token != LexerToken::Keyword {
             return false;
         }
-        return self.text == "int" || self.text == "string" || self.text == "bool" || self.text == "float";
+        return self.text == "int"
+            || self.text == "string"
+            || self.text == "bool"
+            || self.text == "float"
+            || self.text == "char";
     }
-    pub fn is_boolean(&self) -> bool
-    {
-        if self.token != LexerToken::Literal
-        {
+    /* #region Literal typecheck */
+    pub fn is_string(&self) -> bool {
+        if self.token != LexerToken::Literal {
+            return false;
+        }
+        return self.text.starts_with("\"") && self.text.ends_with("\"");
+    }
+    pub fn is_boolean(&self) -> bool {
+        if self.token != LexerToken::Literal {
             return false;
         }
         return self.text == "true" || self.text == "false";
     }
+    pub fn is_integer(&self) -> bool {
+        if self.token != LexerToken::Literal {
+            return false;
+        }
+        return self.text.parse::<i32>().is_ok();
+    }
+    pub fn is_float(&self) -> bool {
+        if self.token != LexerToken::Literal {
+            return false;
+        }
+        return self.text.parse::<f32>().is_ok();
+    }
+    /* #endregion */
     #[allow(dead_code)]
-    fn token_to_string(&self) -> String
-    {
-        match self.token
-        {
+    fn token_to_string(&self) -> String {
+        match self.token {
             LexerToken::Openbrace => "Openbrace".to_string(),
             LexerToken::Closebrace => "Closebrace".to_string(),
             LexerToken::Openparenthesis => "Openparenthesis".to_string(),
@@ -114,24 +126,24 @@ impl Token
             LexerToken::Bang => "Bang".to_string(),
             LexerToken::BangEquals => "BangEquals".to_string(),
             LexerToken::Arrow => "Arrow".to_string(),
-            _ => "BadToken".to_string()
+            _ => "BadToken".to_string(),
         }
     }
     #[allow(dead_code)]
-    pub fn to_string(&self) -> String
-    {
-        if self.token == LexerToken::Identifier || self.token == LexerToken::Literal
-        {
-            return "<Token: ".to_string() + self.token_to_string().as_str() + " Text: " + &self.text + ">";
+    pub fn to_string(&self) -> String {
+        if self.token == LexerToken::Identifier || self.token == LexerToken::Literal {
+            return "<Token: ".to_string()
+                + self.token_to_string().as_str()
+                + " Text: "
+                + &self.text
+                + ">";
         }
         return "<Token: ".to_string() + "" + self.token_to_string().as_str() + ">";
     }
-    pub fn clone(&self) -> Token
-    {
-        Token
-        {
+    pub fn clone(&self) -> Token {
+        Token {
             token: self.token,
-            text: self.text.clone()
+            text: self.text.clone(),
         }
     }
 }

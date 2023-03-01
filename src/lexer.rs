@@ -206,7 +206,7 @@ impl Lexer
                 }
                 text = self.input[start..self.position].to_string();
                 if text == "return" || text == "float" || text == "int" || text == "func" || text == "bool" || text == "string"
-                    || text == "if" || text == "else"
+                    || text == "if" || text == "else" || text == "char"
                 {
                     token = LexerToken::Keyword;
                 }

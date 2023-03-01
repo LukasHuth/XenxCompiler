@@ -37,12 +37,24 @@ impl Parser
                     {
                         panic!("Invalid type");
                     }
+                    let mut is_array = false;
+                    if self.peek().token == LexerToken::OpenSquareBracket
+                    {
+                        self.match_token(LexerToken::OpenSquareBracket);
+                        self.match_token(LexerToken::CloseSquareBracket);
+                        is_array = true;
+                    }
                     self.match_token(LexerToken::Equals);
                     let expr = self.parse_expression();
                     self.match_token(LexerToken::Semicolon);
                     let text = String::from(&identifier.text).to_owned();
+                    let mut datatype = type_.text;
+                    if is_array
+                    {
+                        datatype = format!("{}[]", datatype);
+                    }
                     let variable_expr = Expression::new_variable_expr(text);
-                    let expression = Expression::new_assignment_expr(type_.text, expr, variable_expr);
+                    let expression = Expression::new_assignment_expr(datatype, expr, variable_expr);
                     statements.push(expression);
                     // println!("Integer literal: {}", value.text);
                 }
@@ -206,7 +218,19 @@ impl Parser
             {
                 return Expression::new_boolean_literal(literal.text.parse::<bool>().unwrap());
             }
-            return Expression::new_integer_literal(literal.text.parse::<i32>().unwrap());
+            if literal.is_string()
+            {
+                return Expression::new_string_literal(literal.text);
+            }
+            if literal.is_integer()
+            {
+                return Expression::new_integer_literal(literal.text.parse::<i32>().unwrap());
+            }
+            if literal.is_float()
+            {
+                return Expression::new_float_literal(literal.text.parse::<f32>().unwrap());
+            }
+            panic!("Invalid type of literal: {}", literal.text)
         }
         if self.peek().token == LexerToken::Identifier
         {

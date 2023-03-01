@@ -14,4 +14,5 @@ pub enum ExpressionTag
     FunctionDeclarationExpr,
     IfExpr,
     OverwriteVariableExpr,
+    FloatLiteral,
 }

@@ -1,4 +1,9 @@
 # Xenx Compiler
+## Datatypes
+- int
+- string
+- flaot
+- bool
 ## Working structure
 ### declare variable
 ```
@@ -20,6 +25,11 @@ func <name>(<argname1>: <datatype1>, <argname2>: <datatype2>): <function_datatyp
 ```
 ### if else
 ```
+if(<condition>)
+{
+    <body>
+}
+else
 if(<condition>)
 {
     <body>
@@ -96,6 +106,7 @@ else
 ### TODO
 
 ### Done
+- a: int = 1;
 - b: int = a;
 - c: int = a + b;
 - d: bool = true;
