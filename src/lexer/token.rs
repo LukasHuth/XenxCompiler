@@ -34,6 +34,12 @@ pub enum LexerToken
     Minus,
     Star,
     Slash,
+    Pipe,
+    PipePipe,
+    Ampersand,
+    AmpersandAmpersand,
+    OpenSquareBracket,
+    CloseSquareBracket,
 }
 impl Token
 {
@@ -47,19 +53,23 @@ impl Token
     }
     pub fn precedence(&self) -> i32
     {
+        if self.token == LexerToken::PipePipe || self.token == LexerToken::AmpersandAmpersand
+        {
+            return 1;
+        }
         if self.token == LexerToken::EqualsEquals || self.token == LexerToken::BangEquals
         || self.token == LexerToken::Less || self.token == LexerToken::LessEquals || self.token == LexerToken::Greater
         || self.token == LexerToken::GreaterEquals
         {
-            return 1;
+            return 2;
         }
         if self.token == LexerToken::Plus || self.token == LexerToken::Minus
         {
-            return 2;
+            return 3;
         }
         if self.token == LexerToken::Star || self.token == LexerToken::Slash
         {
-            return 3;
+            return 4;
         }
         return 0;
     }

@@ -29,7 +29,6 @@ else
     <body>
 }
 ```
-- "else if" is not supported at the moment
 ## AST structure
 ### Done
 #### a: int = 0;
@@ -95,7 +94,6 @@ else
 }
 ```
 ### TODO
-- || and &&
 
 ### Done
 - b: int = a;

@@ -40,6 +40,16 @@ impl Lexer
                 text = "}".to_string();
                 return Token::new(token, text);
             },
+            '[' => {
+                token = LexerToken::OpenSquareBracket;
+                text = "[".to_string();
+                return Token::new(token, text);
+            },
+            ']' => {
+                token = LexerToken::CloseSquareBracket;
+                text = "]".to_string();
+                return Token::new(token, text);
+            },
             '+' => {
                 token = LexerToken::Plus;
                 text = "+".to_string();
@@ -83,6 +93,30 @@ impl Lexer
             ';' => {
                 token = LexerToken::Semicolon;
                 text = ";".to_string();
+                return Token::new(token, text);
+            },
+            '|' => {
+                if self.peek(0) == '|'
+                {
+                    self.next();
+                    token = LexerToken::PipePipe;
+                    text = "||".to_string();
+                    return Token::new(token, text);
+                }
+                token = LexerToken::Pipe;
+                text = "|".to_string();
+                return Token::new(token, text);
+            },
+            '&' => {
+                if self.peek(0) == '&'
+                {
+                    self.next();
+                    token = LexerToken::AmpersandAmpersand;
+                    text = "&&".to_string();
+                    return Token::new(token, text);
+                }
+                token = LexerToken::Ampersand;
+                text = "&".to_string();
                 return Token::new(token, text);
             },
             '=' => {
