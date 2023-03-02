@@ -1,6 +1,5 @@
 use std::mem::ManuallyDrop;
 use super::Token;
-
 mod binary_expression;
 mod unary_expression;
 mod if_expression;
