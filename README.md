@@ -104,6 +104,7 @@ else
 }
 ```
 ### TODO
+- make code gen where code is returned by calling functions
 
 ### Done
 - a: int = 1;
