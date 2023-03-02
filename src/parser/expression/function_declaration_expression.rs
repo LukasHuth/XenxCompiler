@@ -26,10 +26,26 @@ impl FunctionDeclarationExpression
             inside.push_str(&arg.to_string());
             inside.push('\n');
         }
-        format!("FunctionDeclarationExpr: (\n\tname:{} \n\ttype:{} \n\targs:\n{} \n\tinside:\n{})", self.name, self.type_, args, inside)
+        format!("FunctionDeclarationExpr: (\n\tname:{} \n\ttype:{} \n\targs:\n[{}] \n\tinside:\n[{}])", self.name, self.type_, args, inside)
     }
     pub fn new(name: String, type_: String, args: Vec<Expression>, inside: Vec<Expression>) -> FunctionDeclarationExpression
     {
         FunctionDeclarationExpression{name, type_, args, inside}
+    }
+    pub fn get_name(&self) -> String
+    {
+        self.name.clone()
+    }
+    pub fn get_type(&self) -> String
+    {
+        self.type_.clone()
+    }
+    pub fn get_args(&self) -> Vec<Expression>
+    {
+        self.args.clone()
+    }
+    pub fn get_inside(&self) -> Vec<Expression>
+    {
+        self.inside.clone()
     }
 }

@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 pub mod lexer;
 pub mod parser;
+pub mod syntactic_analyser;
 mod test;
 // https://norasandler.com/2017/11/29/Write-a-Compiler.html
 #[allow(dead_code)]
@@ -28,11 +29,17 @@ fn main() {
     // }
     let mut parser = parser::Parser::new(tokens);
     let statements = parser.parse();
-    println!("statements: {}", statements.len());
-    for statement in statements
-    {
-        println!("{}", statement.to_string());
-    }
+    // println!("statements: {}", statements.len());
+    // let mut state = String::new();
+    // for statement in statements
+    // {
+    //     state.push_str(format!("{}", statement.to_string()).as_str());
+    // }
+    let mut syntactic_analyser = syntactic_analyser::SyntaticAnalyser::new(statements);
+    // println!("statements: {}", statements.len());
+    // let mut syntactic_analyser = syntactic_analyser::SyntaticAnalyser::new(statements);
+    let _statements = syntactic_analyser.analyse();
+
     // println!("Hello, world!");
 }
 #[allow(dead_code)]

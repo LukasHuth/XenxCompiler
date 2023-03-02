@@ -19,4 +19,16 @@ impl BinaryExpression
     {
         BinaryExpression{operator, left, right}
     }
+    pub fn get_operator(&self) -> Token
+    {
+        self.operator.clone()
+    }
+    pub fn get_left(&self) -> Expression
+    {
+        self.left.clone()
+    }
+    pub fn get_right(&self) -> Expression
+    {
+        self.right.clone()
+    }
 }

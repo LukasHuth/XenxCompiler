@@ -41,8 +41,14 @@ impl Parser
                     while self.peek().token == LexerToken::OpenSquareBracket
                     {
                         self.match_token(LexerToken::OpenSquareBracket);
+                        let numer = self.match_token(LexerToken::Literal);
+                        if !numer.text.parse::<i32>().is_ok()
+                        {
+                            panic!("Invalid array size (Array size has to be i32 not '{}')", numer.text);
+                        }
+                        let numer = numer.text.parse::<i32>().unwrap();
                         self.match_token(LexerToken::CloseSquareBracket);
-                        datatype = format!("{}[]", datatype);
+                        datatype = format!("{}[{}]", datatype, numer);
                     }
                     if self.peek().token != LexerToken::Equals
                     {

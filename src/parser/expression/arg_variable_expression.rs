@@ -14,4 +14,12 @@ impl ArgVariableExpression
     {
         ArgVariableExpression{type_, name}
     }
+    pub fn get_type(&self) -> String
+    {
+        self.type_.clone()
+    }
+    pub fn get_name(&self) -> String
+    {
+        self.name.clone()
+    }
 }

@@ -16,4 +16,16 @@ impl AssignmentExpression
     {
         AssignmentExpression{type_, value, name}
     }
+    pub fn get_type(&self) -> String
+    {
+        self.type_.clone()
+    }
+    pub fn get_value(&self) -> Expression
+    {
+        self.value.clone()
+    }
+    pub fn get_name(&self) -> Expression
+    {
+        self.name.clone()
+    }
 }

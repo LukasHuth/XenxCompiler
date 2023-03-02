@@ -15,3 +15,10 @@ impl VariableExpression
         VariableExpression{name}
     }
 }
+impl Default for VariableExpression
+{
+    fn default() -> VariableExpression
+    {
+        VariableExpression{name: "".to_string()}
+    }
+}
