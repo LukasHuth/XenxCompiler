@@ -37,25 +37,31 @@ impl Parser
                     {
                         panic!("Invalid type");
                     }
-                    let mut is_array = false;
-                    if self.peek().token == LexerToken::OpenSquareBracket
+                    let mut datatype = type_.text;
+                    while self.peek().token == LexerToken::OpenSquareBracket
                     {
                         self.match_token(LexerToken::OpenSquareBracket);
                         self.match_token(LexerToken::CloseSquareBracket);
-                        is_array = true;
-                    }
-                    self.match_token(LexerToken::Equals);
-                    let expr = self.parse_expression();
-                    self.match_token(LexerToken::Semicolon);
-                    let text = String::from(&identifier.text).to_owned();
-                    let mut datatype = type_.text;
-                    if is_array
-                    {
                         datatype = format!("{}[]", datatype);
                     }
-                    let variable_expr = Expression::new_variable_expr(text);
-                    let expression = Expression::new_assignment_expr(datatype, expr, variable_expr);
-                    statements.push(expression);
+                    if self.peek().token != LexerToken::Equals
+                    {
+                        let new = Expression::new_integer_literal(0);
+                        let text = String::from(&identifier.text).to_owned();
+                        let variable_expr = Expression::new_variable_expr(text);
+                        let expression = Expression::new_assignment_expr(datatype.to_owned(), new, variable_expr);
+                        statements.push(expression);
+                    }
+                    else
+                    {
+                        self.match_token(LexerToken::Equals);
+                        let expr = self.parse_expression();
+                        self.match_token(LexerToken::Semicolon);
+                        let text = String::from(&identifier.text).to_owned();
+                        let variable_expr = Expression::new_variable_expr(text);
+                        let expression = Expression::new_assignment_expr(datatype, expr, variable_expr);
+                        statements.push(expression);
+                    }
                     // println!("Integer literal: {}", value.text);
                 }
                 else
@@ -119,7 +125,17 @@ impl Parser
                         {
                             panic!("Invalid type");
                         }
-                        arguments.push(Expression::new_arg_variable_expr(argument.text, type_.text));
+                        let mut inside = String::new();
+                        if self.peek().token == LexerToken::OpenSquareBracket
+                        {
+                            while self.peek().token == LexerToken::OpenSquareBracket
+                            {
+                                self.match_token(LexerToken::OpenSquareBracket);
+                                self.match_token(LexerToken::CloseSquareBracket);
+                                inside.push_str("[]");
+                            }
+                        }
+                        arguments.push(Expression::new_arg_variable_expr(argument.text, type_.text + &inside));
                         if self.peek().token != LexerToken::Closeparenthesis
                         {
                             self.match_token(LexerToken::Comma);

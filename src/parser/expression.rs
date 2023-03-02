@@ -227,8 +227,8 @@ impl Expression
             {
                 arg_variable_expr: ManuallyDrop::new(ArgVariableExpression::new
                 (
-                    name,
                     type_,
+                    name,
                 )),
             }),
         }
