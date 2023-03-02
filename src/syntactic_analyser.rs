@@ -35,6 +35,7 @@ impl SyntaticAnalyser {
         let function_declaration_expr = first_element.syntax.get_function_declaration_expr();
         let name = function_declaration_expr.get_name();
         let datatype = self.get_datatype(function_declaration_expr.get_type());
+        // paused here, next thing i wanted to do is to move parameter extraction to a function
         let mut parameters = Vec::<Statement>::new();
         for parameter in function_declaration_expr.get_args()
         {
