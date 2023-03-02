@@ -1,7 +1,9 @@
 use std::collections::HashMap;
-mod lexer;
-mod parser;
+pub mod lexer;
+pub mod parser;
+mod test;
 // https://norasandler.com/2017/11/29/Write-a-Compiler.html
+#[allow(dead_code)]
 fn main() {
     let args = std::env::args().collect::<Vec<String>>();
     // let dash_args = export_arguments(args);
@@ -69,3 +71,5 @@ fn export_arguments(mut args: Vec<String>) -> (HashMap<String, String>, Vec<Stri
     }
     return (map, args);
 }
+
+

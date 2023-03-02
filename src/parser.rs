@@ -1,5 +1,5 @@
-use crate::lexer::token::Token;
-use crate::lexer::token::LexerToken;
+use super::lexer::token::Token;
+use super::lexer::token::LexerToken;
 pub mod expression;
 use expression::Expression;
 pub struct Parser
@@ -287,7 +287,7 @@ impl Parser
     }
     fn is_at_end(&self) -> bool
     {
-        return self.peek().token == crate::lexer::token::LexerToken::EOF;
+        return self.peek().token == LexerToken::EOF;
     }
     fn peek(&self) -> Token
     {
