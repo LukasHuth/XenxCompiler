@@ -1,4 +1,3 @@
-use std::mem::ManuallyDrop;
 use super::{
     BinaryExpression,
     UnaryExpression,
@@ -9,27 +8,8 @@ use super::{
     OverwriteVariableExpression,
     ArgVariableExpression,
     FunctionDeclarationExpression,
-    VariableExpression, variable_expression, assignment_expression,
+    VariableExpression,
 };
-#[repr(C)]
-// #[derive(Clone)]
-// pub union Syntax
-// {
-//     pub integer_literal: i32,
-//     pub boolean_literal: bool,
-//     pub float_literal: f32,
-//     pub string_literal: ManuallyDrop<String>,
-//     pub variable_expr: ManuallyDrop<VariableExpression>,
-//     pub binary_expr: ManuallyDrop<BinaryExpression>,
-//     pub unary_expr: ManuallyDrop<UnaryExpression>,
-//     pub call_expr: ManuallyDrop<CallExpression>,
-//     pub assignment_expr: ManuallyDrop<AssignmentExpression>,
-//     pub return_expr: ManuallyDrop<ReturnExpression>,
-//     pub arg_variable_expr: ManuallyDrop<ArgVariableExpression>,
-//     pub function_declaration_expr: ManuallyDrop<FunctionDeclarationExpression>,
-//     pub if_expr: ManuallyDrop<IfExpression>,
-//     pub overwrite_variable_expr: ManuallyDrop<OverwriteVariableExpression>,
-// }
 pub struct Syntax
 {
     pub integer_literal: Option<i32>,

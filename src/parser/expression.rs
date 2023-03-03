@@ -1,4 +1,3 @@
-use std::mem::ManuallyDrop;
 use super::Token;
 mod binary_expression;
 mod unary_expression;
@@ -28,7 +27,6 @@ pub use syntax::Syntax;
 mod expression_tag;
 pub use expression_tag::ExpressionTag;
 
-// #[derive(Clone)]
 pub struct Expression
 {
     pub tag: ExpressionTag,
@@ -48,6 +46,7 @@ impl Clone for Expression
 #[allow(dead_code)]
 impl Expression
 {
+    #[allow(unreachable_patterns)]
     pub fn to_string(&self) -> String
     {
         let syntax = &self.syntax;

@@ -7,11 +7,10 @@ mod test;
 #[allow(dead_code)]
 fn main() {
     let args = std::env::args().collect::<Vec<String>>();
-    // let dash_args = export_arguments(args);
-    // let args = dash_args.clone().1;
-    // let dash_args = dash_args.clone().0;
-    // println!("Arguments: {:?}", dash_args);
-    // println!("Arguments: {:?}", args);
+    let dash_args = export_arguments(args);
+    let args = dash_args.clone().1;
+    let dash_args = dash_args.clone().0;
+    println!("dash args: {:?}", dash_args);
     if args.len() < 2
     {
         println!("Usage: {} <input>", args[0]);
@@ -19,32 +18,17 @@ fn main() {
     let filename = &args[1];
     // let filename = "test.xenx";
     println!("Reading file: {}", filename);
-    // let filename = "../../../".to_string()+filename;
     let context = std::fs::read_to_string(filename).expect("Unable to read file");
     let mut lexer = lexer::Lexer::new(context.clone());
     let tokens = lexer.lex();
-    // for token in tokens
-    // {
-    //     println!("{}", token.to_string());
-    // }
     let mut parser = parser::Parser::new(tokens);
     let statements = parser.parse();
-    // println!("statements: {}", statements.len());
-    // let mut state = String::new();
-    // for statement in statements
-    // {
-    //     state.push_str(format!("{}", statement.to_string()).as_str());
-    // }
     let mut syntactic_analyser = syntactic_analyser::SyntaticAnalyser::new(statements);
-    // println!("statements: {}", statements.len());
-    // let mut syntactic_analyser = syntactic_analyser::SyntaticAnalyser::new(statements);
     let _statements = syntactic_analyser.analyse();
 
-    // println!("Hello, world!");
 }
 #[allow(dead_code)]
 fn export_arguments(mut args: Vec<String>) -> (HashMap<String, String>, Vec<String>) {
-    // println!("Arguments: {:?}", args);
     let mut map = HashMap::new();
     let mut rem_vec = Vec::<usize>::new();
     for(i, arg) in args.clone().iter().enumerate() {
@@ -78,5 +62,3 @@ fn export_arguments(mut args: Vec<String>) -> (HashMap<String, String>, Vec<Stri
     }
     return (map, args);
 }
-
-

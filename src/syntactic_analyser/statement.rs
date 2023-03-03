@@ -117,12 +117,12 @@ impl Statement
             statements: Vec::<Statement>::new(),
         }
     }
-    pub fn new_call(name: String, statements: Vec<Statement>, functionDatatype: Datatype) -> Statement
+    pub fn new_call(name: String, statements: Vec<Statement>, function_datatype: Datatype) -> Statement
     {
         Statement {
             name,
             type_: StatementType::Call,
-            datatype: functionDatatype,
+            datatype: function_datatype,
             statements,
         }
     }

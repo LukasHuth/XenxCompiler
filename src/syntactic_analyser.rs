@@ -29,15 +29,11 @@ impl SyntaticAnalyser {
     }
     pub fn analyse(&mut self) -> Vec<Statement>
     {
-        // let mut statements = Vec::<Statement>::new();
         println!("statements: {}", self.statements.len());
         let mut statements = Vec::<Statement>::new();
-        let test = self.get_datatype(String::from("int"));
-        // println!("test: {}", test.to_string());
         while self.pos < self.statements.len()
         {
             let element = self.statements.get(self.pos).unwrap();
-            // println!("{}", element.clone().to_string());
             if !element.is_function_declaration()
             {
                 println!("first element is not a function declaration");
@@ -46,7 +42,6 @@ impl SyntaticAnalyser {
             let function_declaration_expr = element.syntax.get_function_declaration_expr();
             let name = function_declaration_expr.get_name();
             let datatype = self.get_datatype(function_declaration_expr.get_type());
-            // paused here, next thing i wanted to do is to move parameter extraction to a function
             let parameters = self.get_parameters(function_declaration_expr);
             let function = Statement::new_datatype(name.clone(), StatementType::Function, datatype.clone());
             let body = self.get_body(element.syntax.get_function_declaration_expr().get_inside());
@@ -72,9 +67,7 @@ impl SyntaticAnalyser {
             dim.push(number);
             self.remove_n_chars_from_behind(datatype.clone(), 1);
         }
-        // println!("datatype: {} ||", datatype);
         let datatype = self.get_datatype_from_string(datatype);
-        // println!("dim: {}", datatype.to_string());
         let datatype = Datatype::new(datatype, dim, is_array);
         return datatype;
     }
@@ -84,7 +77,6 @@ impl SyntaticAnalyser {
         let datastring = datastring.clone();
         let datastring = datastring.to_lowercase();
         let datastring = datastring.trim();
-        // println!("datastring: {}", datastring);
         if datastring == "int"
         {
             datatype = StatementDatatype::Int;
@@ -109,7 +101,6 @@ impl SyntaticAnalyser {
         {
             datatype = StatementDatatype::Void;
         }
-        // println!("datatype: {} <-", datatype.to_string());
         return datatype;
     }
     fn remove_n_chars_from_behind(&self, string: String, n: usize) -> String
@@ -124,22 +115,20 @@ impl SyntaticAnalyser {
 
     fn get_parameters(&self, function_declaration_expr: crate::parser::expression::FunctionDeclarationExpression) -> Arguments
     {
-        // println!("get parameters");
         let mut parameters = Arguments::new(vec![]);
         for parameter in function_declaration_expr.get_args()
         {
-            // println!("before");
             let arg = parameter.syntax.get_arg_variable_expr();
-            // println!("after");
             let name = arg.get_name();
             let datatype = self.get_datatype(arg.get_type());
             parameters.push(Statement::new(name, statement::StatementType::Argument, datatype.datatype, datatype.array_bounds, datatype.is_array));
         }
         return parameters;
     }
+    #[allow(dead_code)]
     fn get_lit_datatype(&self, string: String) -> StatementDatatype
     {
-        let mut datatype = StatementDatatype::Void;
+        let datatype: StatementDatatype;
         let datastring = string.clone();
         let datastring = datastring.to_lowercase();
         let datastring = datastring.trim();
@@ -186,7 +175,6 @@ impl SyntaticAnalyser {
                 {
                     let arg = args.get(i).unwrap();
                     let farg = function.arguments.get(i).unwrap();
-                    // println!(":{} {}", farg.datatype.clone(), arg.clone().to_string());
                     let same_datatype: bool;
                     if arg.is_literal()
                     {
@@ -198,8 +186,6 @@ impl SyntaticAnalyser {
                         let arg = self.get_variable(argname.clone());
                         same_datatype = self.same_datatype(farg.clone(), arg.clone());
                     }
-                    // let same_datatype = self.is_datatype(farg.datatype.clone(), arg.clone(), supressed_output.clone());
-                    // if self.test_variable_declaration(farg.datatype.clone(), arg.clone(), supress_output)
                     if same_datatype
                     {
                         let datatype = self.get_datatype(farg.datatype.to_string());
@@ -229,10 +215,7 @@ impl SyntaticAnalyser {
                 let variable_declaration = statement.syntax.get_assignment_expr();
                 let name = variable_declaration.get_name().syntax.get_variable_expr().get_name();
                 let datatype = self.get_datatype(variable_declaration.get_type());
-                // println!("variable declaration {} {}", name, datatype.to_string());
                 let value = variable_declaration.get_value();
-                let valuedatatype = self.get_datatype(value.to_string());
-                // println!("value datatype: {}", valuedatatype.to_string());
                 let supress_output = true; // show error output if variable declaration is not valid (only visible if false)
                 let test = self.is_datatype(datatype.clone(), value, supress_output);
                 if !test
@@ -245,34 +228,33 @@ impl SyntaticAnalyser {
             }
         }
         return vec![];
-        // todo!()
     }
-    fn test_variable_declaration(&self,datatype: Datatype, value: Expression, supressOutput: bool) -> bool
+    fn test_variable_declaration(&self,datatype: Datatype, value: Expression, supress_output: bool) -> bool
     {
         if value.is_literal()
         {
-            return self.test_variable_declaration_literal(datatype, value, supressOutput);
+            return self.test_variable_declaration_literal(datatype, value, supress_output);
         }
         else
         if value.is_variable()
         {
-            return self.test_variable_declaration_variable(datatype, value, supressOutput);
+            return self.test_variable_declaration_variable(datatype, value, supress_output);
         }
         else
         if value.is_binary()
         {
-            return self.test_variable_declaration_binary(datatype, value, supressOutput);
+            return self.test_variable_declaration_binary(datatype, value, supress_output);
         }
         else
         {
-            if !supressOutput
+            if !supress_output
             {
                 println!("variable declaration is not a literal or variable");
             }
             return false;
         }
     }
-    fn test_variable_declaration_binary(&self, datatype: Datatype, value: Expression, supressOutput: bool) -> bool
+    fn test_variable_declaration_binary(&self, datatype: Datatype, value: Expression, supress_output: bool) -> bool
     {
         let binary = value.syntax.get_binary_expr();
         let left = binary.get_left();
@@ -289,31 +271,31 @@ impl SyntaticAnalyser {
             let intstate = Datatype::new(StatementDatatype::Int, vec![], false);
             let charstate = Datatype::new(StatementDatatype::Char, vec![], false);
             let floatstate = Datatype::new(StatementDatatype::Float, vec![], false);
-            if self.is_datatype(boolstate.clone(), left.clone(), supressOutput) && self.is_datatype(boolstate.clone(), right.clone(), supressOutput)
+            if self.is_datatype(boolstate.clone(), left.clone(), supress_output) && self.is_datatype(boolstate.clone(), right.clone(), supress_output)
             {
                 return true;
             }
             if operator.token == LexerToken::AmpersandAmpersand || operator.token == LexerToken::PipePipe
             {
-                if !supressOutput
+                if !supress_output
                 {
                     println!("cannot use && or || on other that bool");
                 }
                 return false;
             }
-            if self.is_datatype(stringstate.clone(), left.clone(), supressOutput) && self.is_datatype(stringstate.clone(), right.clone(), supressOutput)
+            if self.is_datatype(stringstate.clone(), left.clone(), supress_output) && self.is_datatype(stringstate.clone(), right.clone(), supress_output)
             {
                 return true;
             }
-            if self.is_datatype(intstate.clone(), left.clone(), supressOutput) && self.is_datatype(intstate.clone(), right.clone(), supressOutput)
+            if self.is_datatype(intstate.clone(), left.clone(), supress_output) && self.is_datatype(intstate.clone(), right.clone(), supress_output)
             {
                 return true;
             }
-            if self.is_datatype(charstate.clone(), left.clone(), supressOutput) && self.is_datatype(charstate.clone(), right.clone(), supressOutput)
+            if self.is_datatype(charstate.clone(), left.clone(), supress_output) && self.is_datatype(charstate.clone(), right.clone(), supress_output)
             {
                 return true;
             }
-            if self.is_datatype(floatstate.clone(), left.clone(), supressOutput) && self.is_datatype(floatstate.clone(), right.clone(), supressOutput)
+            if self.is_datatype(floatstate.clone(), left.clone(), supress_output) && self.is_datatype(floatstate.clone(), right.clone(), supress_output)
             {
                 return true;
             }
@@ -325,15 +307,15 @@ impl SyntaticAnalyser {
             let intstate = Datatype::new(StatementDatatype::Int, vec![], false);
             let charstate = Datatype::new(StatementDatatype::Char, vec![], false);
             let floatstate = Datatype::new(StatementDatatype::Float, vec![], false);
-            if self.is_datatype(boolstate.clone(), left.clone(), supressOutput) && self.is_datatype(boolstate.clone(), right.clone(), supressOutput)
+            if self.is_datatype(boolstate.clone(), left.clone(), supress_output) && self.is_datatype(boolstate.clone(), right.clone(), supress_output)
             {
-                if !supressOutput
+                if !supress_output
                 {
                     println!("cannot use binary operators except logical equals and not equals on bools");
                 }
                 return false;
             }
-            if self.is_datatype(stringstate.clone(), left.clone(), supressOutput) && self.is_datatype(stringstate.clone(), right.clone(), supressOutput)
+            if self.is_datatype(stringstate.clone(), left.clone(), supress_output) && self.is_datatype(stringstate.clone(), right.clone(), supress_output)
             {
                 if datatype.datatype == StatementDatatype::String
                 {
@@ -341,14 +323,14 @@ impl SyntaticAnalyser {
                 }
                 else
                 {
-                    if !supressOutput
+                    if !supress_output
                     {
                         println!("cannot use binary operators on strings except logical equals and not equals");
                     }
                     return false;
                 }
             }
-            if self.is_datatype(intstate.clone(), left.clone(), supressOutput) && self.is_datatype(intstate.clone(), right.clone(), supressOutput)
+            if self.is_datatype(intstate.clone(), left.clone(), supress_output) && self.is_datatype(intstate.clone(), right.clone(), supress_output)
             {
                 if datatype.datatype == StatementDatatype::Int
                 {
@@ -356,14 +338,14 @@ impl SyntaticAnalyser {
                 }
                 else
                 {
-                    if !supressOutput
+                    if !supress_output
                     {
                         println!("cannot use binary operators on ints except logical equals and not equals");
                     }
                     return false;
                 }
             }
-            if self.is_datatype(charstate.clone(), left.clone(), supressOutput) && self.is_datatype(charstate.clone(), right.clone(), supressOutput)
+            if self.is_datatype(charstate.clone(), left.clone(), supress_output) && self.is_datatype(charstate.clone(), right.clone(), supress_output)
             {
                 if datatype.datatype == StatementDatatype::Char
                 {
@@ -371,14 +353,14 @@ impl SyntaticAnalyser {
                 }
                 else
                 {
-                    if !supressOutput
+                    if !supress_output
                     {
                         println!("cannot use binary operators on chars except logical equals and not equals");
                     }
                     return false;
                 }
             }
-            if self.is_datatype(floatstate.clone(), left.clone(), supressOutput) && self.is_datatype(floatstate.clone(), right.clone(), supressOutput)
+            if self.is_datatype(floatstate.clone(), left.clone(), supress_output) && self.is_datatype(floatstate.clone(), right.clone(), supress_output)
             {
                 if datatype.datatype == StatementDatatype::Float
                 {
@@ -386,7 +368,7 @@ impl SyntaticAnalyser {
                 }
                 else
                 {
-                    if !supressOutput
+                    if !supress_output
                     {
                         println!("cannot use binary operators on floats except logical equals and not equals");
                     }
@@ -396,19 +378,18 @@ impl SyntaticAnalyser {
         }
         return false;
     }
-    fn is_datatype(&self, datatype: Datatype, value: Expression, supressedOutput: bool) -> bool
+    fn is_datatype(&self, datatype: Datatype, value: Expression, supressed_output: bool) -> bool
     {
-        return self.test_variable_declaration(datatype, value, supressedOutput);
+        return self.test_variable_declaration(datatype, value, supressed_output);
     }
-    fn test_variable_declaration_variable(&self, datatype: Datatype, value: Expression, supressOutput: bool) -> bool
+    fn test_variable_declaration_variable(&self, datatype: Datatype, value: Expression, supress_output: bool) -> bool
     {
         let variable = value.syntax.get_variable_expr();
         let name = variable.get_name(); 
         let variable = self.get_variable(name);
-        // println!("var: {}", variable);
         if datatype.datatype != variable.datatype && datatype.is_array != variable.is_array && datatype.array_bounds != variable.array_bounds
         {
-            if !supressOutput
+            if !supress_output
             {
                 println!("variable declaration is not the same type as the variable");
             }
@@ -420,14 +401,15 @@ impl SyntaticAnalyser {
     {
         self.variables.get(&name).unwrap().clone()
     }
-    fn test_variable_declaration_literal(&self, datatype: Datatype, value: Expression, supressOutput: bool) -> bool
+    #[allow(unreachable_patterns)]
+    fn test_variable_declaration_literal(&self, datatype: Datatype, value: Expression, supress_output: bool) -> bool
     {
         match datatype.datatype
         {
             StatementDatatype::Int => {
                 if !value.is_integer_literal()
                 {
-                    if !supressOutput
+                    if !supress_output
                     {
                         println!("variable is not an int");
                     }
@@ -438,7 +420,7 @@ impl SyntaticAnalyser {
             StatementDatatype::Float => {
                 if !value.is_float_literal()
                 {
-                    if !supressOutput
+                    if !supress_output
                     {
                         println!("variable is not a float");
                     }
@@ -449,7 +431,7 @@ impl SyntaticAnalyser {
             StatementDatatype::String => {
                 if !value.is_string_literal()
                 {
-                    if !supressOutput
+                    if !supress_output
                     {
                         println!("variable is not a string");
                     }
@@ -460,7 +442,7 @@ impl SyntaticAnalyser {
             StatementDatatype::Bool => {
                 if !value.is_boolean_literal()
                 {
-                    if !supressOutput
+                    if !supress_output
                     {
                         println!("variable is not a bool");
                     }
@@ -469,7 +451,7 @@ impl SyntaticAnalyser {
                 return true;
             }
             StatementDatatype::Void => {
-                if !supressOutput
+                if !supress_output
                 {
                     println!("variable is void");
                 }
@@ -478,7 +460,7 @@ impl SyntaticAnalyser {
             StatementDatatype::Char => {
                 if !value.is_char_literal()
                 {
-                    if !supressOutput
+                    if !supress_output
                     {
                         println!("variable is not a char");
                     }
@@ -487,7 +469,7 @@ impl SyntaticAnalyser {
                 return true;
             }
             _ => {
-                if !supressOutput
+                if !supress_output
                 {
                     println!("variable is not a valid datatype");
                 }

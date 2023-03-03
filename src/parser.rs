@@ -26,10 +26,8 @@ impl Parser
             if self.peek().token == LexerToken::Identifier
             {
                 let identifier = self.next_token();
-                // println!("Identifier: {}", self.peek().text);
                 if self.peek().token == LexerToken::Colon
                 {
-                    // println!("Colon: {}", self.peek_off(1).text);
                     self.match_token(LexerToken::Colon);
                     let type_: Token;
                     type_ = self.match_token(LexerToken::Keyword);
@@ -68,12 +66,10 @@ impl Parser
                         let expression = Expression::new_assignment_expr(datatype, expr, variable_expr);
                         statements.push(expression);
                     }
-                    // println!("Integer literal: {}", value.text);
                 }
                 else
                 if self.peek().token == LexerToken::Openparenthesis
                 {
-                    // println!("Function call: {}", identifier.text);
                     self.match_token(LexerToken::Openparenthesis);
                     let mut arguments = Vec::<Expression>::new();
                     while self.peek().token != LexerToken::Closeparenthesis

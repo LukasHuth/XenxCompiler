@@ -25,7 +25,6 @@ mod tests
         let p = parser.parse();
         let f = p.first().unwrap();
         f.to_string()
-        // String::from("")
     }
     // generate result string for decl and init
     fn g_r_s_f_d_a_i(type_:&str, value: &str, name: &str) -> String

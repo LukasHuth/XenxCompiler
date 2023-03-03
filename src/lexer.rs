@@ -26,7 +26,6 @@ impl Lexer
         let current = self.next();
         let token: LexerToken;
         let text: String;
-        // println!("Found {}{}", current, self.peek(0));
         match current
         {
             ' ' | '\t' | '\r' | '\n' => self.lex_token(),
