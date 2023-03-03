@@ -1,3 +1,4 @@
+
 use super::lexer::token::Token;
 use super::lexer::token::LexerToken;
 pub mod expression;
@@ -23,6 +24,7 @@ impl Parser
         let mut statements = Vec::<Expression>::new();
         while !self.is_at_end() && self.peek().token != LexerToken::Closebrace
         {
+            let start = self.peek().pos;
             if self.peek().token == LexerToken::Identifier
             {
                 let identifier = self.next_token();
@@ -50,10 +52,10 @@ impl Parser
                     }
                     if self.peek().token != LexerToken::Equals
                     {
-                        let new = Expression::new_integer_literal(0);
+                        let new = Expression::new_integer_literal(0, start);
                         let text = String::from(&identifier.text).to_owned();
-                        let variable_expr = Expression::new_variable_expr(text);
-                        let expression = Expression::new_assignment_expr(datatype.to_owned(), new, variable_expr);
+                        let variable_expr = Expression::new_variable_expr(text, start);
+                        let expression = Expression::new_assignment_expr(datatype.to_owned(), new, variable_expr, start);
                         statements.push(expression);
                     }
                     else
@@ -62,8 +64,8 @@ impl Parser
                         let expr = self.parse_expression();
                         self.match_token(LexerToken::Semicolon);
                         let text = String::from(&identifier.text).to_owned();
-                        let variable_expr = Expression::new_variable_expr(text);
-                        let expression = Expression::new_assignment_expr(datatype, expr, variable_expr);
+                        let variable_expr = Expression::new_variable_expr(text, start);
+                        let expression = Expression::new_assignment_expr(datatype, expr, variable_expr, start);
                         statements.push(expression);
                     }
                 }
@@ -85,7 +87,7 @@ impl Parser
                     if self.peek().token == LexerToken::Semicolon // Function call
                     {
                         self.match_token(LexerToken::Semicolon);
-                        let function_call = Expression::new_call_expr(identifier.text, arguments);
+                        let function_call = Expression::new_call_expr(identifier.text, arguments, start);
                         statements.push(function_call);
                     }
                 }
@@ -96,7 +98,7 @@ impl Parser
                     let expr = self.parse_expression();
                     self.match_token(LexerToken::Semicolon);
                     let text = String::from(&identifier.text).to_owned();
-                    let expression = Expression::new_overwrite_variable_expression(text, expr);
+                    let expression = Expression::new_overwrite_variable_expression(text, expr, start);
                     statements.push(expression);
                 }
             }
@@ -108,13 +110,12 @@ impl Parser
                 {
                     let expr = self.parse_expression();
                     self.match_token(LexerToken::Semicolon);
-                    let expression = Expression::new_return_expr(expr);
+                    let expression = Expression::new_return_expr(expr, start);
                     statements.push(expression);
                 }
                 else
                 if key.text == "func"
                 {
-                    println!("Function definition");
                     let identifier = self.match_token(LexerToken::Identifier);
                     self.match_token(LexerToken::Openparenthesis);
                     let mut arguments = Vec::<Expression>::new();
@@ -137,7 +138,7 @@ impl Parser
                                 inside.push_str("[]");
                             }
                         }
-                        arguments.push(Expression::new_arg_variable_expr(argument.text, type_.text + &inside));
+                        arguments.push(Expression::new_arg_variable_expr(argument.text, type_.text + &inside, start));
                         if self.peek().token != LexerToken::Closeparenthesis
                         {
                             self.match_token(LexerToken::Comma);
@@ -154,7 +155,7 @@ impl Parser
                     self.match_token(LexerToken::Openbrace);
                     let body = self.parse();
                     self.match_token(LexerToken::Closebrace);
-                    let function_definition = Expression::new_function_expr(identifier.text, type_.text, arguments, body);
+                    let function_definition = Expression::new_function_expr(identifier.text, type_.text, arguments, body, start);
                     statements.push(function_definition);
                 }
                 else if key.text == "if"
@@ -172,6 +173,7 @@ impl Parser
     }
     fn parse_if_statement(&mut self, inside: bool) -> Expression
     {
+        let start = self.peek().pos - 2;
         self.match_token(LexerToken::Openparenthesis);
         let condition = self.parse_expression();
         self.match_token(LexerToken::Closeparenthesis);
@@ -189,71 +191,90 @@ impl Parser
                 {
                     self.match_token(LexerToken::Closebrace);
                 }
-                return Expression::new_if_expr(condition, body, else_body);
+                return Expression::new_if_expr(condition, body, else_body, start);
             }
             else
             {
                 self.match_token(LexerToken::Keyword);
                 let else_if_statement = self.parse_if_statement(true);
-                return Expression::new_if_expr(condition, body, vec![else_if_statement]);
+                return Expression::new_if_expr(condition, body, vec![else_if_statement], start);
             }
         }
-        Expression::new_if_expr(condition, body, Vec::new())
+        Expression::new_if_expr(condition, body, Vec::new(), start)
     }
     fn parse_binary_expression(&mut self, precedence: i32) -> Expression
     {
+        let start = self.peek().pos;
         let mut left = self.parse_unary_expression();
         while precedence < self.peek().precedence()
         {
             let operator = self.next_token();
             let right = self.parse_binary_expression(operator.precedence());
-            left = Expression::new_binary_expr(left, operator, right);
+            left = Expression::new_binary_expr(left, operator, right, start);
         }
         return left;
     }
     fn parse_unary_expression(&mut self) -> Expression
     {
+        let start = self.peek().pos;
         if self.peek().token == LexerToken::Minus
         {
             let operator = self.match_token(LexerToken::Minus);
             let right = self.parse_unary_expression();
-            return Expression::new_unary_expr(operator, right);
+            return Expression::new_unary_expr(operator, right, start);
         }
         if self.peek().token == LexerToken::Bang
         {
             let operator = self.match_token(LexerToken::Bang);
             let right = self.parse_unary_expression();
-            return Expression::new_unary_expr(operator, right);
+            return Expression::new_unary_expr(operator, right, start);
         }
         return self.parse_primary_expression();
     }
     fn parse_primary_expression(&mut self) -> Expression
     {
+        let start = self.peek().pos;
         if self.peek().token == LexerToken::Literal
         {
             let literal = self.match_token(LexerToken::Literal);
             if literal.is_boolean()
             {
-                return Expression::new_boolean_literal(literal.text.parse::<bool>().unwrap());
+                return Expression::new_boolean_literal(literal.text.parse::<bool>().unwrap(), start);
             }
             if literal.is_string()
             {
-                return Expression::new_string_literal(literal.text);
+                return Expression::new_string_literal(literal.text, start);
             }
             if literal.is_integer()
             {
-                return Expression::new_integer_literal(literal.text.parse::<i32>().unwrap());
+                return Expression::new_integer_literal(literal.text.parse::<i32>().unwrap(), start);
             }
             if literal.is_float()
             {
-                return Expression::new_float_literal(literal.text.parse::<f32>().unwrap());
+                return Expression::new_float_literal(literal.text.parse::<f32>().unwrap(), start);
             }
             panic!("Invalid type of literal: {}", literal.text)
         }
         if self.peek().token == LexerToken::Identifier
         {
             let identifier = self.match_token(LexerToken::Identifier);
-            return Expression::new_variable_expr(identifier.text);
+            if self.peek().token == LexerToken::Openparenthesis
+            {
+                self.match_token(LexerToken::Openparenthesis);
+                let mut arguments = Vec::new();
+                while self.peek().token != LexerToken::Closeparenthesis
+                {
+                    let argument = self.parse_expression();
+                    arguments.push(argument);
+                    if self.peek().token != LexerToken::Closeparenthesis
+                    {
+                        self.match_token(LexerToken::Comma);
+                    }
+                }
+                self.match_token(LexerToken::Closeparenthesis);
+                return Expression::new_call_expr(identifier.text, arguments, start);
+            }
+            return Expression::new_variable_expr(identifier.text, start);
         }
         if self.peek().token == LexerToken::Openparenthesis
         {
@@ -299,7 +320,7 @@ impl Parser
     {
         if self.current + offset >= self.tokens.len()
         {
-            return Token::new(LexerToken::EOF, "".to_string());
+            return Token::new(LexerToken::EOF, "".to_string(), 0, 0);
         }
         return self.tokens[self.current + offset].clone();
     }

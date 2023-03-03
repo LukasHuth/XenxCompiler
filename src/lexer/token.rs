@@ -4,6 +4,8 @@ use std::fmt;
 pub struct Token {
     pub token: LexerToken,
     pub text: String,
+    pub pos: usize,
+    pub length: usize,
 }
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum LexerToken {
@@ -40,10 +42,12 @@ pub enum LexerToken {
     CloseSquareBracket,
 }
 impl Token {
-    pub fn new(token: LexerToken, text: String) -> Token {
+    pub fn new(token: LexerToken, text: String, pos: usize, length: usize) -> Token {
         Token {
-            token: token,
-            text: text,
+            token,
+            text,
+            pos,
+            length,
         }
     }
     pub fn precedence(&self) -> i32 {
@@ -144,6 +148,8 @@ impl Token {
         Token {
             token: self.token,
             text: self.text.clone(),
+            pos: self.pos.clone(),
+            length: self.length.clone(),
         }
     }
 }

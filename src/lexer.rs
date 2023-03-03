@@ -32,67 +32,67 @@ impl Lexer
             '{' => {
                 token = LexerToken::Openbrace;
                 text = "{".to_string();
-                return Token::new(token, text);
+                return Token::new(token, text, start, self.position);
             },
             '}' => {
                 token = LexerToken::Closebrace;
                 text = "}".to_string();
-                return Token::new(token, text);
+                return Token::new(token, text, start, self.position);
             },
             '[' => {
                 token = LexerToken::OpenSquareBracket;
                 text = "[".to_string();
-                return Token::new(token, text);
+                return Token::new(token, text, start, self.position);
             },
             ']' => {
                 token = LexerToken::CloseSquareBracket;
                 text = "]".to_string();
-                return Token::new(token, text);
+                return Token::new(token, text, start, self.position);
             },
             '+' => {
                 token = LexerToken::Plus;
                 text = "+".to_string();
-                return Token::new(token, text);
+                return Token::new(token, text, start, self.position);
             },
             '-' => {
                 token = LexerToken::Minus;
                 text = "-".to_string();
-                return Token::new(token, text);
+                return Token::new(token, text, start, self.position);
             },
             '*' => {
                 token = LexerToken::Star;
                 text = "*".to_string();
-                return Token::new(token, text);
+                return Token::new(token, text, start, self.position);
             },
             '/' => {
                 token = LexerToken::Slash;
                 text = "/".to_string();
-                return Token::new(token, text);
+                return Token::new(token, text, start, self.position);
             },
             ',' => {
                 token = LexerToken::Comma;
                 text = ",".to_string();
-                return Token::new(token, text);
+                return Token::new(token, text, start, self.position);
             },
             ':' => {
                 token = LexerToken::Colon;
                 text = ":".to_string();
-                return Token::new(token, text);
+                return Token::new(token, text, start, self.position);
             },
             '(' => {
                 token = LexerToken::Openparenthesis;
                 text = "(".to_string();
-                return Token::new(token, text);
+                return Token::new(token, text, start, self.position);
             },
             ')' => {
                 token = LexerToken::Closeparenthesis;
                 text = ")".to_string();
-                return Token::new(token, text);
+                return Token::new(token, text, start, self.position);
             },
             ';' => {
                 token = LexerToken::Semicolon;
                 text = ";".to_string();
-                return Token::new(token, text);
+                return Token::new(token, text, start, self.position);
             },
             '|' => {
                 if self.peek(0) == '|'
@@ -100,11 +100,11 @@ impl Lexer
                     self.next();
                     token = LexerToken::PipePipe;
                     text = "||".to_string();
-                    return Token::new(token, text);
+                    return Token::new(token, text, start, self.position);
                 }
                 token = LexerToken::Pipe;
                 text = "|".to_string();
-                return Token::new(token, text);
+                return Token::new(token, text, start, self.position);
             },
             '&' => {
                 if self.peek(0) == '&'
@@ -112,11 +112,11 @@ impl Lexer
                     self.next();
                     token = LexerToken::AmpersandAmpersand;
                     text = "&&".to_string();
-                    return Token::new(token, text);
+                    return Token::new(token, text, start, self.position);
                 }
                 token = LexerToken::Ampersand;
                 text = "&".to_string();
-                return Token::new(token, text);
+                return Token::new(token, text, start, self.position);
             },
             '=' => {
                 if self.peek(0) == '='
@@ -124,7 +124,7 @@ impl Lexer
                     self.next();
                     token = LexerToken::EqualsEquals;
                     text = "==".to_string();
-                    return Token::new(token, text);
+                    return Token::new(token, text, start, self.position);
                 }
                 else
                 if self.peek(0) == '>'
@@ -132,11 +132,11 @@ impl Lexer
                     self.next();
                     token = LexerToken::Arrow;
                     text = "=>".to_string();
-                    return Token::new(token, text);
+                    return Token::new(token, text, start, self.position);
                 }
                 token = LexerToken::Equals;
                 text = "=".to_string();
-                return Token::new(token, text);
+                return Token::new(token, text, start, self.position);
             },
             '<' => {
                 if self.peek(0) == '='
@@ -144,11 +144,11 @@ impl Lexer
                     self.next();
                     token = LexerToken::LessEquals;
                     text = "<=".to_string();
-                    return Token::new(token, text);
+                    return Token::new(token, text, start, self.position);
                 }
                 token = LexerToken::Less;
                 text = "<".to_string();
-                return Token::new(token, text);
+                return Token::new(token, text, start, self.position);
             },
             '>' => {
                 if self.peek(0) == '='
@@ -156,11 +156,11 @@ impl Lexer
                     self.next();
                     token = LexerToken::GreaterEquals;
                     text = ">=".to_string();
-                    return Token::new(token, text);
+                    return Token::new(token, text, start, self.position);
                 }
                 token = LexerToken::Greater;
                 text = ">".to_string();
-                return Token::new(token, text);
+                return Token::new(token, text, start, self.position);
             },
             '!' => {
                 if self.peek(0) == '='
@@ -168,11 +168,11 @@ impl Lexer
                     self.next();
                     token = LexerToken::BangEquals;
                     text = "!=".to_string();
-                    return Token::new(token, text);
+                    return Token::new(token, text, start, self.position);
                 }
                 token = LexerToken::Bang;
                 text = "!".to_string();
-                return Token::new(token, text);
+                return Token::new(token, text, start, self.position);
             },
             '0'..='9' => {
                 let mut is_float = false;
@@ -186,7 +186,7 @@ impl Lexer
                 }
                 token = LexerToken::Literal;
                 text = self.input[start..self.position].to_string();
-                return Token::new(token, text);
+                return Token::new(token, text, start, self.position);
             },
             '"' => {
                 while self.peek(0) != '"'
@@ -196,7 +196,7 @@ impl Lexer
                 self.next();
                 token = LexerToken::Literal;
                 text = self.input[start..self.position].to_string();
-                return Token::new(token, text);
+                return Token::new(token, text, start, self.position);
             },
             'a'..='z' | 'A'..='Z' => {
                 while self.peek(0).is_alphanumeric()
@@ -218,13 +218,13 @@ impl Lexer
                 {
                     token = LexerToken::Identifier;
                 }
-                return Token::new(token, text);
+                return Token::new(token, text, start, self.position);
             },
             _ =>  {
                 token = LexerToken::BadToken;
                 text = "".to_string();
                 // self.input[start..self.position].to_string();
-                return Token::new(token, text);
+                return Token::new(token, text, start, self.position);
             },
         }
     }

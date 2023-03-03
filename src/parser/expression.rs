@@ -31,6 +31,7 @@ pub struct Expression
 {
     pub tag: ExpressionTag,
     pub syntax: Box<Syntax>,
+    pub start: usize,
 }
 impl Clone for Expression
 {
@@ -40,6 +41,7 @@ impl Clone for Expression
         {
             tag: self.tag.clone(),
             syntax: self.syntax.clone(),
+            start: self.start,
         }
     }
 }
@@ -68,6 +70,10 @@ impl Expression
             ExpressionTag::OverwriteVariableExpr => syntax.overwrite_variable_expr.as_ref().unwrap().to_string(),
             _ => String::new(),
         }
+    }
+    pub fn get_position(&self) -> usize
+    {
+        self.start
     }
     pub fn is_function_declaration(&self) -> bool
     {
@@ -192,126 +198,140 @@ impl Expression
             _ => false,
         }
     }
-    pub fn new_integer_literal(lit: i32) -> Expression
+    pub fn new_integer_literal(lit: i32, start: usize) -> Expression
     {
         Expression
         {
             tag: ExpressionTag::IntegerLiteral,
-            syntax: Box::new(Syntax::new_integer_literal(lit))
+            syntax: Box::new(Syntax::new_integer_literal(lit)),
+            start,
         }
     }
-    pub fn new_string_literal(lit: String) -> Expression
+    pub fn new_string_literal(lit: String, start: usize) -> Expression
     {
         Expression
         {
             tag: ExpressionTag::StringLiteral,
-            syntax: Box::new(Syntax::new_string_literal(lit))
+            syntax: Box::new(Syntax::new_string_literal(lit)),
+            start,
         }
     }
-    pub fn new_boolean_literal(lit: bool) -> Expression
+    pub fn new_boolean_literal(lit: bool, start: usize) -> Expression
     {
         Expression
         {
             tag: ExpressionTag::BooleanLiteral,
-            syntax: Box::new(Syntax::new_boolean_literal(lit))
+            syntax: Box::new(Syntax::new_boolean_literal(lit)),
+            start,
         }
     }
-    pub fn new_float_literal(lit: f32) -> Expression
+    pub fn new_float_literal(lit: f32, start: usize) -> Expression
     {
         Expression
         {
             tag: ExpressionTag::FloatLiteral,
-            syntax: Box::new(Syntax::new_float_literal(lit))
+            syntax: Box::new(Syntax::new_float_literal(lit)),
+            start,
         }
     }
-    pub fn new_variable_expr(value:String) -> Expression
+    pub fn new_variable_expr(value:String, start: usize) -> Expression
     {
         let var_expr = VariableExpression::new(value);
         Expression
         {
             tag: ExpressionTag::VariableExpr,
-            syntax: Box::new(Syntax::new_variable_expr(var_expr))
+            syntax: Box::new(Syntax::new_variable_expr(var_expr)),
+            start,
         }
     }
-    pub fn new_binary_expr(left: Expression, operator: Token, right: Expression) -> Expression
+    pub fn new_binary_expr(left: Expression, operator: Token, right: Expression, start: usize) -> Expression
     {
         let binary_expr = BinaryExpression::new(operator, left, right);
         Expression
         {
             tag: ExpressionTag::BinaryExpr,
-            syntax: Box::new(Syntax::new_binary_expr(binary_expr))
+            syntax: Box::new(Syntax::new_binary_expr(binary_expr)),
+            start,
         }
     }
-    pub fn new_unary_expr(operator: Token, operand: Expression) -> Expression
+    pub fn new_unary_expr(operator: Token, operand: Expression, start: usize) -> Expression
     {
         let unary_expr = UnaryExpression::new(operator, operand);
         Expression
         {
             tag: ExpressionTag::UnaryExpr,
-            syntax: Box::new(Syntax::new_unary_expr(unary_expr))
+            syntax: Box::new(Syntax::new_unary_expr(unary_expr)),
+            start,
         }
     }
-    pub fn new_call_expr(name: String, arguments: Vec<Expression>) -> Expression
+    pub fn new_call_expr(name: String, arguments: Vec<Expression>, start: usize) -> Expression
     {
         let call_expr = CallExpression::new(name, arguments);
         Expression
         {
             tag: ExpressionTag::CallExpr,
-            syntax: Box::new(Syntax::new_call_expr(call_expr))
+            syntax: Box::new(Syntax::new_call_expr(call_expr)),
+            start,
         }
     }
-    pub fn new_assignment_expr(name: String, value: Expression, type_: Expression) -> Expression
+    pub fn new_assignment_expr(name: String, value: Expression, type_: Expression, start: usize) -> Expression
     {
         let assignment_expr = AssignmentExpression::new(name, value, type_);
         Expression
         {
             tag: ExpressionTag::AssignmentExpr,
             syntax: Box::new(Syntax::new_assignment_expr(assignment_expr)),
+            start,
         }
     }
-    pub fn new_function_expr(_name: String, _type_: String, _args: Vec<Expression>, _inside: Vec<Expression>) -> Expression
+    pub fn new_function_expr(_name: String, _type_: String, _args: Vec<Expression>, _inside: Vec<Expression>, start: usize) -> Expression
     {
         let function_expr = FunctionDeclarationExpression::new(_name, _type_, _args, _inside);
         Expression
         {
             tag: ExpressionTag::FunctionDeclarationExpr,
             syntax: Box::new(Syntax::new_function_declaration_expr(function_expr)),
+            start,
         }
     }
-    pub fn new_return_expr(value: Expression) -> Expression
+    pub fn new_return_expr(value: Expression, start: usize) -> Expression
     {
         let return_expr = ReturnExpression::new(value);
         Expression
         {
             tag: ExpressionTag::ReturnExpr,
             syntax: Box::new(Syntax::new_return_expr(return_expr)),
+            start,
         }
     }
-    pub fn new_arg_variable_expr(name: String, type_: String) -> Expression
+    pub fn new_arg_variable_expr(name: String, type_: String, start: usize) -> Expression
     {
         let arg_variable_expr = ArgVariableExpression::new(type_, name);
         Expression
         {
             tag: ExpressionTag::ArgVariableExpr,
             syntax: Box::new(Syntax::new_arg_variable_expr(arg_variable_expr)),
+            start,
         }
     }
-    pub fn new_if_expr(condition: Expression, then: Vec<Expression>, else_: Vec<Expression>) -> Expression
+    pub fn new_if_expr(condition: Expression, then: Vec<Expression>, else_: Vec<Expression>, start: usize) -> Expression
     {
         let if_expr = IfExpression::new(condition, then, else_);
         Expression
         {
             tag: ExpressionTag::IfExpr,
             syntax: Box::new(Syntax::new_if_expr(if_expr)),
+            start,
         }
     }
-    pub fn new_overwrite_variable_expression(name: String, value: Expression) -> Expression
+    pub fn new_overwrite_variable_expression(name: String, value: Expression, start: usize) -> Expression
     {
         let overwrite_variable_expr = OverwriteVariableExpression::new(value, name);
         Expression
         {
             tag: ExpressionTag::OverwriteVariableExpr,
             syntax: Box::new(Syntax::new_overwrite_variable_expr(overwrite_variable_expr)),
+            start,
         }
     }
 

@@ -23,9 +23,10 @@ fn main() {
     let tokens = lexer.lex();
     let mut parser = parser::Parser::new(tokens);
     let statements = parser.parse();
-    let mut syntactic_analyser = syntactic_analyser::SyntaticAnalyser::new(statements);
+    let mut syntactic_analyser = syntactic_analyser::SyntaticAnalyser::new(statements, context.clone());
     let _statements = syntactic_analyser.analyse();
-
+    println!("Statements: {}", _statements.clone().len());
+    // from here i can use _statements to generate code
 }
 #[allow(dead_code)]
 fn export_arguments(mut args: Vec<String>) -> (HashMap<String, String>, Vec<String>) {

@@ -1,6 +1,7 @@
 use std::fmt::Formatter;
 use std::fmt::Error;
 use std::fmt::Display;
+#[derive(Clone)]
 pub struct Statement
 {
     pub name: String,
@@ -78,6 +79,7 @@ impl StatementDatatype
         return string;
     }
 }
+#[derive(PartialEq, Copy, Clone)]
 pub enum StatementType
 {
     Function,

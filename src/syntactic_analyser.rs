@@ -16,20 +16,22 @@ pub struct SyntaticAnalyser {
     pos: usize,
     variables: HashMap<String, Datatype>,
     functions: HashMap<String, (Datatype, Arguments, Vec::<Statement>)>,
+    context: String,
 }
 impl SyntaticAnalyser {
-    pub fn new(statements: Vec<Expression>) -> SyntaticAnalyser {
+    pub fn new(statements: Vec<Expression>, context: String) -> SyntaticAnalyser {
         println!("start syntactic analyser");
         SyntaticAnalyser {
             statements: statements,
             pos: 0,
             variables: HashMap::<String, Datatype>::new(),
             functions: HashMap::<String, (Datatype, Arguments, Vec::<Statement>)>::new(),
+            context: context,
         }
     }
     pub fn analyse(&mut self) -> Vec<Statement>
     {
-        println!("statements: {}", self.statements.len());
+        // println!("statements: {}", self.statements.len());
         let mut statements = Vec::<Statement>::new();
         while self.pos < self.statements.len()
         {
@@ -165,7 +167,8 @@ impl SyntaticAnalyser {
                 let name = call.get_name();
                 if !self.functions.contains_key(&name)
                 {
-                    panic!("function {} does not exist", name);
+                    let err = self.get_line_of_position(statement.get_position());
+                    panic!("function {} does not exist at {}:{}", name, err.0, err.1);
                 }
                 let mut arguments = Vec::<Statement>::new();
                 let function = &self.functions.get(&name).unwrap().1;
@@ -196,12 +199,14 @@ impl SyntaticAnalyser {
                     {
                         if arg.is_literal()
                         {
-                            panic!("argument {} is not valid type", arg.clone().to_string());
+                            let err = self.get_line_of_position(arg.get_position());
+                            panic!("argument {} is not valid type at {}:{}", arg.clone().to_string(), err.0, err.1);
                         }
                         else
                         {
                             let argname = arg.syntax.get_variable_expr().get_name();
-                            panic!("argument {} is not valid type", argname);
+                            let err = self.get_line_of_position(arg.get_position());
+                            panic!("argument {} is not valid type at {}:{}", argname, err.0, err.1);
                         }
                     }
                 }
@@ -220,7 +225,8 @@ impl SyntaticAnalyser {
                 let test = self.is_datatype(datatype.clone(), value, supress_output);
                 if !test
                 {
-                    panic!("variable declaration {} {} is not valid", name, datatype.to_string());
+                    let err = self.get_line_of_position(statement.get_position() + 2);
+                    panic!("variable declaration {} {} is not valid at {}:{}", name, datatype.to_string(), err.0, err.1);
                 }
                 let variable = Statement::new(name.clone(), statement::StatementType::Variable, datatype.datatype, datatype.clone().array_bounds, datatype.clone().is_array);
                 body.push(variable);
@@ -244,6 +250,10 @@ impl SyntaticAnalyser {
         if value.is_binary()
         {
             return self.test_variable_declaration_binary(datatype, value, supress_output);
+        }
+        if value.is_call()
+        {
+            return self.test_variable_declaration_call(datatype, value, supress_output);
         }
         else
         {
@@ -386,16 +396,20 @@ impl SyntaticAnalyser {
     {
         let variable = value.syntax.get_variable_expr();
         let name = variable.get_name(); 
+        // println!("test for: {}", name);
         let variable = self.get_variable(name);
-        if datatype.datatype != variable.datatype && datatype.is_array != variable.is_array && datatype.array_bounds != variable.array_bounds
+        // println!("variable: {} datatype: {}", variable, datatype);
+        // println!("variable: {} datatype: {}", variable.is_array, datatype.is_array);
+        // println!("variable: {:?} datatype: {:?}", variable.array_bounds, datatype.array_bounds);
+        if datatype.datatype == variable.datatype && datatype.is_array == variable.is_array && datatype.array_bounds == variable.array_bounds
         {
-            if !supress_output
-            {
-                println!("variable declaration is not the same type as the variable");
-            }
-            return false;
+            return true;
         }
-        return true;
+        if !supress_output
+        {
+            println!("variable declaration is not the same type as the variable");
+        }
+        return false;
     }
     fn get_variable(&self, name: String) -> Datatype
     {
@@ -478,7 +492,7 @@ impl SyntaticAnalyser {
         }
     }
 
-    fn same_datatype(&self, arg1: &Statement, arg2: Datatype) -> bool {
+    fn same_datatype(&self, arg1: Statement, arg2: Datatype) -> bool {
         let arg1 = arg1.datatype.clone();
         if arg1.datatype != arg2.datatype {
             return false;
@@ -490,6 +504,51 @@ impl SyntaticAnalyser {
             return false;
         }
         return true;
+    }
+
+    fn test_variable_declaration_call(&self, datatype: Datatype, value: Expression, supress_output: bool) -> bool {
+        let call = value.clone().syntax.get_call_expr();
+        let name = call.get_name();
+        let function = self.get_function(name, value.clone().get_position());
+        if datatype.datatype != function.0.datatype {
+            if !supress_output {
+                println!("function return type does not match variable type");
+            }
+            return false;
+        }
+        return true;
+    }
+    fn get_function(&self, name: String, pos: usize) -> (Datatype, Vec<Statement>) {
+        let functions = self.functions.keys().map(|e| e.to_string() ).collect::<Vec<String>>();
+        if !functions.contains(&name) {
+            println!("pos: {}", pos);
+            let err = self.get_line_of_position(pos);
+            panic!("function {} does not exist, called at {}:{}", name, err.0, err.1);
+        }
+        let data = self.functions.get(&name).unwrap().clone();
+        let data = (data.0.clone(), data.1.arguments.clone());
+        return data;
+    }
+    fn get_line_of_position(&self, position: usize) -> (usize, usize) {
+        let mut start = 0;
+        let mut line_ = 1;
+        let mut pos = 0;
+        while pos < self.context.chars().count()
+        {
+            if pos == position
+            {
+                return (line_, start-1);
+            }
+            let line = self.context.chars().nth(pos).unwrap();
+            if line == '\n'
+            {
+                line_ += 1;
+                start = 0;
+            }
+            start += 1;
+            pos += 1;
+        }
+        return (line_, start);
     }
 }
 
