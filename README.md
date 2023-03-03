@@ -105,6 +105,8 @@ else
 ```
 ### TODO
 - make code gen where code is returned by calling functions
+- return doesn't check if the variable exists or if it is the right type
+- function call argument types are not checked as of now
 
 ### Done
 - a: int = 1;
