@@ -209,7 +209,7 @@ impl Expression
             syntax: Box::new(Syntax::new_string_literal(lit))
         }
     }
-    pub(crate) fn new_boolean_literal(lit: bool) -> Expression
+    pub fn new_boolean_literal(lit: bool) -> Expression
     {
         Expression
         {
@@ -217,7 +217,7 @@ impl Expression
             syntax: Box::new(Syntax::new_boolean_literal(lit))
         }
     }
-    pub(crate) fn new_float_literal(lit: f32) -> Expression
+    pub fn new_float_literal(lit: f32) -> Expression
     {
         Expression
         {
@@ -270,7 +270,7 @@ impl Expression
             syntax: Box::new(Syntax::new_assignment_expr(assignment_expr)),
         }
     }
-    pub(crate) fn new_function_expr(_name: String, _type_: String, _args: Vec<Expression>, _inside: Vec<Expression>) -> Expression
+    pub fn new_function_expr(_name: String, _type_: String, _args: Vec<Expression>, _inside: Vec<Expression>) -> Expression
     {
         let function_expr = FunctionDeclarationExpression::new(_name, _type_, _args, _inside);
         Expression
@@ -279,7 +279,7 @@ impl Expression
             syntax: Box::new(Syntax::new_function_declaration_expr(function_expr)),
         }
     }
-    pub(crate) fn new_return_expr(value: Expression) -> Expression
+    pub fn new_return_expr(value: Expression) -> Expression
     {
         let return_expr = ReturnExpression::new(value);
         Expression
@@ -288,7 +288,7 @@ impl Expression
             syntax: Box::new(Syntax::new_return_expr(return_expr)),
         }
     }
-    pub(crate) fn new_arg_variable_expr(name: String, type_: String) -> Expression
+    pub fn new_arg_variable_expr(name: String, type_: String) -> Expression
     {
         let arg_variable_expr = ArgVariableExpression::new(type_, name);
         Expression
@@ -297,7 +297,7 @@ impl Expression
             syntax: Box::new(Syntax::new_arg_variable_expr(arg_variable_expr)),
         }
     }
-    pub(crate) fn new_if_expr(condition: Expression, then: Vec<Expression>, else_: Vec<Expression>) -> Expression
+    pub fn new_if_expr(condition: Expression, then: Vec<Expression>, else_: Vec<Expression>) -> Expression
     {
         let if_expr = IfExpression::new(condition, then, else_);
         Expression
@@ -306,7 +306,7 @@ impl Expression
             syntax: Box::new(Syntax::new_if_expr(if_expr)),
         }
     }
-    pub(crate) fn new_overwrite_variable_expression(name: String, value: Expression) -> Expression
+    pub fn new_overwrite_variable_expression(name: String, value: Expression) -> Expression
     {
         let overwrite_variable_expr = OverwriteVariableExpression::new(value, name);
         Expression
@@ -314,6 +314,19 @@ impl Expression
             tag: ExpressionTag::OverwriteVariableExpr,
             syntax: Box::new(Syntax::new_overwrite_variable_expr(overwrite_variable_expr)),
         }
+    }
+
+    pub fn is_char_literal(&self) -> bool {
+        if !self.is_string_literal()
+        {
+            return false;
+        }
+        let string_literal = self.syntax.get_string_literal();
+        if string_literal.len() != 1
+        {
+            return false;
+        }
+        return true;
     }
     
 }

@@ -22,4 +22,12 @@ impl CallExpression
     {
         CallExpression{name, arguments}
     }
+    pub fn get_name(&self) -> String
+    {
+        self.name.clone()
+    }
+    pub fn get_args(&self) -> Vec<Expression>
+    {
+        self.arguments.clone()
+    }
 }
