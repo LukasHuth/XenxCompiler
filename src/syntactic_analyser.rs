@@ -20,7 +20,7 @@ pub struct SyntaticAnalyser {
 }
 impl SyntaticAnalyser {
     pub fn new(statements: Vec<Expression>, context: String) -> SyntaticAnalyser {
-        println!("start syntactic analyser");
+        // println!("start syntactic analyser");
         SyntaticAnalyser {
             statements: statements,
             pos: 0,
@@ -48,8 +48,8 @@ impl SyntaticAnalyser {
             let mut function = Statement::new_datatype(name.clone(), StatementType::Function, datatype.clone());
             let body = self.get_body(element.syntax.get_function_declaration_expr().get_inside(), datatype.clone());
             function.statements = body.clone();
-            println!("function: {}", function.to_string());
-            println!("body: {}", body.len());
+            // println!("function: {}", function.to_string());
+            // println!("body: {}", body.len());
             self.functions.insert(name, (datatype, parameters, body));
             statements.push(function);
             self.pos += 1;
@@ -234,7 +234,7 @@ impl SyntaticAnalyser {
                     panic!("variable declaration {} {} is not valid at {}:{}", name, datatype.to_string(), err.0, err.1);
                 }
                 let mut variable = Statement::new(name.clone(), statement::StatementType::Variable, datatype.datatype, datatype.clone().array_bounds, datatype.clone().is_array);
-                println!("variable declaration {} {} is valid", name, datatype.to_string());
+                // println!("variable declaration {} {} is valid", name, datatype.to_string());
                 variable.set_value(value.clone());
                 body.push(variable);
                 self.variables.insert(name.clone(), datatype.clone());
@@ -242,7 +242,7 @@ impl SyntaticAnalyser {
             else
             if statement.is_return()
             {
-                println!("return statement");
+                // println!("return statement");
                 let return_expr = statement.syntax.get_return_expr();
                 let value = return_expr.get_value();
                 let datatype = Datatype::new(StatementDatatype::Int, Vec::<i32>::new(), false); // TODO: get datatype of function
@@ -261,13 +261,13 @@ impl SyntaticAnalyser {
                     {
                         panic!("return value is not integer literal (not implemented)");
                     }
-                    println!("return value is integer literal");
-                    println!("{} | {}", value.to_string(), self.get_lit_datatype(value.to_string()).to_string());
+                    // println!("return value is integer literal");
+                    // println!("{} | {}", value.to_string(), self.get_lit_datatype(value.to_string()).to_string());
                     if !self.get_lit_datatype(value.to_string()).is_same(&functiondatatype)
                     {
                         panic!("return value is not same as function datatype");
                     }
-                    println!("get_integer_literal (1)");
+                    // println!("get_integer_literal (1)");
                     let value = value.syntax.get_integer_literal();
                     let datatype = self.get_datatype(datatype.to_string());
                     let value = Statement::new(value.to_string(), StatementType::Literal, datatype.datatype.clone(), datatype.array_bounds.clone(), datatype.is_array.clone());
@@ -299,10 +299,15 @@ impl SyntaticAnalyser {
             {
                 let variable_overwrite = statement.syntax.get_overwrite_variable_expr();
                 let name = variable_overwrite.get_name();
-                println!("variable overwrite {}", name);
+                if !self.variables.contains_key(&name)
+                {
+                    let err = self.get_line_of_position(statement.get_position() + 2);
+                    panic!("variable overwrite {} is not valid at {}:{}, because variable is not declared!", name, err.0, err.1);
+                }
+                // println!("variable overwrite {}", name);
                 let datatype = self.get_variable(name.clone());
                 let value = variable_overwrite.get_value();
-                println!("value:|: {}", value.to_string());
+                // println!("value:|: {}", value.to_string());
                 let supress_output = true; // show error output if variable declaration is not valid (only visible if false)
                 let test = self.is_datatype(datatype.clone(), value.clone(), supress_output);
                 if !test
@@ -311,7 +316,7 @@ impl SyntaticAnalyser {
                     panic!("variable overwrite {} {} is not valid at {}:{}", name, datatype.to_string(), err.0, err.1);
                 }
                 let mut variable = Statement::new(name.clone(), statement::StatementType::Variable, datatype.datatype, datatype.clone().array_bounds, datatype.clone().is_array);
-                println!("variable overwrite {} {} is valid", name, datatype.to_string());
+                // println!("variable overwrite {} {} is valid", name, datatype.to_string());
                 if value.is_literal()
                 {
                     variable.set_value(value.clone());
@@ -501,7 +506,7 @@ impl SyntaticAnalyser {
     }
     fn test_variable_declaration_variable(&self, datatype: Datatype, value: Expression, supress_output: bool) -> bool
     {
-        println!("test for: {}", value.to_string());
+        // println!("test for: {}", value.to_string());
         let variable = value.syntax.get_variable_expr();
         let name = variable.get_name(); 
         // println!("test for: {}", name);
@@ -526,7 +531,7 @@ impl SyntaticAnalyser {
     #[allow(unreachable_patterns)]
     fn test_variable_declaration_literal(&self, datatype: Datatype, value: Expression, supress_output: bool) -> bool
     {
-        println!("test for: {}", value.to_string());
+        // println!("test for: {}", value.to_string());
         match datatype.datatype
         {
             StatementDatatype::Int => {
@@ -620,8 +625,8 @@ impl SyntaticAnalyser {
         let name = call.get_name();
         let args = call.get_args();
         let function = self.get_function(name, value.clone().get_position());
-        println!("function: {}", function.0.to_string());
-        println!("datatype: {}", datatype.to_string());
+        // println!("function: {}", function.0.to_string());
+        // println!("datatype: {}", datatype.to_string());
         if args.len() != function.1.len() {
             if !supress_output {
                 println!("function call does not have the same amount of arguments as the function");
@@ -650,7 +655,7 @@ impl SyntaticAnalyser {
     fn get_function(&self, name: String, pos: usize) -> (Datatype, Vec<Statement>) {
         let functions = self.functions.keys().map(|e| e.to_string() ).collect::<Vec<String>>();
         if !functions.contains(&name) {
-            println!("pos: {}", pos);
+            // println!("pos: {}", pos);
             let err = self.get_line_of_position(pos);
             panic!("function {} does not exist, called at {}:{}", name, err.0, err.1);
         }

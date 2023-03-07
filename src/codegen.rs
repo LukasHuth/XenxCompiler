@@ -74,6 +74,7 @@ impl Codegen
             Ok(_) => {},
             Err(_) => {panic!("Failed to remove out.o");},
         }
+        println!("Compiled to {}", path);
     }
     fn genfunction(&mut self, statement: Statement) -> String
     {
@@ -82,20 +83,20 @@ impl Codegen
         let mut data = String::new();
         data.push_str(statement.name.as_str());
         data.push_str(":\n");
-        println!("statements: {}", statement.statements.len());
+        // println!("statements: {}", statement.statements.len());
         for expr in statement.statements
         {
-            println!("|expr: {}", expr.to_string());
-            println!("|type: {}", expr.type_.to_string());
+            // println!("|expr: {}", expr.to_string());
+            // println!("|type: {}", expr.type_.to_string());
             if expr.type_ == StatementType::Variable
             {
-                println!("Assignment");
+                // println!("Assignment");
                 let str = self.genassignment(expr.clone());
                 data.push_str(str.as_str());
             }
             if expr.type_ == StatementType::Return
             {
-                println!("Return");
+                // println!("Return");
                 let str = self.genreturn(expr.clone());
                 data.push_str(str.as_str());
             }
@@ -130,7 +131,7 @@ impl Codegen
     }
     fn genassignment(&mut self, statement: Statement) -> String
     {
-        println!("genassignment({})", statement.to_string());
+        // println!("genassignment({})", statement.to_string());
         let var = statement.clone();
         let name = var.name.clone();
         if var.datatype.datatype != StatementDatatype::Int
@@ -154,7 +155,7 @@ impl Codegen
         if value.type_ == StatementType::Literal
         {
             let value = value.name.clone();
-            println!("{} = {}", name, value);
+            // println!("{} = {}", name, value);
             let value = value.parse::<i32>().unwrap();
             self.vars.insert(name, pos);
             return format!("movl ${}, {} + int\n", value, pos);
@@ -162,7 +163,7 @@ impl Codegen
         if value.type_ == StatementType::Call // TODO: till now only no args are supported
         {
             let value = value.name.clone();
-            println!("{} = {}", name, value);
+            // println!("{} = {}", name, value);
             self.vars.insert(name, pos);
             return format!("call {}\nmovl %eax, {} + int\n", value, pos);
         }
