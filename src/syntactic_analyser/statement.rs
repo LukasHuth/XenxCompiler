@@ -34,6 +34,29 @@ impl Datatype
             is_array,
         }
     }
+    pub fn is_same(&self, other: &Datatype) -> bool
+    {
+        if self.datatype != other.datatype
+        {
+            return false;
+        }
+        if self.is_array != other.is_array
+        {
+            return false;
+        }
+        if self.array_bounds.len() != other.array_bounds.len()
+        {
+            return false;
+        }
+        for i in 0..self.array_bounds.len()
+        {
+            if self.array_bounds[i] != other.array_bounds[i]
+            {
+                return false;
+            }
+        }
+        return true;
+    }
     pub fn to_string(&self) -> String
     {
         let mut string = String::new();
@@ -93,6 +116,27 @@ pub enum StatementType
     Assignment,
     Argument,
 }
+impl StatementType
+{
+    pub fn to_string(&self) -> String
+    {
+        let mut string = String::new();
+        match self
+        {
+            StatementType::Function => string.push_str("Function"),
+            StatementType::Variable => string.push_str("Variable"),
+            StatementType::Class => string.push_str("Class"),
+            StatementType::Call => string.push_str("Call"),
+            StatementType::Return => string.push_str("Return"),
+            StatementType::If => string.push_str("If"),
+            StatementType::Else => string.push_str("Else"),
+            StatementType::Literal => string.push_str("Literal"),
+            StatementType::Assignment => string.push_str("Assignment"),
+            StatementType::Argument => string.push_str("Argument"),
+        }
+        return string;
+    }
+}
 impl Statement
 {
     pub fn new(name: String, type_: StatementType, datatype: StatementDatatype, array_bounds: Vec<i32>, is_array: bool) -> Statement
@@ -130,6 +174,65 @@ impl Statement
     }
     pub fn to_string(&self) -> String
     {
-        todo!();
+        format!("{}: {} {}", self.name, self.type_.to_string(), self.datatype.to_string())
     }
+    pub fn set_value(&mut self, value: crate::parser::expression::Expression) {
+        self.statements.push(generate_statement_from_expression(value));
+    }
+
+    pub fn new_return(clone_1: Statement, datatype: Datatype) -> Statement
+    {
+        let ret = String::from("return");
+        Statement {
+            name: ret,
+            type_: StatementType::Return,
+            datatype: datatype,
+            statements: vec![clone_1],
+        }
+    }
+}
+fn generate_statement_from_expression(expression: crate::parser::expression::Expression) -> Statement {
+    if !expression.is_literal()
+    {
+        panic!("Expression is not a literal (not implemented)");
+    }
+    let datatype: StatementDatatype;
+    if expression.is_integer_literal()
+    {
+        datatype = StatementDatatype::Int;
+    }
+    else if expression.is_float_literal()
+    {
+        datatype = StatementDatatype::Float;
+    }
+    else if expression.is_string_literal()
+    {
+        datatype = StatementDatatype::String;
+    }
+    else if expression.is_boolean_literal()
+    {
+        datatype = StatementDatatype::Bool;
+    }
+    else if expression.is_char_literal()
+    {
+        datatype = StatementDatatype::Char;
+    }
+    else
+    {
+        panic!("Expression is not a literal (not implemented)");
+    }
+    let datatype = Datatype
+    {
+        datatype,
+        array_bounds: Vec::<i32>::new(),
+        is_array: false,
+    };
+    let statement = Statement
+    {
+        name: expression.to_string(),
+        type_: StatementType::Literal,
+        datatype,
+        statements: Vec::<Statement>::new(),
+    };
+    statement
 }

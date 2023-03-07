@@ -45,8 +45,11 @@ impl SyntaticAnalyser {
             let name = function_declaration_expr.get_name();
             let datatype = self.get_datatype(function_declaration_expr.get_type());
             let parameters = self.get_parameters(function_declaration_expr);
-            let function = Statement::new_datatype(name.clone(), StatementType::Function, datatype.clone());
-            let body = self.get_body(element.syntax.get_function_declaration_expr().get_inside());
+            let mut function = Statement::new_datatype(name.clone(), StatementType::Function, datatype.clone());
+            let body = self.get_body(element.syntax.get_function_declaration_expr().get_inside(), datatype.clone());
+            function.statements = body.clone();
+            println!("function: {}", function.to_string());
+            println!("body: {}", body.len());
             self.functions.insert(name, (datatype, parameters, body));
             statements.push(function);
             self.pos += 1;
@@ -128,7 +131,7 @@ impl SyntaticAnalyser {
         return parameters;
     }
     #[allow(dead_code)]
-    fn get_lit_datatype(&self, string: String) -> StatementDatatype
+    fn get_lit_datatype(&self, string: String) -> Datatype
     {
         let datatype: StatementDatatype;
         let datastring = string.clone();
@@ -154,11 +157,13 @@ impl SyntaticAnalyser {
                 }
             },
         }
+        let datatype = Datatype::new(datatype, vec![], false);
         return datatype;
     }
-    fn get_body(&mut self, statements: Vec<Expression>) -> Vec<Statement>
+    fn get_body(&mut self, statements: Vec<Expression>, functiondatatype: Datatype) -> Vec<Statement>
     {
         let mut body = Vec::<Statement>::new();
+        let mut returned = false;
         for statement in statements
         {
             if statement.is_call() // function call
@@ -222,18 +227,120 @@ impl SyntaticAnalyser {
                 let datatype = self.get_datatype(variable_declaration.get_type());
                 let value = variable_declaration.get_value();
                 let supress_output = true; // show error output if variable declaration is not valid (only visible if false)
-                let test = self.is_datatype(datatype.clone(), value, supress_output);
+                let test = self.is_datatype(datatype.clone(), value.clone(), supress_output);
                 if !test
                 {
                     let err = self.get_line_of_position(statement.get_position() + 2);
                     panic!("variable declaration {} {} is not valid at {}:{}", name, datatype.to_string(), err.0, err.1);
                 }
-                let variable = Statement::new(name.clone(), statement::StatementType::Variable, datatype.datatype, datatype.clone().array_bounds, datatype.clone().is_array);
+                let mut variable = Statement::new(name.clone(), statement::StatementType::Variable, datatype.datatype, datatype.clone().array_bounds, datatype.clone().is_array);
+                println!("variable declaration {} {} is valid", name, datatype.to_string());
+                variable.set_value(value.clone());
                 body.push(variable);
                 self.variables.insert(name.clone(), datatype.clone());
             }
+            else
+            if statement.is_return()
+            {
+                println!("return statement");
+                let return_expr = statement.syntax.get_return_expr();
+                let value = return_expr.get_value();
+                let datatype = Datatype::new(StatementDatatype::Int, Vec::<i32>::new(), false); // TODO: get datatype of function
+                let supress_output = true; // show error output if variable declaration is not valid (only visible if false)
+                let test = self.is_datatype(datatype.clone(), value.clone(), supress_output);
+                if !test
+                {
+                    let err = self.get_line_of_position(statement.get_position() + 2);
+                    panic!("return {} {} is not valid at {}:{}", value.clone().to_string(), datatype.to_string(), err.0, err.1);
+                }
+                // let value = self.get_body(vec![value.clone()]);
+                // let value = value.get(0).unwrap();
+                if value.is_literal()
+                {
+                    if !value.is_integer_literal()
+                    {
+                        panic!("return value is not integer literal (not implemented)");
+                    }
+                    println!("return value is integer literal");
+                    println!("{} | {}", value.to_string(), self.get_lit_datatype(value.to_string()).to_string());
+                    if !self.get_lit_datatype(value.to_string()).is_same(&functiondatatype)
+                    {
+                        panic!("return value is not same as function datatype");
+                    }
+                    println!("get_integer_literal (1)");
+                    let value = value.syntax.get_integer_literal();
+                    let datatype = self.get_datatype(datatype.to_string());
+                    let value = Statement::new(value.to_string(), StatementType::Literal, datatype.datatype.clone(), datatype.array_bounds.clone(), datatype.is_array.clone());
+                    let return_statement = Statement::new_return(value.clone(), datatype.clone());
+                    body.push(return_statement);
+                }
+                else
+                if value.is_variable()
+                {
+                    let value = value.syntax.get_variable_expr();
+                    let name = value.get_name();
+                    let datatype = self.get_variable(name.clone());
+                    if !datatype.is_same(&functiondatatype)
+                    {
+                        panic!("return value is not same as function datatype");
+                    }
+                    let value = Statement::new(name.clone(), StatementType::Variable, datatype.datatype.clone(), datatype.array_bounds.clone(), datatype.is_array.clone());
+                    let return_statement = Statement::new_return(value.clone(), datatype.clone());
+                    body.push(return_statement);
+                }
+                else
+                {
+                    panic!("return value is not literal or variable (not implemented)");
+                }
+                returned = true;
+            }
+            else
+            if statement.is_variable_overwrite()
+            {
+                let variable_overwrite = statement.syntax.get_overwrite_variable_expr();
+                let name = variable_overwrite.get_name();
+                println!("variable overwrite {}", name);
+                let datatype = self.get_variable(name.clone());
+                let value = variable_overwrite.get_value();
+                println!("value:|: {}", value.to_string());
+                let supress_output = true; // show error output if variable declaration is not valid (only visible if false)
+                let test = self.is_datatype(datatype.clone(), value.clone(), supress_output);
+                if !test
+                {
+                    let err = self.get_line_of_position(statement.get_position() + 2);
+                    panic!("variable overwrite {} {} is not valid at {}:{}", name, datatype.to_string(), err.0, err.1);
+                }
+                let mut variable = Statement::new(name.clone(), statement::StatementType::Variable, datatype.datatype, datatype.clone().array_bounds, datatype.clone().is_array);
+                println!("variable overwrite {} {} is valid", name, datatype.to_string());
+                if value.is_literal()
+                {
+                    variable.set_value(value.clone());
+                }
+                else
+                {
+                    let value = self.parse_expr(value);
+                    variable.statements.push(value.clone());
+                }
+                body.push(variable);
+            }
         }
-        return vec![];
+        if !returned && functiondatatype.datatype != StatementDatatype::Void
+        {
+            panic!("function does not return a value");
+        }
+        return body;
+    }
+    fn parse_expr(&self, expression: Expression) -> Statement
+    {
+        if expression.is_call()
+        {
+            let call = expression.syntax.get_call_expr();
+            let name = call.get_name();
+            let _args = call.get_args(); // TODO: not yet inmplemented
+            let return_type = self.get_function(name.clone(), 0);
+            return Statement::new_call(name.clone(), vec![], return_type.0);
+        }
+        panic!("expression is not call");
     }
     fn test_variable_declaration(&self,datatype: Datatype, value: Expression, supress_output: bool) -> bool
     {

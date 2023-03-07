@@ -15,4 +15,11 @@ impl OverwriteVariableExpression
     {
         OverwriteVariableExpression{value, name}
     }
+
+    pub fn get_name(&self) -> String {
+        return self.name.clone();
+    }
+    pub fn get_value(&self) -> Expression {
+        return self.value.clone();
+    }
 }

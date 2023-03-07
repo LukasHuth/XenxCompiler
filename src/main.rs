@@ -2,6 +2,7 @@ use std::collections::HashMap;
 pub mod lexer;
 pub mod parser;
 pub mod syntactic_analyser;
+pub mod codegen;
 mod test;
 // https://norasandler.com/2017/11/29/Write-a-Compiler.html
 #[allow(dead_code)]
@@ -26,6 +27,12 @@ fn main() {
     let mut syntactic_analyser = syntactic_analyser::SyntaticAnalyser::new(statements, context.clone());
     let _statements = syntactic_analyser.analyse();
     println!("Statements: {}", _statements.clone().len());
+    let mut var_count = codegen::VariableSpace::new();
+    var_count.inc_int();
+    let mut codegen = codegen::Codegen::new(_statements, var_count);
+    codegen.generate();
+    codegen.save_asm();
+    codegen.compile("out");
     // from here i can use _statements to generate code
 }
 #[allow(dead_code)]

@@ -14,4 +14,8 @@ impl ReturnExpression
     {
         ReturnExpression{value}
     }
+
+    pub fn get_value(&self) -> Expression {
+        return self.value.clone();
+    }
 }

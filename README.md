@@ -105,7 +105,7 @@ else
 ```
 ### TODO
 - make code gen where code is returned by calling functions
-- return doesn't check if the variable exists or if it is the right type
+- count in syntactic analyser how many times variables of an specific type are initialized and how much the max at the same time are
 - function call argument types are not checked as of now
 
 ### Done

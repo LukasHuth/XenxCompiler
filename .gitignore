@@ -1,2 +1,7 @@
 /target
 *.xenx
+*.s
+*.o
+*.out
+*.sh
+out
