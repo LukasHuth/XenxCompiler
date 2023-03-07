@@ -394,6 +394,7 @@ impl SyntaticAnalyser {
     }
     fn test_variable_declaration_variable(&self, datatype: Datatype, value: Expression, supress_output: bool) -> bool
     {
+        println!("test for: {}", value.to_string());
         let variable = value.syntax.get_variable_expr();
         let name = variable.get_name(); 
         // println!("test for: {}", name);
@@ -418,6 +419,7 @@ impl SyntaticAnalyser {
     #[allow(unreachable_patterns)]
     fn test_variable_declaration_literal(&self, datatype: Datatype, value: Expression, supress_output: bool) -> bool
     {
+        println!("test for: {}", value.to_string());
         match datatype.datatype
         {
             StatementDatatype::Int => {
@@ -509,7 +511,27 @@ impl SyntaticAnalyser {
     fn test_variable_declaration_call(&self, datatype: Datatype, value: Expression, supress_output: bool) -> bool {
         let call = value.clone().syntax.get_call_expr();
         let name = call.get_name();
+        let args = call.get_args();
         let function = self.get_function(name, value.clone().get_position());
+        println!("function: {}", function.0.to_string());
+        println!("datatype: {}", datatype.to_string());
+        if args.len() != function.1.len() {
+            if !supress_output {
+                println!("function call does not have the same amount of arguments as the function");
+            }
+            return false;
+        }
+        for i in 0..args.len() {
+            let arg = args[i].clone();
+            let arg2 = function.1[i].clone();
+            let arg2 = arg2.datatype;
+            if !self.test_variable_declaration(arg2, arg, false) {
+                if !supress_output {
+                    println!("function call does not have the same datatype as the function");
+                }
+                return false;
+            }
+        }
         if datatype.datatype != function.0.datatype {
             if !supress_output {
                 println!("function return type does not match variable type");
