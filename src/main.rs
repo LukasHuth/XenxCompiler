@@ -18,12 +18,28 @@ fn main() {
     }
     let filename = &args[1];
     // set outfile
-    let outfile = if dash_args.contains_key("o") {
-        dash_args.get("o").unwrap().clone()
-    } else {
-        "out".to_string()
-    };
+    let outfile: String;
+    {
+        outfile = if dash_args.contains_key("o") {
+            dash_args.get("o").unwrap().clone()
+        } else {
+            "out".to_string()
+        };
+    }
     println!("outfile: {}", outfile);
+    let os: codegen::OS;
+    {
+        os = if dash_args.contains_key("f") {
+            let os = dash_args.get("f").unwrap().clone();
+            if os == "elf" {
+                codegen::OS::Linux
+            } else {
+                panic!("OS not supported");
+            }
+        } else {
+            codegen::OS::Linux
+        }
+    }
     // let filename = "test.xenx";
     println!("Reading file: {}", filename);
     let context = std::fs::read_to_string(filename).expect("Unable to read file");
@@ -34,12 +50,8 @@ fn main() {
     let mut syntactic_analyser = syntactic_analyser::SyntaticAnalyser::new(statements, context.clone());
     let _statements = syntactic_analyser.analyse();
     // println!("Statements: {}", _statements.clone().len());
-
-    let mut var_count = codegen::VariableSpace::new();
-    var_count.inc_int();
-    let mut codegen = codegen::Codegen::new(_statements, var_count);
+    let mut codegen = codegen::Codegen::new(_statements, os);
     codegen.generate();
-    codegen.save_asm();
     codegen.compile(outfile.as_str());
     // from here i can use _statements to generate code
 }

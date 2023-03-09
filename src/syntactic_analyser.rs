@@ -345,6 +345,14 @@ impl SyntaticAnalyser {
             let return_type = self.get_function(name.clone(), 0);
             return Statement::new_call(name.clone(), vec![], return_type.0);
         }
+        if expression.is_variable()
+        {
+            let variable = expression.syntax.get_variable_expr();
+            let name = variable.get_name();
+            let datatype = self.get_variable(name.clone());
+            return Statement::new(name.clone(), StatementType::Variable, datatype.datatype, datatype.array_bounds, datatype.is_array);
+        }
+        println!("expression: {}", expression.to_string());
         panic!("expression is not call");
     }
     fn test_variable_declaration(&self,datatype: Datatype, value: Expression, supress_output: bool) -> bool

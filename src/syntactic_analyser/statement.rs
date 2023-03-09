@@ -191,9 +191,22 @@ impl Statement
         }
     }
 }
-fn generate_statement_from_expression(expression: crate::parser::expression::Expression) -> Statement {
+fn generate_statement_from_expression(expression: super::Expression) -> Statement {
+    if expression.is_variable()
+    {
+        let var = expression.syntax.get_variable_expr();
+        let name = var.get_name();
+        let datatype = Datatype
+        {
+            datatype: StatementDatatype::Int,
+            array_bounds: Vec::<i32>::new(),
+            is_array: false,
+        };
+        return Statement::new_datatype(name, StatementType::Variable, datatype);
+    }
     if !expression.is_literal()
     {
+        println!("Expression: {}", expression.to_string());
         panic!("Expression is not a literal (not implemented)");
     }
     let datatype: StatementDatatype;
