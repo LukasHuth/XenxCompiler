@@ -7,8 +7,8 @@ use statement::StatementDatatype;
 
 mod util;
 
-use self::arguments::Arguments;
-use self::statement::Datatype;
+use arguments::Arguments;
+use statement::Datatype;
 
 use super::lexer::token::LexerToken;
 use super::parser::expression::Expression;
@@ -64,60 +64,18 @@ impl SyntaticAnalyser {
         while datatype.ends_with("]")
         {
             is_array = true;
-            let datatype = self.remove_n_chars_from_behind(datatype.clone(), 1);
+            let datatype = util::remove_n_chars_from_behind(datatype.clone(), 1);
             let split = datatype.split("[");
             let split = split.last().unwrap();
             let number = split.parse::<i32>().unwrap();
-            let datatype = self.remove_n_chars_from_behind(datatype.clone(), split.len());
+            let datatype = util::remove_n_chars_from_behind(datatype.clone(), split.len());
             dim.push(number);
-            self.remove_n_chars_from_behind(datatype.clone(), 1);
+            util::remove_n_chars_from_behind(datatype.clone(), 1);
         }
-        let datatype = self.get_datatype_from_string(datatype);
+        let datatype = util::get_datatype_from_string(datatype);
         let datatype = Datatype::new(datatype, dim, is_array);
         return datatype;
     }
-    fn get_datatype_from_string(&self, datastring: String) -> StatementDatatype
-    {
-        let mut datatype = StatementDatatype::Void;
-        let datastring = datastring.clone();
-        let datastring = datastring.to_lowercase();
-        let datastring = datastring.trim();
-        if datastring == "int"
-        {
-            datatype = StatementDatatype::Int;
-        }
-        else
-        if datastring == "float"
-        {
-            datatype = StatementDatatype::Float;
-        }
-        else
-        if datastring == "string"
-        {
-            datatype = StatementDatatype::String;
-        }
-        else
-        if datastring == "bool"
-        {
-            datatype = StatementDatatype::Bool;
-        }
-        else
-        if datastring == "void"
-        {
-            datatype = StatementDatatype::Void;
-        }
-        return datatype;
-    }
-    fn remove_n_chars_from_behind(&self, string: String, n: usize) -> String
-    {
-        let mut string = string;
-        for _ in 0..n
-        {
-            string.pop();
-        }
-        return string;
-    }
-
     fn get_parameters(&self, function_declaration_expr: crate::parser::expression::FunctionDeclarationExpression) -> Arguments
     {
         let mut parameters = Arguments::new(vec![]);
@@ -129,36 +87,6 @@ impl SyntaticAnalyser {
             parameters.push(Statement::new(name, statement::StatementType::Argument, datatype.datatype, datatype.array_bounds, datatype.is_array));
         }
         return parameters;
-    }
-    #[allow(dead_code)]
-    fn get_lit_datatype(&self, string: String) -> Datatype
-    {
-        let datatype: StatementDatatype;
-        let datastring = string.clone();
-        let datastring = datastring.to_lowercase();
-        let datastring = datastring.trim();
-        match string.parse::<i32>()
-        {
-            Ok(_) => datatype = StatementDatatype::Int,
-            Err(_) => {
-                match string.parse::<f32>()
-                {
-                    Ok(_) => datatype = StatementDatatype::Float,
-                    Err(_) => {
-                        if datastring == "true" || datastring == "false"
-                        {
-                            datatype = StatementDatatype::Bool;
-                        }
-                        else
-                        {
-                            datatype = StatementDatatype::String;
-                        }
-                    }
-                }
-            },
-        }
-        let datatype = Datatype::new(datatype, vec![], false);
-        return datatype;
     }
     fn get_body(&mut self, statements: Vec<Expression>, functiondatatype: Datatype) -> Vec<Statement>
     {
@@ -173,7 +101,7 @@ impl SyntaticAnalyser {
                 let name = call.get_name();
                 if !self.functions.contains_key(&name)
                 {
-                    let err = self.get_line_of_position(statement.get_position());
+                    let err = util::get_line_of_position(self.context.clone(), statement.get_position());
                     panic!("function {} does not exist at {}:{}", name, err.0, err.1);
                 }
                 let mut arguments = Vec::<Statement>::new();
@@ -193,7 +121,7 @@ impl SyntaticAnalyser {
                     {
                         let argname = arg.syntax.get_variable_expr().get_name();
                         let arg = util::get_variable(argname.clone(), &variables);
-                        same_datatype = self.same_datatype(farg.clone(), arg.clone());
+                        same_datatype = util::same_datatype(farg.clone(), arg.clone());
                     }
                     if same_datatype
                     {
@@ -205,13 +133,13 @@ impl SyntaticAnalyser {
                     {
                         if arg.is_literal()
                         {
-                            let err = self.get_line_of_position(arg.get_position());
+                            let err = util::get_line_of_position(self.context.clone(), arg.get_position());
                             panic!("argument {} is not valid type at {}:{}", arg.clone().to_string(), err.0, err.1);
                         }
                         else
                         {
                             let argname = arg.syntax.get_variable_expr().get_name();
-                            let err = self.get_line_of_position(arg.get_position());
+                            let err = util::get_line_of_position(self.context.clone(), arg.get_position());
                             panic!("argument {} is not valid type at {}:{}", argname, err.0, err.1);
                         }
                     }
@@ -231,7 +159,7 @@ impl SyntaticAnalyser {
                 let test = self.is_datatype(datatype.clone(), value.clone(), supress_output, &variables);
                 if !test
                 {
-                    let err = self.get_line_of_position(statement.get_position() + 2);
+                    let err = util::get_line_of_position(self.context.clone(),statement.get_position() + 2);
                     panic!("variable declaration {} {} is not valid at {}:{}", name, datatype.to_string(), err.0, err.1);
                 }
                 let mut variable = Statement::new(name.clone(), statement::StatementType::Variable, datatype.datatype, datatype.clone().array_bounds, datatype.clone().is_array);
@@ -251,7 +179,7 @@ impl SyntaticAnalyser {
                 let test = self.is_datatype(datatype.clone(), value.clone(), supress_output, &variables);
                 if !test
                 {
-                    let err = self.get_line_of_position(statement.get_position() + 2);
+                    let err = util::get_line_of_position(self.context.clone(),statement.get_position() + 2);
                     panic!("return {} {} is not valid at {}:{}", value.clone().to_string(), datatype.to_string(), err.0, err.1);
                 }
                 // let value = self.get_body(vec![value.clone()]);
@@ -264,7 +192,7 @@ impl SyntaticAnalyser {
                     }
                     // println!("return value is integer literal");
                     // println!("{} | {}", value.to_string(), self.get_lit_datatype(value.to_string()).to_string());
-                    if !self.get_lit_datatype(value.to_string()).is_same(&functiondatatype)
+                    if !util::get_lit_datatype(value.to_string()).is_same(&functiondatatype)
                     {
                         panic!("return value is not same as function datatype");
                     }
@@ -302,7 +230,7 @@ impl SyntaticAnalyser {
                 let name = variable_overwrite.get_name();
                 if !variables.contains_key(&name) // TODO: possible to fix with body variable
                 {
-                    let err = self.get_line_of_position(statement.get_position() + 2);
+                    let err = util::get_line_of_position(self.context.clone(),statement.get_position() + 2);
                     panic!("variable overwrite {} is not valid at {}:{}, because variable is not declared!", name, err.0, err.1);
                 }
                 // println!("variable overwrite {}", name);
@@ -313,7 +241,7 @@ impl SyntaticAnalyser {
                 let test = self.is_datatype(datatype.clone(), value.clone(), supress_output, &variables);
                 if !test
                 {
-                    let err = self.get_line_of_position(statement.get_position() + 2);
+                    let err = util::get_line_of_position(self.context.clone(),statement.get_position() + 2);
                     panic!("variable overwrite {} {} is not valid at {}:{}", name, datatype.to_string(), err.0, err.1);
                 }
                 let mut variable = Statement::new(name.clone(), statement::StatementType::Variable, datatype.datatype, datatype.clone().array_bounds, datatype.clone().is_array);
@@ -360,12 +288,12 @@ impl SyntaticAnalyser {
     {
         if value.is_literal()
         {
-            return self.test_variable_declaration_literal(datatype, value, supress_output);
+            return util::test_variable_declaration_literal(datatype, value, supress_output);
         }
         else
         if value.is_variable()
         {
-            return self.test_variable_declaration_variable(datatype, value, supress_output, &variables);
+            return util::test_variable_declaration_variable(datatype, value, supress_output, &variables);
         }
         else
         if value.is_binary()
@@ -513,118 +441,6 @@ impl SyntaticAnalyser {
     {
         return self.test_variable_declaration(datatype, value, supressed_output, &variables);
     }
-    fn test_variable_declaration_variable(&self, datatype: Datatype, value: Expression, supress_output: bool, variables: &HashMap<String, Datatype>) -> bool
-    {
-        // println!("test for: {}", value.to_string());
-        let variable = value.syntax.get_variable_expr();
-        let name = variable.get_name(); 
-        // println!("test for: {}", name);
-        let variable = util::get_variable(name, &variables);
-        // println!("variable: {} datatype: {}", variable, datatype);
-        // println!("variable: {} datatype: {}", variable.is_array, datatype.is_array);
-        // println!("variable: {:?} datatype: {:?}", variable.array_bounds, datatype.array_bounds);
-        if datatype.datatype == variable.datatype && datatype.is_array == variable.is_array && datatype.array_bounds == variable.array_bounds
-        {
-            return true;
-        }
-        if !supress_output
-        {
-            println!("variable declaration is not the same type as the variable");
-        }
-        return false;
-    }
-    #[allow(unreachable_patterns)]
-    fn test_variable_declaration_literal(&self, datatype: Datatype, value: Expression, supress_output: bool) -> bool
-    {
-        // println!("test for: {}", value.to_string());
-        match datatype.datatype
-        {
-            StatementDatatype::Int => {
-                if !value.is_integer_literal()
-                {
-                    if !supress_output
-                    {
-                        println!("variable is not an int");
-                    }
-                    return false;
-                }
-                return true;
-            }
-            StatementDatatype::Float => {
-                if !value.is_float_literal()
-                {
-                    if !supress_output
-                    {
-                        println!("variable is not a float");
-                    }
-                    return false;
-                }
-                return true;
-            }
-            StatementDatatype::String => {
-                if !value.is_string_literal()
-                {
-                    if !supress_output
-                    {
-                        println!("variable is not a string");
-                    }
-                    return false;
-                }
-                return true;
-            }
-            StatementDatatype::Bool => {
-                if !value.is_boolean_literal()
-                {
-                    if !supress_output
-                    {
-                        println!("variable is not a bool");
-                    }
-                    return false;
-                }
-                return true;
-            }
-            StatementDatatype::Void => {
-                if !supress_output
-                {
-                    println!("variable is void");
-                }
-                return false;
-            }
-            StatementDatatype::Char => {
-                if !value.is_char_literal()
-                {
-                    if !supress_output
-                    {
-                        println!("variable is not a char");
-                    }
-                    return false;
-                }
-                return true;
-            }
-            _ => {
-                if !supress_output
-                {
-                    println!("variable is not a valid datatype");
-                }
-                return false;
-            }
-        }
-    }
-
-    fn same_datatype(&self, arg1: Statement, arg2: Datatype) -> bool {
-        let arg1 = arg1.datatype.clone();
-        if arg1.datatype != arg2.datatype {
-            return false;
-        }
-        if arg1.is_array != arg2.is_array {
-            return false;
-        }
-        if arg1.array_bounds != arg2.array_bounds {
-            return false;
-        }
-        return true;
-    }
-
     fn test_variable_declaration_call(&self, datatype: Datatype, value: Expression, supress_output: bool, variables: &HashMap<String, Datatype>) -> bool {
         let call = value.clone().syntax.get_call_expr();
         let name = call.get_name();
@@ -661,33 +477,12 @@ impl SyntaticAnalyser {
         let functions = self.functions.keys().map(|e| e.to_string() ).collect::<Vec<String>>();
         if !functions.contains(&name) {
             // println!("pos: {}", pos);
-            let err = self.get_line_of_position(pos);
+            let err = util::get_line_of_position(self.context.clone(), pos);
             panic!("function {} does not exist, called at {}:{}", name, err.0, err.1);
         }
         let data = self.functions.get(&name).unwrap().clone();
         let data = (data.0.clone(), data.1.arguments.clone());
         return data;
-    }
-    fn get_line_of_position(&self, position: usize) -> (usize, usize) {
-        let mut start = 0;
-        let mut line_ = 1;
-        let mut pos = 0;
-        while pos < self.context.chars().count()
-        {
-            if pos == position
-            {
-                return (line_, start-1);
-            }
-            let line = self.context.chars().nth(pos).unwrap();
-            if line == '\n'
-            {
-                line_ += 1;
-                start = 0;
-            }
-            start += 1;
-            pos += 1;
-        }
-        return (line_, start);
     }
 }
 
