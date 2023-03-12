@@ -164,7 +164,7 @@ impl SyntaticAnalyser {
                 }
                 let mut variable = Statement::new(name.clone(), statement::StatementType::Variable, datatype.datatype, datatype.clone().array_bounds, datatype.clone().is_array);
                 // println!("variable declaration {} {} is valid", name, datatype.to_string());
-                variable.set_value(value.clone());
+                variable.set_value(value.clone(), &self.functions);
                 body.push(variable);
                 variables.insert(name.clone(), datatype.clone()); // TODO: possible to fix with body variable
             }
@@ -248,7 +248,7 @@ impl SyntaticAnalyser {
                 // println!("variable overwrite {} {} is valid", name, datatype.to_string());
                 if value.is_literal()
                 {
-                    variable.set_value(value.clone());
+                    variable.set_value(value.clone(), &self.functions);
                 }
                 else
                 {

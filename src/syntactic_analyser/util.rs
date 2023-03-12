@@ -3,6 +3,10 @@ use super::Datatype;
 
 pub fn get_variable(name: String, variables: &HashMap<String, Datatype>) -> Datatype
 {
+    if variables.keys().find(|&x| *x == name).is_none()
+    {
+        panic!("variable {} does not exist", name);
+    }
     variables.get(&name).unwrap().clone()
 }
 

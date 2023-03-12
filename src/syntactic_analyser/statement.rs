@@ -176,8 +176,8 @@ impl Statement
     {
         format!("{}: {} {}", self.name, self.type_.to_string(), self.datatype.to_string())
     }
-    pub fn set_value(&mut self, value: crate::parser::expression::Expression) {
-        self.statements.push(generate_statement_from_expression(value));
+    pub fn set_value(&mut self, value: crate::parser::expression::Expression, functions: &HashMap<String, (Datatype, Arguments, Vec::<Statement>)>) {
+        self.statements.push(generate_statement_from_expression(value, &functions));
     }
 
     pub fn new_return(clone_1: Statement, datatype: Datatype) -> Statement
@@ -191,7 +191,9 @@ impl Statement
         }
     }
 }
-fn generate_statement_from_expression(expression: super::Expression) -> Statement {
+use super::Arguments;
+use std::collections::HashMap;
+fn generate_statement_from_expression(expression: super::Expression, functions: &HashMap<String, (Datatype, Arguments, Vec::<Statement>)>) -> Statement {
     if expression.is_variable()
     {
         let var = expression.syntax.get_variable_expr();
@@ -204,48 +206,66 @@ fn generate_statement_from_expression(expression: super::Expression) -> Statemen
         };
         return Statement::new_datatype(name, StatementType::Variable, datatype);
     }
-    if !expression.is_literal()
+    if expression.is_literal()
     {
-        println!("Expression: {}", expression.to_string());
-        panic!("Expression is not a literal (not implemented)");
+        let datatype: StatementDatatype;
+        if expression.is_integer_literal()
+        {
+            datatype = StatementDatatype::Int;
+        }
+        else if expression.is_float_literal()
+        {
+            datatype = StatementDatatype::Float;
+        }
+        else if expression.is_string_literal()
+        {
+            datatype = StatementDatatype::String;
+        }
+        else if expression.is_boolean_literal()
+        {
+            datatype = StatementDatatype::Bool;
+        }
+        else if expression.is_char_literal()
+        {
+            datatype = StatementDatatype::Char;
+        }
+        else
+        {
+            panic!("Expression is not a literal (not implemented)");
+        }
+        let datatype = Datatype
+        {
+            datatype,
+            array_bounds: Vec::<i32>::new(),
+            is_array: false,
+        };
+        let statement = Statement
+        {
+            name: expression.to_string(),
+            type_: StatementType::Literal,
+            datatype,
+            statements: Vec::<Statement>::new(),
+        };
+        return statement;
     }
-    let datatype: StatementDatatype;
-    if expression.is_integer_literal()
+    if expression.is_call()
     {
-        datatype = StatementDatatype::Int;
+        let call = expression.syntax.get_call_expr();
+        let name = call.get_name();
+        let mut statements = Vec::<Statement>::new();
+        for arg in call.get_args()
+        {
+            statements.push(generate_statement_from_expression(arg.clone(), &functions));
+        }
+        let data = functions.get(&name).unwrap();
+        // let datatype = Datatype
+        // {
+        //     datatype: StatementDatatype::Int,
+        //     array_bounds: Vec::<i32>::new(),
+        //     is_array: false,
+        // };
+        return Statement::new_call(name, statements, data.0.clone());
     }
-    else if expression.is_float_literal()
-    {
-        datatype = StatementDatatype::Float;
-    }
-    else if expression.is_string_literal()
-    {
-        datatype = StatementDatatype::String;
-    }
-    else if expression.is_boolean_literal()
-    {
-        datatype = StatementDatatype::Bool;
-    }
-    else if expression.is_char_literal()
-    {
-        datatype = StatementDatatype::Char;
-    }
-    else
-    {
-        panic!("Expression is not a literal (not implemented)");
-    }
-    let datatype = Datatype
-    {
-        datatype,
-        array_bounds: Vec::<i32>::new(),
-        is_array: false,
-    };
-    let statement = Statement
-    {
-        name: expression.to_string(),
-        type_: StatementType::Literal,
-        datatype,
-        statements: Vec::<Statement>::new(),
-    };
-    statement
+    println!("Expression: {}", expression.to_string());
+    panic!("Expression is not a literal (not implemented)");
 }

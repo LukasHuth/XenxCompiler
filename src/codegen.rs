@@ -50,6 +50,11 @@ impl Codegen
             let func = self.genfunction_linux(state);
             self.data.push_str(func.as_str());
         }
+        let registers = linux::utils::get_registers();
+        for register in registers
+        {
+            self.data = self.data.replace(format!("push %{}\npop %{}\n", register, register).as_str(), "");
+        }
     }
     fn save_asm(&self)
     {
@@ -78,6 +83,9 @@ impl Codegen
         data.push_str(":\n");
         // println!("statements: {}", statement.statements.len());
         data.push_str("push %rbp\n");
+        data.push_str("push %rbx\n");
+        data.push_str("push %rdi\n");
+        data.push_str("push %rsi\n");
         data.push_str("mov %rsp, %rbp\n");
         for expr in statement.statements
         {
@@ -97,6 +105,11 @@ impl Codegen
                 data.push_str(str.as_str());
                 break;
             }
+            if expr.type_ == StatementType::Call
+            {
+                let str = linux::call_util::gencall(expr.clone());
+                data.push_str(str.as_str());
+            }
         }
         println!("vars: {}", vars.len());
         data.push_str("push %rax\n");
@@ -107,6 +120,9 @@ impl Codegen
         }
         data.push_str("pop %rax\n");
         data.push_str("mov %rbp, %rsp\n");
+        data.push_str("pop %rsi\n");
+        data.push_str("pop %rdi\n");
+        data.push_str("pop %rbx\n");
         data.push_str("pop %rbp\n");
         data.push_str("ret\n\n");
         data

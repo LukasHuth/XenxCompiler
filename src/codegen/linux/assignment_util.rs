@@ -2,6 +2,7 @@ use super::super::StatementDatatype;
 use super::super::StatementType;
 use super::super::Statement;
 use super::Variable;
+use super::call_util;
 use super::utils;
 use super::load_util;
 
@@ -45,15 +46,6 @@ pub fn genassignment(statement: Statement, vars: &mut Vec<Variable>, mut used_po
 }
 fn genassignment_new(value: &Statement, pos: usize, vars: &Vec<Variable>) -> String
 {
-    println!("vars: {:?}", vars.clone());
-    if value.type_ != StatementType::Literal && value.type_ != StatementType::Variable
-    {
-        panic!("Only literals and variables are supported for now");
-    }
-    if value.datatype.datatype != StatementDatatype::Int
-    {
-        panic!("Only int variables are supported for now");
-    }
     let malloc_code = format!("movq $8, %rdi\ncall malloc\nsub $8, %rsp\nmovq %rax, -{}(%rbp)\n", pos*8); // TODO: malloc
     let assign = genassignment_old(value, pos, &vars);
     return format!("{}{}", malloc_code, assign);
@@ -62,6 +54,7 @@ fn genassignment_old(value: &Statement, pos: usize, vars: &Vec<Variable>) -> Str
 {
     // println!("genassignment_old({})", value.type_ == StatementType::Literal);
     if value.type_ != StatementType::Literal && value.type_ != StatementType::Variable
+        && value.type_ != StatementType::Call
     {
         panic!("Only literals and variables are supported for now");
     }
@@ -73,6 +66,11 @@ fn genassignment_old(value: &Statement, pos: usize, vars: &Vec<Variable>) -> Str
         println!("pos: {}", pos);
         println!("loaded_value: '{}'", loaded_value);
         return format!("{}movq -{}(%rbp), %rbx\nmovq %rax, (%rbx)\n", loaded_value, pos*8);
+    }
+    if value.type_ == StatementType::Call
+    {
+        let callstr = call_util::gencall(value.clone());
+        return format!("{}movq -{}(%rbp), %rbx\nmovq %rax, (%rbx)\n", callstr, pos*8);
     }
     if value.datatype.datatype != StatementDatatype::Int
     {

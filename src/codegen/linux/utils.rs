@@ -38,6 +38,8 @@ pub fn save_assebly_code(str: &str) {
 use super::Variable;
 pub fn findvariableindex(name: &str, variables: &Vec<Variable>) -> usize
 {
+    println!("Finding variable index for {}", name);
+    println!("Variables: {:?}", variables);
     for var in variables
     {
         if var.name == name
@@ -75,4 +77,32 @@ pub fn findemptyposition(used_positions: &mut Vec<usize>, highest_position: &mut
     }
     *highest_position+=1;
     return *highest_position;
-}   
+}
+// source: https://www.tortall.net/projects/yasm/manual/html/arch-x86-registers.html
+pub fn get_registers() -> Vec<String>
+{
+    let general_registers = get_general_register_names();
+    let mut registers = vec![];
+    for reg in general_registers
+    {
+        registers.push(reg.clone());
+        registers.push(format!("e{}", reg));
+        registers.push(format!("r{}", reg));
+    }
+    for i in 8..=15
+    {
+        registers.push(format!("r{}", i));
+        registers.push(format!("r{}w", i));
+        registers.push(format!("r{}b", i));
+        registers.push(format!("r{}d", i));
+    }
+    return registers;
+}
+fn get_general_register_names() -> Vec<String>
+{
+    let registers = vec!["ax".to_string(),
+    "bx".to_string(), "cx".to_string(), "dx".to_string(),
+    "si".to_string(), "di".to_string(), "bp".to_string(),
+    "sp".to_string()];
+    return registers;
+}
