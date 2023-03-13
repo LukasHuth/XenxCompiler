@@ -27,7 +27,7 @@ pub fn gencall(statement: Statement, vars: &Vec<Variable>) -> String
         else
         if expr.type_ == StatementType::Variable
         {
-            let load_var = super::load_util::load_variable(vars, expr.name.clone());
+            let load_var = super::load_util::load_int_variable(vars, expr.name.clone());
             // println!("load_var: {}", load_var);
             string.push_str(load_var.as_str());
             load_from = "%rax".to_string();

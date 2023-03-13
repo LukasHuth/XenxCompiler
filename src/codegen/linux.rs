@@ -56,6 +56,7 @@ pub fn generate(statement: super::Statement, args: Arguments) -> String
         if expr.type_ == StatementType::Call
         {
             let str = call_util::gencall(expr.clone(), &vars);
+            println!("Unnecessary call: {}", expr.name);
             data.push_str(str.as_str());
         }
     }

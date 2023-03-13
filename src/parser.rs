@@ -212,6 +212,8 @@ impl Parser
             let right = self.parse_binary_expression(operator.precedence());
             left = Expression::new_binary_expr(left, operator, right, start);
         }
+        left = fix_precedence(&mut left);
+        println!("Returning left: {}", left.to_string());
         return left;
     }
     fn parse_unary_expression(&mut self) -> Expression
@@ -324,4 +326,27 @@ impl Parser
         }
         return self.tokens[self.current + offset].clone();
     }
+}
+
+fn fix_precedence(expr: &mut Expression) -> Expression {
+    if expr.is_literal() || expr.is_variable() || expr.is_unary() || expr.is_call() {
+        return expr.clone();
+    }
+    let binary = expr.syntax.get_binary_expr();
+    let mut left = binary.get_left();
+    let left = fix_precedence(&mut left);
+    let mut right = binary.get_right();
+    let right = fix_precedence(&mut right);
+    let operator = binary.get_operator();
+    if right.is_literal() || right.is_variable() || right.is_unary() || right.is_call() {
+        return expr.clone();
+    }
+    if !left.is_binary()
+    {
+        return Expression::new_binary_expr(right, operator, left, expr.get_position());
+    }
+    if left.syntax.get_binary_expr().get_operator().precedence() < operator.precedence() {
+        return Expression::new_binary_expr(right, operator, left, expr.get_position());
+    }
+    return expr.clone();
 }

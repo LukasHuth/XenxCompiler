@@ -52,33 +52,12 @@ fn genassignment_new(value: &Statement, pos: usize, vars: &Vec<Variable>) -> Str
 }
 fn genassignment_old(value: &Statement, pos: usize, vars: &Vec<Variable>) -> String
 {
-    if value.type_ == StatementType::Variable
-    {
-        let value = value.name.clone();
-        // println!("value: {}", value);
-        let loaded_value = load_util::load_variable(&vars, value);
-        // println!("pos: {}", pos);
-        // println!("loaded_value: '{}'", loaded_value);
-        return format!("{}movq -{}(%rbp), %rbx\nmovq %rax, (%rbx)\n", loaded_value, pos*8);
-    }
-    if value.type_ == StatementType::Call
-    {
-        let callstr = call_util::gencall(value.clone(), &vars);
-        return format!("{}movq -{}(%rbp), %rbx\nmovq %rax, (%rbx)\n", callstr, pos*8);
-    }
-    if value.datatype.datatype != StatementDatatype::Int
-    {
-        panic!("Only int variables are supported for now");
-    }
     if value.type_ == StatementType::Literal
     {
         let value = value.name.clone();
         return format!("movq -{}(%rbp), %rax\nmovq ${}, (%rax)\n", pos*8, value);
     }
-    if value.type_ == StatementType::Binary
-    {
-        let parsed = utils::parsebinary(value.clone(), &vars);
-        return format!("{}movq -{}(%rbp), %rbx\nmovq %rax, (%rbx)\n", parsed, pos*8);
-    }
-    panic!("Not implemented (genassignment) ({})", value.to_string());
+    println!("value: {}", value.to_string());
+    let expression = utils::parsebinary(value.clone(), &vars);
+    return format!("{}movq -{}(%rbp), %rbx\nmovq %rax, (%rbx)\n", expression, pos*8);
 }

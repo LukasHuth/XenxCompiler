@@ -17,4 +17,12 @@ impl UnaryExpression
     {
         UnaryExpression{operator, operand}
     }
+
+    pub fn get_operator(&self) -> Token {
+        return self.operator.clone();
+    }
+
+    pub fn get_operand(&self) -> Expression {
+        return self.operand.clone();
+    }
 }

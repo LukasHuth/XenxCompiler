@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 pub mod statement;
 pub mod arguments;
+mod typetest;
 use statement::Statement;
 use statement::StatementType;
 use statement::StatementDatatype;
@@ -118,7 +119,7 @@ impl SyntaticAnalyser {
                     let same_datatype: bool;
                     if arg.is_literal()
                     {
-                        same_datatype = self.is_datatype(farg.datatype.clone(), arg.clone(), supressed_output.clone(), &variables);
+                        same_datatype = typetest::is_datatype(farg.datatype.clone(), arg.clone(), supressed_output.clone(), &variables, &self.functions);
                     }
                     else
                     {
@@ -159,15 +160,16 @@ impl SyntaticAnalyser {
                 let datatype = self.get_datatype(variable_declaration.get_type());
                 let value = variable_declaration.get_value();
                 let supress_output = true; // show error output if variable declaration is not valid (only visible if false)
-                let test = self.is_datatype(datatype.clone(), value.clone(), supress_output, &variables);
+                let test = typetest::is_datatype(datatype.clone(), value.clone(), supress_output, &variables, &self.functions);
                 if !test
                 {
                     let err = util::get_line_of_position(self.context.clone(),statement.get_position() + 2);
+                    println!("{}{}", datatype.clone().to_string(), "");
                     panic!("variable declaration {} {} is not valid at {}:{}", name, datatype.to_string(), err.0, err.1);
                 }
                 let mut variable = Statement::new(name.clone(), statement::StatementType::Variable, datatype.datatype, datatype.clone().array_bounds, datatype.clone().is_array);
                 // println!("variable declaration {} {} is valid", name, datatype.to_string());
-                variable.set_value(value.clone(), &self.functions);
+                variable.set_value(value.clone(), &variables, &self.functions);
                 body.push(variable);
                 variables.insert(name.clone(), datatype.clone()); // TODO: possible to fix with body variable
             }
@@ -179,7 +181,7 @@ impl SyntaticAnalyser {
                 let value = return_expr.get_value();
                 let datatype = Datatype::new(StatementDatatype::Int, Vec::<i32>::new(), false); // TODO: get datatype of function
                 let supress_output = true; // show error output if variable declaration is not valid (only visible if false)
-                let test = self.is_datatype(datatype.clone(), value.clone(), supress_output, &variables);
+                let test = typetest::is_datatype(datatype.clone(), value.clone(), supress_output, &variables, &self.functions);
                 if !test
                 {
                     let err = util::get_line_of_position(self.context.clone(),statement.get_position() + 2);
@@ -241,7 +243,7 @@ impl SyntaticAnalyser {
                 let value = variable_overwrite.get_value();
                 // println!("value:|: {}", value.to_string());
                 let supress_output = true; // show error output if variable declaration is not valid (only visible if false)
-                let test = self.is_datatype(datatype.clone(), value.clone(), supress_output, &variables);
+                let test = typetest::is_datatype(datatype.clone(), value.clone(), supress_output, &variables, &self.functions);
                 if !test
                 {
                     let err = util::get_line_of_position(self.context.clone(),statement.get_position() + 2);
@@ -251,12 +253,12 @@ impl SyntaticAnalyser {
                 // println!("variable overwrite {} {} is valid", name, datatype.to_string());
                 if value.is_literal()
                 {
-                    variable.set_value(value.clone(), &self.functions);
+                    variable.set_value(value.clone(), &variables, &self.functions);
                 }
                 else
                 if value.is_call()
                 {
-                    variable.set_value(value.clone(), &self.functions);
+                    variable.set_value(value.clone(), &variables, &self.functions);
                 }
                 else
                 {
@@ -274,223 +276,14 @@ impl SyntaticAnalyser {
     }
     fn parse_expr(&self, expression: Expression, variables: &HashMap<String, Datatype>) -> Statement
     {
-        if expression.is_call()
+        if expression.is_binary()
         {
-            let call = expression.syntax.get_call_expr();
-            let name = call.get_name();
-            let _args = call.get_args(); // TODO: not yet inmplemented
-            let return_type = self.get_function(name.clone(), 0);
-            return Statement::new_call(name.clone(), vec![], return_type.0);
-        }
-        if expression.is_variable()
-        {
-            let variable = expression.syntax.get_variable_expr();
-            let name = variable.get_name();
-            let datatype = util::get_variable(name.clone(), &variables);
-            return Statement::new(name.clone(), StatementType::Variable, datatype.datatype, datatype.array_bounds, datatype.is_array);
+            let binary = util::generate_binary(expression.clone(), &variables, &self.functions);
+            return binary;
         }
         println!("expression: {}", expression.to_string());
         panic!("expression is not call");
     }
-    fn test_variable_declaration(&self,datatype: Datatype, value: Expression, supress_output: bool, variables: &HashMap<String, Datatype>) -> bool
-    {
-        if value.is_literal()
-        {
-            return util::test_variable_declaration_literal(datatype, value, supress_output);
-        }
-        else
-        if value.is_variable()
-        {
-            return util::test_variable_declaration_variable(datatype, value, supress_output, &variables);
-        }
-        else
-        if value.is_binary()
-        {
-            return self.test_variable_declaration_binary(datatype, value, supress_output, &variables);
-        }
-        if value.is_call()
-        {
-            return self.test_variable_declaration_call(datatype, value, supress_output, &variables);
-        }
-        else
-        {
-            if !supress_output
-            {
-                println!("variable declaration is not a literal or variable");
-            }
-            return false;
-        }
-    }
-    fn test_variable_declaration_binary(&self, datatype: Datatype, value: Expression, supress_output: bool, variables: &HashMap<String, Datatype>) -> bool
-    {
-        let binary = value.syntax.get_binary_expr();
-        let left = binary.get_left();
-        let right = binary.get_right();
-        let operator = binary.get_operator();
-        if (operator.token == LexerToken::EqualsEquals || operator.token == LexerToken::BangEquals
-            || operator.token == LexerToken::Less || operator.token == LexerToken::Greater
-            || operator.token == LexerToken::LessEquals || operator.token == LexerToken::GreaterEquals
-            || operator.token == LexerToken::AmpersandAmpersand || operator.token == LexerToken::PipePipe) 
-            && datatype.datatype == StatementDatatype::Bool
-        {
-            let boolstate = Datatype::new(StatementDatatype::Bool, vec![], false);
-            let stringstate = Datatype::new(StatementDatatype::String, vec![], false);
-            let intstate = Datatype::new(StatementDatatype::Int, vec![], false);
-            let charstate = Datatype::new(StatementDatatype::Char, vec![], false);
-            let floatstate = Datatype::new(StatementDatatype::Float, vec![], false);
-            if self.is_datatype(boolstate.clone(), left.clone(), supress_output, &variables) && self.is_datatype(boolstate.clone(), right.clone(), supress_output, &variables)
-            {
-                return true;
-            }
-            if operator.token == LexerToken::AmpersandAmpersand || operator.token == LexerToken::PipePipe
-            {
-                if !supress_output
-                {
-                    println!("cannot use && or || on other that bool");
-                }
-                return false;
-            }
-            if self.is_datatype(stringstate.clone(), left.clone(), supress_output, &variables) && self.is_datatype(stringstate.clone(), right.clone(), supress_output, &variables)
-            {
-                return true;
-            }
-            if self.is_datatype(intstate.clone(), left.clone(), supress_output, &variables) && self.is_datatype(intstate.clone(), right.clone(), supress_output, &variables)
-            {
-                return true;
-            }
-            if self.is_datatype(charstate.clone(), left.clone(), supress_output, &variables) && self.is_datatype(charstate.clone(), right.clone(), supress_output, &variables)
-            {
-                return true;
-            }
-            if self.is_datatype(floatstate.clone(), left.clone(), supress_output, &variables) && self.is_datatype(floatstate.clone(), right.clone(), supress_output, &variables)
-            {
-                return true;
-            }
-        }
-        else
-        {
-            let boolstate = Datatype::new(StatementDatatype::Bool, vec![], false);
-            let stringstate = Datatype::new(StatementDatatype::String, vec![], false);
-            let intstate = Datatype::new(StatementDatatype::Int, vec![], false);
-            let charstate = Datatype::new(StatementDatatype::Char, vec![], false);
-            let floatstate = Datatype::new(StatementDatatype::Float, vec![], false);
-            if self.is_datatype(boolstate.clone(), left.clone(), supress_output, &variables) && self.is_datatype(boolstate.clone(), right.clone(), supress_output, &variables)
-            {
-                if !supress_output
-                {
-                    println!("cannot use binary operators except logical equals and not equals on bools");
-                }
-                return false;
-            }
-            if self.is_datatype(stringstate.clone(), left.clone(), supress_output, &variables) && self.is_datatype(stringstate.clone(), right.clone(), supress_output, &variables)
-            {
-                if datatype.datatype == StatementDatatype::String
-                {
-                    return true;
-                }
-                else
-                {
-                    if !supress_output
-                    {
-                        println!("cannot use binary operators on strings except logical equals and not equals");
-                    }
-                    return false;
-                }
-            }
-            if self.is_datatype(intstate.clone(), left.clone(), supress_output, &variables) && self.is_datatype(intstate.clone(), right.clone(), supress_output, &variables)
-            {
-                if datatype.datatype == StatementDatatype::Int
-                {
-                    return true;
-                }
-                else
-                {
-                    if !supress_output
-                    {
-                        println!("cannot use binary operators on ints except logical equals and not equals");
-                    }
-                    return false;
-                }
-            }
-            if self.is_datatype(charstate.clone(), left.clone(), supress_output, &variables) && self.is_datatype(charstate.clone(), right.clone(), supress_output, &variables)
-            {
-                if datatype.datatype == StatementDatatype::Char
-                {
-                    return true;
-                }
-                else
-                {
-                    if !supress_output
-                    {
-                        println!("cannot use binary operators on chars except logical equals and not equals");
-                    }
-                    return false;
-                }
-            }
-            if self.is_datatype(floatstate.clone(), left.clone(), supress_output, &variables) && self.is_datatype(floatstate.clone(), right.clone(), supress_output, &variables)
-            {
-                if datatype.datatype == StatementDatatype::Float
-                {
-                    return true;
-                }
-                else
-                {
-                    if !supress_output
-                    {
-                        println!("cannot use binary operators on floats except logical equals and not equals");
-                    }
-                    return false;
-                }
-            }
-        }
-        return false;
-    }
-    fn is_datatype(&self, datatype: Datatype, value: Expression, supressed_output: bool, variables: &HashMap<String, Datatype>) -> bool
-    {
-        return self.test_variable_declaration(datatype, value, supressed_output, &variables);
-    }
-    fn test_variable_declaration_call(&self, datatype: Datatype, value: Expression, supress_output: bool, variables: &HashMap<String, Datatype>) -> bool {
-        let call = value.clone().syntax.get_call_expr();
-        let name = call.get_name();
-        let args = call.get_args();
-        let function = self.get_function(name, value.clone().get_position());
-        // println!("function: {}", function.0.to_string());
-        // println!("datatype: {}", datatype.to_string());
-        if args.len() != function.1.len() {
-            if !supress_output {
-                println!("function call does not have the same amount of arguments as the function");
-            }
-            return false;
-        }
-        for i in 0..args.len() {
-            let arg = args[i].clone();
-            let arg2 = function.1[i].clone();
-            let arg2 = arg2.datatype;
-            if !self.test_variable_declaration(arg2, arg, false, &variables) {
-                if !supress_output {
-                    println!("function call does not have the same datatype as the function");
-                }
-                return false;
-            }
-        }
-        if datatype.datatype != function.0.datatype {
-            if !supress_output {
-                println!("function return type does not match variable type");
-            }
-            return false;
-        }
-        return true;
-    }
-    fn get_function(&self, name: String, pos: usize) -> (Datatype, Vec<Statement>) {
-        let functions = self.functions.keys().map(|e| e.to_string() ).collect::<Vec<String>>();
-        if !functions.contains(&name) {
-            // println!("pos: {}", pos);
-            let err = util::get_line_of_position(self.context.clone(), pos);
-            panic!("function {} does not exist, called at {}:{}", name, err.0, err.1);
-        }
-        let data = self.functions.get(&name).unwrap().clone();
-        let data = (data.0.clone(), data.1.arguments.clone());
-        return data;
-    }
+    
 }
 

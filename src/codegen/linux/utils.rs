@@ -140,11 +140,18 @@ pub fn parsebinary(statement: Statement, vars: &Vec<Variable>) -> String
         let left = statement.statements[0].clone();
         let right = statement.statements[1].clone();
         let left = parsebinary(left, &vars);
-        let right = parsebinary(right, &vars);
         code.push_str(&left);
-        code.push_str("movq %rax, %rbx\n");
-        // make addition usw.
-        code.push_str(&right);
+        let right = parsebinary(right, &vars);
+        if left == right
+        {
+            code.push_str("movq %rax, %rbx\n");
+        }
+        else
+        {
+            code.push_str("pushq %rax\n");
+            code.push_str(&right);
+            code.push_str("popq %rbx\n");
+        }
         if statement.name == "+"
         {
             code.push_str("addq %rbx, %rax\n");
@@ -173,15 +180,35 @@ pub fn parsebinary(statement: Statement, vars: &Vec<Variable>) -> String
     else
     if statement.type_ == StatementType::Variable
     {
-        code = load_util::load_variable(&vars, statement.name.clone());
+        code = load_util::load_int_variable(&vars, statement.name.clone());
     }
     else
     if statement.type_ == StatementType::Literal
     {
         code = format!("movq ${}, %rax\n", statement.name);
     }
+    else if statement.type_ == StatementType::Unary
+    {
+        let left = statement.statements[0].clone();
+        let left = parsebinary(left, &vars);
+        code.push_str(&left);
+        if statement.name == "-"
+        {
+            code.push_str("negq %rax\n");
+        }
+        else
+        {
+            panic!("Unary operator not supported (yet)");
+        }
+    }
+    else if statement.type_ == StatementType::Call
+    {
+        let callstr = super::call_util::gencall(statement.clone(), &vars);
+        code.push_str(callstr.as_str());
+    }
     else
     {
+        println!("{:?}", statement);
         panic!("Invalid statement type");
     }
     return code;

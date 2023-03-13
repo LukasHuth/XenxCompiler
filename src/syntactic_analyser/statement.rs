@@ -116,6 +116,7 @@ pub enum StatementType
     Assignment,
     Argument,
     Binary,
+    Unary,
 }
 impl StatementType
 {
@@ -135,6 +136,7 @@ impl StatementType
             StatementType::Assignment => string.push_str("Assignment"),
             StatementType::Argument => string.push_str("Argument"),
             StatementType::Binary => string.push_str("Binary"),
+            StatementType::Unary => string.push_str("Unary"),
         }
         return string;
     }
@@ -178,8 +180,9 @@ impl Statement
     {
         format!("{}: {} {}", self.name, self.type_.to_string(), self.datatype.to_string())
     }
-    pub fn set_value(&mut self, value: crate::parser::expression::Expression, functions: &HashMap<String, (Datatype, Arguments, Vec::<Statement>)>) {
-        self.statements.push(generate_statement_from_expression(value, &functions));
+    pub fn set_value(&mut self, value: crate::parser::expression::Expression, vars: &HashMap<String, Datatype>, functions: &HashMap<String, (Datatype, Arguments, Vec::<Statement>)>) {
+        self.statements.push(util::generate_binary(value, vars, functions));
+        // self.statements.push(generate_statement_from_expression(value, &functions));
     }
 
     pub fn new_return(clone_1: Statement, datatype: Datatype) -> Statement
@@ -201,120 +204,18 @@ impl Statement
             statements: vec![left, right],
         }
     }
+
+    pub fn new_unary(operand: Statement, operator: String, vec: Datatype) -> Statement {
+        Statement
+        {
+            name: operator,
+            type_: StatementType::Unary,
+            datatype: vec,
+            statements: vec![operand],
+        }
+    }
 }
-use crate::lexer::token::LexerToken;
 
 use super::Arguments;
 use std::collections::HashMap;
-fn generate_statement_from_expression(expression: super::Expression, functions: &HashMap<String, (Datatype, Arguments, Vec::<Statement>)>) -> Statement {
-    if expression.is_variable()
-    {
-        // println!("generate statement from expression ( variable )");
-        let var = expression.syntax.get_variable_expr();
-        let name = var.get_name();
-        let datatype = Datatype
-        {
-            datatype: StatementDatatype::Int,
-            array_bounds: Vec::<i32>::new(),
-            is_array: false,
-        };
-        return Statement::new_datatype(name, StatementType::Variable, datatype);
-    }
-    if expression.is_literal()
-    {
-        // println!("generate statement from expression ( literal )");
-        let datatype: StatementDatatype;
-        if expression.is_integer_literal()
-        {
-            datatype = StatementDatatype::Int;
-        }
-        else if expression.is_float_literal()
-        {
-            datatype = StatementDatatype::Float;
-        }
-        else if expression.is_string_literal()
-        {
-            datatype = StatementDatatype::String;
-        }
-        else if expression.is_boolean_literal()
-        {
-            datatype = StatementDatatype::Bool;
-        }
-        else if expression.is_char_literal()
-        {
-            datatype = StatementDatatype::Char;
-        }
-        else
-        {
-            panic!("Expression is not a literal (not implemented)");
-        }
-        let datatype = Datatype
-        {
-            datatype,
-            array_bounds: Vec::<i32>::new(),
-            is_array: false,
-        };
-        let statement = Statement
-        {
-            name: expression.to_string(),
-            type_: StatementType::Literal,
-            datatype,
-            statements: Vec::<Statement>::new(),
-        };
-        return statement;
-    }
-    if expression.is_call()
-    {
-        // println!("generate statement from expression ( call )");
-        let call = expression.syntax.get_call_expr();
-        let name = call.get_name();
-        let mut statements = Vec::<Statement>::new();
-        for arg in call.get_args()
-        {
-            statements.push(generate_statement_from_expression(arg.clone(), &functions));
-        }
-        let data = functions.get(&name).unwrap();
-        let call_state = Statement::new_call(name, statements, data.0.clone());
-        return call_state;
-    }
-    if expression.is_binary()
-    {
-        // println!("generate statement from expression ( binary )");
-        let binary = expression.syntax.get_binary_expr();
-        let left = generate_statement_from_expression(binary.get_left().clone(), &functions);
-        let right = generate_statement_from_expression(binary.get_right().clone(), &functions);
-        let datatype = Datatype
-        {
-            datatype: StatementDatatype::Int,
-            array_bounds: Vec::<i32>::new(),
-            is_array: false,
-        };
-        // println!("Binary: {} {} {}", left.to_string(), binary.get_operator().to_string(), right.to_string());
-        let op = get_op_by_token(binary.get_operator().token);
-        let call_state = Statement::new_binary(left, right, op, datatype);
-        return call_state;
-    }
-    println!("Expression: {}", expression.to_string());
-    panic!("Expression is not a literal (not implemented)");
-}
-fn get_op_by_token(token : LexerToken) -> String
-{
-    return match token {
-        LexerToken::Plus => String::from("+"),
-        LexerToken::Minus => String::from("-"),
-        LexerToken::Star => String::from("*"),
-        LexerToken::Slash => String::from("/"),
-        // LexerToken::Percent => String::from("%"), // TODO: Implement
-        LexerToken::EqualsEquals => String::from("=="),
-        LexerToken::BangEquals => String::from("!="),
-        LexerToken::Less => String::from("<"),
-        LexerToken::LessEquals => String::from("<="),
-        LexerToken::Greater => String::from(">"),
-        LexerToken::GreaterEquals => String::from(">="),
-        LexerToken::AmpersandAmpersand => String::from("&&"),
-        LexerToken::PipePipe => String::from("||"),
-        LexerToken::Ampersand => String::from("&"),
-        LexerToken::Pipe => String::from("|"),
-        _ => panic!("Token is not an operator"),
-    }
-}
+use super::util;

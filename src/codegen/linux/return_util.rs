@@ -28,7 +28,7 @@ pub fn genreturn(statement: Statement, vars: &mut Vec<Variable>) -> String
     {
         let value = value.name.clone();
         // println!("name: {}", value);
-        let load_code = load_util::load_variable(&vars, value);
+        let load_code = load_util::load_int_variable(&vars, value);
         return load_code;
     }
     return String::new();
