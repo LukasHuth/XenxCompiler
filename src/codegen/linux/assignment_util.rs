@@ -52,12 +52,6 @@ fn genassignment_new(value: &Statement, pos: usize, vars: &Vec<Variable>) -> Str
 }
 fn genassignment_old(value: &Statement, pos: usize, vars: &Vec<Variable>) -> String
 {
-    // println!("genassignment_old({})", value.type_ == StatementType::Literal);
-    if value.type_ != StatementType::Literal && value.type_ != StatementType::Variable
-        && value.type_ != StatementType::Call
-    {
-        panic!("Only literals and variables are supported for now");
-    }
     if value.type_ == StatementType::Variable
     {
         let value = value.name.clone();
@@ -76,6 +70,15 @@ fn genassignment_old(value: &Statement, pos: usize, vars: &Vec<Variable>) -> Str
     {
         panic!("Only int variables are supported for now");
     }
-    let value = value.name.clone();
-    return format!("movq -{}(%rbp), %rax\nmovq ${}, (%rax)\n", pos*8, value);
+    if value.type_ == StatementType::Literal
+    {
+        let value = value.name.clone();
+        return format!("movq -{}(%rbp), %rax\nmovq ${}, (%rax)\n", pos*8, value);
+    }
+    if value.type_ == StatementType::Binary
+    {
+        let parsed = utils::parsebinary(value.clone(), &vars);
+        return format!("{}movq -{}(%rbp), %rbx\nmovq %rax, (%rbx)\n", parsed, pos*8);
+    }
+    panic!("Not implemented (genassignment) ({})", value.to_string());
 }

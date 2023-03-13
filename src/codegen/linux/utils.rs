@@ -21,7 +21,12 @@ pub fn compile_linux(path: &str) {
     command.arg(path);
     command.arg("out.o");
     command.arg("-lc");
-    command.output().unwrap();
+    let res = command.output().unwrap();
+    if res.status.code().unwrap() != 0
+    {
+        println!("{}", res.stderr.len());
+        panic!("Failed to compile");
+    }
     match std::fs::remove_file("out.o")
     {
         Ok(_) => {},
@@ -35,6 +40,7 @@ pub fn save_assebly_code(str: &str) {
     let mut file = File::create("out.s").unwrap();
     file.write_all(str.as_bytes()).unwrap();
 }
+
 use super::Variable;
 pub fn findvariableindex(name: &str, variables: &Vec<Variable>) -> usize
 {
@@ -122,4 +128,61 @@ pub fn is_argument(name: &str, vars: &Vec<Variable>) -> bool
         }
     }
     panic!("Variable {} not found", name);
+}
+use super::super::Statement;
+use super::super::StatementType;
+use super::load_util;
+pub fn parsebinary(statement: Statement, vars: &Vec<Variable>) -> String
+{
+    let mut code = String::new();
+    if statement.type_ == StatementType::Binary
+    {
+        let left = statement.statements[0].clone();
+        let right = statement.statements[1].clone();
+        let left = parsebinary(left, &vars);
+        let right = parsebinary(right, &vars);
+        code.push_str(&left);
+        code.push_str("movq %rax, %rbx\n");
+        // make addition usw.
+        code.push_str(&right);
+        if statement.name == "+"
+        {
+            code.push_str("addq %rbx, %rax\n");
+        }
+        else
+        if statement.name == "-"
+        {
+            code.push_str("subq %rax, %rbx\nmovq %rbx, %rax\n");
+        }
+        else
+        if statement.name == "*"
+        {
+            code.push_str("imulq %rbx, %rax\n");
+        }
+        else
+        if statement.name == "/"
+        {
+            code.push_str("movq %rax, %rcx\nmovq %rbx, %rax\nmovq %rcx, %rbx\nmovq $0, %rcx\ncqto\nidivq %rbx\n");
+        }
+        else
+        {
+            panic!("Invalid binary operator");
+        }
+        return code;
+    }
+    else
+    if statement.type_ == StatementType::Variable
+    {
+        code = load_util::load_variable(&vars, statement.name.clone());
+    }
+    else
+    if statement.type_ == StatementType::Literal
+    {
+        code = format!("movq ${}, %rax\n", statement.name);
+    }
+    else
+    {
+        panic!("Invalid statement type");
+    }
+    return code;
 }

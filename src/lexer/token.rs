@@ -130,6 +130,16 @@ impl Token {
             LexerToken::Bang => "Bang".to_string(),
             LexerToken::BangEquals => "BangEquals".to_string(),
             LexerToken::Arrow => "Arrow".to_string(),
+            LexerToken::Plus => "Plus".to_string(),
+            LexerToken::Minus => "Minus".to_string(),
+            LexerToken::Star => "Star".to_string(),
+            LexerToken::Slash => "Slash".to_string(),
+            LexerToken::Pipe => "Pipe".to_string(),
+            LexerToken::PipePipe => "PipePipe".to_string(),
+            LexerToken::Ampersand => "Ampersand".to_string(),
+            LexerToken::AmpersandAmpersand => "AmpersandAmpersand".to_string(),
+            LexerToken::OpenSquareBracket => "OpenSquareBracket".to_string(),
+            LexerToken::CloseSquareBracket => "CloseSquareBracket".to_string(),
             _ => "BadToken".to_string(),
         }
     }

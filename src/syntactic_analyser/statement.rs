@@ -115,6 +115,7 @@ pub enum StatementType
     Literal,
     Assignment,
     Argument,
+    Binary,
 }
 impl StatementType
 {
@@ -133,6 +134,7 @@ impl StatementType
             StatementType::Literal => string.push_str("Literal"),
             StatementType::Assignment => string.push_str("Assignment"),
             StatementType::Argument => string.push_str("Argument"),
+            StatementType::Binary => string.push_str("Binary"),
         }
         return string;
     }
@@ -190,7 +192,18 @@ impl Statement
             statements: vec![clone_1],
         }
     }
+    pub fn new_binary(left: Statement, right: Statement, operator: String, datatype: Datatype) -> Statement
+    {
+        Statement {
+            name: operator,
+            type_: StatementType::Binary,
+            datatype: datatype,
+            statements: vec![left, right],
+        }
+    }
 }
+use crate::lexer::token::LexerToken;
+
 use super::Arguments;
 use std::collections::HashMap;
 fn generate_statement_from_expression(expression: super::Expression, functions: &HashMap<String, (Datatype, Arguments, Vec::<Statement>)>) -> Statement {
@@ -264,6 +277,44 @@ fn generate_statement_from_expression(expression: super::Expression, functions: 
         let call_state = Statement::new_call(name, statements, data.0.clone());
         return call_state;
     }
+    if expression.is_binary()
+    {
+        // println!("generate statement from expression ( binary )");
+        let binary = expression.syntax.get_binary_expr();
+        let left = generate_statement_from_expression(binary.get_left().clone(), &functions);
+        let right = generate_statement_from_expression(binary.get_right().clone(), &functions);
+        let datatype = Datatype
+        {
+            datatype: StatementDatatype::Int,
+            array_bounds: Vec::<i32>::new(),
+            is_array: false,
+        };
+        // println!("Binary: {} {} {}", left.to_string(), binary.get_operator().to_string(), right.to_string());
+        let op = get_op_by_token(binary.get_operator().token);
+        let call_state = Statement::new_binary(left, right, op, datatype);
+        return call_state;
+    }
     println!("Expression: {}", expression.to_string());
     panic!("Expression is not a literal (not implemented)");
+}
+fn get_op_by_token(token : LexerToken) -> String
+{
+    return match token {
+        LexerToken::Plus => String::from("+"),
+        LexerToken::Minus => String::from("-"),
+        LexerToken::Star => String::from("*"),
+        LexerToken::Slash => String::from("/"),
+        // LexerToken::Percent => String::from("%"), // TODO: Implement
+        LexerToken::EqualsEquals => String::from("=="),
+        LexerToken::BangEquals => String::from("!="),
+        LexerToken::Less => String::from("<"),
+        LexerToken::LessEquals => String::from("<="),
+        LexerToken::Greater => String::from(">"),
+        LexerToken::GreaterEquals => String::from(">="),
+        LexerToken::AmpersandAmpersand => String::from("&&"),
+        LexerToken::PipePipe => String::from("||"),
+        LexerToken::Ampersand => String::from("&"),
+        LexerToken::Pipe => String::from("|"),
+        _ => panic!("Token is not an operator"),
+    }
 }
