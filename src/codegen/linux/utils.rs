@@ -38,8 +38,8 @@ pub fn save_assebly_code(str: &str) {
 use super::Variable;
 pub fn findvariableindex(name: &str, variables: &Vec<Variable>) -> usize
 {
-    println!("Finding variable index for {}", name);
-    println!("Variables: {:?}", variables);
+    // println!("Finding variable index for {}", name);
+    // println!("Variables: {:?}", variables);
     for var in variables
     {
         if var.name == name
@@ -105,4 +105,21 @@ fn get_general_register_names() -> Vec<String>
     "si".to_string(), "di".to_string(), "bp".to_string(),
     "sp".to_string()];
     return registers;
+}
+pub fn get_argument_registers() -> Vec<String>
+{
+    let registers = vec!["rdi".to_string(), "rsi".to_string(), "rdx".to_string(),
+    "rcx".to_string(), "r8".to_string(), "r9".to_string()];
+    return registers;
+}
+pub fn is_argument(name: &str, vars: &Vec<Variable>) -> bool
+{
+    for var in vars
+    {
+        if var.name == name
+        {
+            return var.is_argument;
+        }
+    }
+    panic!("Variable {} not found", name);
 }

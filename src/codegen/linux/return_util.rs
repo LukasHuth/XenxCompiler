@@ -27,7 +27,7 @@ pub fn genreturn(statement: Statement, vars: &mut Vec<Variable>) -> String
     if value.type_ == StatementType::Variable
     {
         let value = value.name.clone();
-        println!("name: {}", value);
+        // println!("name: {}", value);
         let load_code = load_util::load_variable(&vars, value);
         return load_code;
     }

@@ -1,4 +1,5 @@
 use super::Statement;
+#[derive(Clone, Debug)]
 pub struct Arguments
 {
     pub arguments: Vec<Statement>,

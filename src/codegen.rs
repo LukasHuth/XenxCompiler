@@ -2,22 +2,25 @@ mod versions;
 pub use versions::OS;
 
 pub mod linux;
-use linux::Variable;
 
 use crate::syntactic_analyser::statement::{StatementType, StatementDatatype};
 
 use super::syntactic_analyser::statement::Statement;
+use std::collections::HashMap;
+use super::syntactic_analyser::statement::Datatype;
+use super::syntactic_analyser::arguments::Arguments;
 pub struct Codegen
 {
     statements: Vec<Statement>,
+    functions: HashMap<String, (Datatype, Arguments, Vec::<Statement>)>,
     data: String,
     os: OS,
 }
 impl Codegen
 {
-    pub fn new(statements: Vec<Statement>, os: OS) -> Codegen
+    pub fn new(statements: Vec<Statement>, functions: HashMap<String, (Datatype, Arguments, Vec::<Statement>)>,os: OS) -> Codegen
     {
-        Codegen { statements: statements, data: "".to_string(), os }
+        Codegen { statements: statements, functions, data: "".to_string(), os }
     }
     pub fn generate(&mut self)
     {
@@ -36,9 +39,15 @@ impl Codegen
         self.data.push_str(".extern exit\n");
         self.data.push_str(".extern malloc\n");
         self.data.push_str(".extern free\n");
+        self.data.push_str(".extern printf\n");
+        self.data.push_str(".data\n");
+        self.data.push_str("format: .asciz \"%d\\n\"\n");
         self.data.push_str(".text\n");
         self.data.push_str(".globl _start\n");
         self.data.push_str("_start:\n");
+        self.data.push_str("pop %rdi\n");
+        self.data.push_str("movq %rsp, %rsi\n");
+        // self.data.push_str("lea 0(%rsp), %rsi\n");
         self.data.push_str("call main\n");
         self.data.push_str("movq %rax, %rdi\n");
         self.data.push_str("movq $60, %rax\n");
@@ -47,7 +56,11 @@ impl Codegen
         for statement in self.statements.clone()
         {
             let state = statement.clone();
-            let func = linux::generate(state);
+            let functions = self.functions.clone();
+            let name = statement.name.clone();
+            let function = functions.get(&name);
+            let args = function.unwrap().1.clone();
+            let func = linux::generate(state, args);
             self.data.push_str(func.as_str());
         }
         let registers = linux::utils::get_registers();

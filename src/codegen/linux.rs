@@ -5,12 +5,12 @@ pub mod load_util;
 pub mod return_util;
 pub mod utils;
 pub mod call_util;
-pub fn generate(statement: super::Statement) -> String
+use super::Arguments;
+pub fn generate(statement: super::Statement, args: Arguments) -> String
 {
     use super::StatementType;
     let mut vars = Vec::<Variable>::new();
     let mut used_positions = Vec::<usize>::new();
-    let mut highest_position: usize = 0;
     let mut data = String::new();
     data.push_str(statement.name.as_str());
     data.push_str(":\n");
@@ -20,6 +20,21 @@ pub fn generate(statement: super::Statement) -> String
     data.push_str("push %rdi\n");
     data.push_str("push %rsi\n");
     data.push_str("mov %rsp, %rbp\n");
+    let argument_regs = utils::get_argument_registers();
+    let mut highest_position: usize = argument_regs.len().clone();
+    for i in 0..argument_regs.len()
+    {
+        if i < args.arguments.len()
+        {
+            let arg = args.arguments[i].clone();
+            let name = arg.name.clone();
+            let var = Variable::new(&name, i, true);
+            vars.push(var);
+        }
+        data.push_str(format!("push %{}\n", argument_regs[i]).as_str());
+        used_positions.push(i);
+    }
+    // data.push_str(print_first.as_str());
     for expr in statement.statements
     {
         // println!("|expr: {}", expr.to_string());
@@ -40,14 +55,18 @@ pub fn generate(statement: super::Statement) -> String
         }
         if expr.type_ == StatementType::Call
         {
-            let str = call_util::gencall(expr.clone());
+            let str = call_util::gencall(expr.clone(), &vars);
             data.push_str(str.as_str());
         }
     }
-    println!("vars: {}", vars.len());
+    // println!("vars: {}", vars.len());
     data.push_str("push %rax\n");
     for var in vars
     {
+        if var.is_argument
+        {
+            continue;
+        }
         data.push_str(format!("movq -{}(%rbp), %rdi\n", var.index.clone()*8).as_str());
         data.push_str("call free\n");
     }

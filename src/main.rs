@@ -48,9 +48,11 @@ fn main() {
     let mut parser = parser::Parser::new(tokens);
     let statements = parser.parse();
     let mut syntactic_analyser = syntactic_analyser::SyntaticAnalyser::new(statements, context.clone());
-    let _statements = syntactic_analyser.analyse();
+    let _statements_function_tuple = syntactic_analyser.analyse();
     // println!("Statements: {}", _statements.clone().len());
-    let mut codegen = codegen::Codegen::new(_statements, os);
+    let functions = _statements_function_tuple.1;
+    let _statements = _statements_function_tuple.0;
+    let mut codegen = codegen::Codegen::new(_statements,functions, os);
     codegen.generate();
     codegen.compile(outfile.as_str());
     // from here i can use _statements to generate code

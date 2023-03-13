@@ -1,7 +1,7 @@
 use std::fmt::Formatter;
 use std::fmt::Error;
 use std::fmt::Display;
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Statement
 {
     pub name: String,
@@ -9,7 +9,7 @@ pub struct Statement
     pub datatype: Datatype,
     pub statements: Vec<Statement>,
 }
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Datatype
 {
     pub datatype: StatementDatatype,
@@ -75,7 +75,7 @@ impl Datatype
         return string;
     }
 }
-#[derive(PartialEq, Copy, Clone)]
+#[derive(PartialEq, Copy, Clone, Debug)]
 pub enum StatementDatatype
 {
     Int,
@@ -102,7 +102,7 @@ impl StatementDatatype
         return string;
     }
 }
-#[derive(PartialEq, Copy, Clone)]
+#[derive(PartialEq, Copy, Clone, Debug)]
 pub enum StatementType
 {
     Function,
@@ -196,6 +196,7 @@ use std::collections::HashMap;
 fn generate_statement_from_expression(expression: super::Expression, functions: &HashMap<String, (Datatype, Arguments, Vec::<Statement>)>) -> Statement {
     if expression.is_variable()
     {
+        // println!("generate statement from expression ( variable )");
         let var = expression.syntax.get_variable_expr();
         let name = var.get_name();
         let datatype = Datatype
@@ -208,6 +209,7 @@ fn generate_statement_from_expression(expression: super::Expression, functions: 
     }
     if expression.is_literal()
     {
+        // println!("generate statement from expression ( literal )");
         let datatype: StatementDatatype;
         if expression.is_integer_literal()
         {
@@ -250,6 +252,7 @@ fn generate_statement_from_expression(expression: super::Expression, functions: 
     }
     if expression.is_call()
     {
+        // println!("generate statement from expression ( call )");
         let call = expression.syntax.get_call_expr();
         let name = call.get_name();
         let mut statements = Vec::<Statement>::new();
@@ -258,13 +261,8 @@ fn generate_statement_from_expression(expression: super::Expression, functions: 
             statements.push(generate_statement_from_expression(arg.clone(), &functions));
         }
         let data = functions.get(&name).unwrap();
-        // let datatype = Datatype
-        // {
-        //     datatype: StatementDatatype::Int,
-        //     array_bounds: Vec::<i32>::new(),
-        //     is_array: false,
-        // };
-        return Statement::new_call(name, statements, data.0.clone());
+        let call_state = Statement::new_call(name, statements, data.0.clone());
+        return call_state;
     }
     println!("Expression: {}", expression.to_string());
     panic!("Expression is not a literal (not implemented)");

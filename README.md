@@ -107,6 +107,7 @@ else
 - make code gen where code is returned by calling functions
 - count in syntactic analyser how many times variables of an specific type are initialized and how much the max at the same time are
 - function call argument types are not checked as of now
+- function arguments: rdi, rsi, rdx, rcx, r8, r9, stack
 
 ### Done
 - a: int = 1;

@@ -31,10 +31,10 @@ pub fn genassignment(statement: Statement, vars: &mut Vec<Variable>, mut used_po
     {
         pos = utils::findemptyposition(&mut used_positions, &mut highest_position);
         used_positions.push(pos);
-        vars.push(Variable::new(name.as_str(), pos.clone()));
+        vars.push(Variable::new(name.as_str(), pos.clone(), false));
         new = true;
     }
-    println!("used_positions: {:?}", used_positions.clone());
+    // println!("used_positions: {:?}", used_positions.clone());
     if new
     {
         return genassignment_new(&value, pos, &vars);
@@ -61,15 +61,15 @@ fn genassignment_old(value: &Statement, pos: usize, vars: &Vec<Variable>) -> Str
     if value.type_ == StatementType::Variable
     {
         let value = value.name.clone();
-        println!("value: {}", value);
+        // println!("value: {}", value);
         let loaded_value = load_util::load_variable(&vars, value);
-        println!("pos: {}", pos);
-        println!("loaded_value: '{}'", loaded_value);
+        // println!("pos: {}", pos);
+        // println!("loaded_value: '{}'", loaded_value);
         return format!("{}movq -{}(%rbp), %rbx\nmovq %rax, (%rbx)\n", loaded_value, pos*8);
     }
     if value.type_ == StatementType::Call
     {
-        let callstr = call_util::gencall(value.clone());
+        let callstr = call_util::gencall(value.clone(), &vars);
         return format!("{}movq -{}(%rbp), %rbx\nmovq %rax, (%rbx)\n", callstr, pos*8);
     }
     if value.datatype.datatype != StatementDatatype::Int

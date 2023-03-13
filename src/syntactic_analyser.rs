@@ -29,7 +29,7 @@ impl SyntaticAnalyser {
             context: context,
         }
     }
-    pub fn analyse(&mut self) -> Vec<Statement>
+    pub fn analyse(&mut self) -> (Vec<Statement>, HashMap<String, (Datatype, Arguments, Vec::<Statement>)>)
     {
         // println!("statements: {}", self.statements.len());
         let mut statements = Vec::<Statement>::new();
@@ -38,15 +38,14 @@ impl SyntaticAnalyser {
             let element = self.statements.get(self.pos).unwrap();
             if !element.is_function_declaration()
             {
-                println!("first element is not a function declaration");
-                return vec![];
+                panic!("expected function declaration");
             }
             let function_declaration_expr = element.syntax.get_function_declaration_expr();
             let name = function_declaration_expr.get_name();
             let datatype = self.get_datatype(function_declaration_expr.get_type());
             let parameters = self.get_parameters(function_declaration_expr);
             let mut function = Statement::new_datatype(name.clone(), StatementType::Function, datatype.clone());
-            let body = self.get_body(element.syntax.get_function_declaration_expr().get_inside(), datatype.clone());
+            let body = self.get_body(element.syntax.get_function_declaration_expr().get_inside(), datatype.clone(), parameters.clone());
             function.statements = body.clone();
             // println!("function: {}", function.to_string());
             // println!("body: {}", body.len());
@@ -54,7 +53,7 @@ impl SyntaticAnalyser {
             statements.push(function);
             self.pos += 1;
         }
-        return statements;
+        return (statements, self.functions.clone());
     }
     fn get_datatype(&self, string: String) -> Datatype
     {
@@ -88,11 +87,15 @@ impl SyntaticAnalyser {
         }
         return parameters;
     }
-    fn get_body(&mut self, statements: Vec<Expression>, functiondatatype: Datatype) -> Vec<Statement>
+    fn get_body(&mut self, statements: Vec<Expression>, functiondatatype: Datatype, args: Arguments) -> Vec<Statement>
     {
         let mut body = Vec::<Statement>::new();
         let mut returned = false;
         let mut variables = HashMap::<String, Datatype>::new();
+        for arg in args.arguments
+        {
+            variables.insert(arg.name, arg.datatype);
+        }
         for statement in statements
         {
             if statement.is_call() // function call
@@ -247,6 +250,11 @@ impl SyntaticAnalyser {
                 let mut variable = Statement::new(name.clone(), statement::StatementType::Variable, datatype.datatype, datatype.clone().array_bounds, datatype.clone().is_array);
                 // println!("variable overwrite {} {} is valid", name, datatype.to_string());
                 if value.is_literal()
+                {
+                    variable.set_value(value.clone(), &self.functions);
+                }
+                else
+                if value.is_call()
                 {
                     variable.set_value(value.clone(), &self.functions);
                 }
