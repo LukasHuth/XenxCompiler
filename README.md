@@ -109,15 +109,8 @@ else
 - support more datatypes
 
 ### Done
-- a: int = 1;
-- b: int = a;
-- c: int = a + b;
-- d: bool = true;
-- e: bool = d;
-- g: bool = e == f;
-- h: bool = 1 >= 2;
-- i: int = 1 + 2 * 3
-- j: int = ( 1 + 2 ) * 3;
-- f: bool = !e;
-- k: int = -1;
-- l: int = -(5+6);
+- int:
+    - binary operators
+    - unary operators 
+    - return values
+    - arguments
