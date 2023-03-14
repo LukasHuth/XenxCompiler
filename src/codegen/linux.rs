@@ -5,6 +5,7 @@ pub mod load_util;
 pub mod return_util;
 pub mod utils;
 pub mod call_util;
+pub mod basic_functions;
 use super::{
     Arguments,
     Datatype,
@@ -15,9 +16,7 @@ pub fn generate(statements: Vec<Statement>, functions: HashMap<String, (Datatype
 {
     let mut data = String::new();
     data.push_str(".data\n");
-    data.push_str(".extern exit\n");
-    data.push_str(".extern malloc\n");
-    data.push_str(".extern free\n");
+    // data.push_str(".extern exit\n");
     data.push_str(".extern printf\n");
     data.push_str(".data\n");
     data.push_str("format: .asciz \"%d\\n\"\n");
@@ -29,8 +28,7 @@ pub fn generate(statements: Vec<Statement>, functions: HashMap<String, (Datatype
     // data.push_str("lea 0(%rsp), %rsi\n");
     data.push_str("call main\n");
     data.push_str("movq %rax, %rdi\n");
-    data.push_str("movq $60, %rax\n");
-    data.push_str("syscall\n\n");
+    data.push_str("call exit\n\n");
     data.push_str("");
     for statement in statements.clone()
     {
@@ -47,8 +45,13 @@ pub fn generate(statements: Vec<Statement>, functions: HashMap<String, (Datatype
     {
         data = data.replace(format!("push %{}\npop %{}\n", register, register).as_str(), "");
     }
+    let mut own_functions = String::from("# here begins the section for system functions\n\n");
+    own_functions.push_str(&basic_functions::generate_malloc());
+    own_functions.push_str(&basic_functions::generate_free());
+    data.push_str(own_functions.as_str());
     return data;
 }
+
 pub fn generate_function(statement: super::Statement, args: Arguments) -> String
 {
     use super::StatementType;
@@ -104,6 +107,7 @@ pub fn generate_function(statement: super::Statement, args: Arguments) -> String
         }
     }
     // println!("vars: {}", vars.len());
+    //*
     data.push_str("push %rax\n");
     for var in vars
     {
@@ -111,10 +115,13 @@ pub fn generate_function(statement: super::Statement, args: Arguments) -> String
         {
             continue;
         }
+        let size = 8;
         data.push_str(format!("movq -{}(%rbp), %rdi\n", var.index.clone()*8).as_str());
+        data.push_str(&format!("movq ${}, %rsi\n",size));
         data.push_str("call free\n");
     }
     data.push_str("pop %rax\n");
+    // */
     data.push_str("mov %rbp, %rsp\n");
     data.push_str("pop %rsi\n");
     data.push_str("pop %rdi\n");

@@ -29,7 +29,7 @@ impl Codegen
     {
         if self.os == OS::Linux
         {
-            linux::generate(self.statements.clone(), self.functions.clone());
+            self.data = linux::generate(self.statements.clone(), self.functions.clone());
         }
         else
         {
