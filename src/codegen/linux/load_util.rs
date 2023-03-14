@@ -8,7 +8,7 @@ pub fn load_int_variable(vars: &Vec<Variable>, name: String) -> String
     let value_pos = utils::findvariableindex(&name, &vars);
     if utils::is_argument(&name, &vars)
     {
-        return format!("movq -{}(%rbp), %rax\n", value_pos+8);
+        return format!("movq -{}(%rbp), %rax\n", value_pos*8);
     }
     return format!("movq -{}(%rbp), %rax\nmovq (%rax), %rax\n", value_pos*8);
 }

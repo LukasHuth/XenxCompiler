@@ -29,7 +29,10 @@ pub fn generate_free() -> String
     data.push_str("push %rdi\n");
     data.push_str("push %rbp\n");
     data.push_str("mov %rsp, %rbp\n");
-
+    data.push_str("movq $11, %rax\n");
+    data.push_str("movq %rdi, %rdi\n");
+    data.push_str("movq %rsi, %rsi\n");
+    data.push_str("syscall\n");
     data.push_str("cmp $0, %rax\n");
     data.push_str("je .L1\n");
     data.push_str("movq %rax, %rdi\n");
