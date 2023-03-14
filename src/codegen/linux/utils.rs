@@ -1,6 +1,9 @@
+use crate::syntactic_analyser::statement::Datatype;
+
 use super::super::{
     Statement,
-    StatementType
+    StatementType,
+    StatementDatatype,
 };
 use super::{
     Variable,
@@ -216,4 +219,22 @@ pub fn parsebinary(statement: Statement, vars: &Vec<Variable>) -> String
         panic!("Invalid statement type");
     }
     return code;
+}
+pub fn get_type_size(datatype: Datatype) -> i32
+{
+    let mut size = match datatype.datatype
+    {
+        StatementDatatype::Int => 8,    // 8 bytes for int
+        StatementDatatype::Char => 1,   // 1 byte for char
+        StatementDatatype::String => 8, // 8 bytes for pointer
+        StatementDatatype::Bool => 1,   // 1 byte for bool
+        StatementDatatype::Void => 0,   // 0 bytes for void
+        StatementDatatype::Float => 8,  // 8 bytes for double
+    };
+    for i in 0..datatype.array_bounds.len()
+    {
+        let bound = datatype.array_bounds[i].clone();
+        size = size * bound;
+    }
+    return size;
 }
