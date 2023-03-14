@@ -32,22 +32,24 @@ pub fn genassignment(statement: Statement, vars: &mut Vec<Variable>, mut used_po
     {
         pos = utils::findemptyposition(&mut used_positions, &mut highest_position);
         used_positions.push(pos);
-        vars.push(Variable::new(name.as_str(), pos.clone(), false));
+        let var_type = var.datatype.clone();
+        vars.push(Variable::new(name.as_str(), pos.clone(), false, var_type));
         new = true;
     }
     // println!("used_positions: {:?}", used_positions.clone());
     if new
     {
-        return genassignment_new(&value, pos, &vars);
+        let size = utils::get_type_size(var.datatype.clone());
+        return genassignment_new(size, &value, pos, &vars);
     }
     else
     {
         return genassignment_old(&value, pos, &vars);
     }
 }
-fn genassignment_new(value: &Statement, pos: usize, vars: &Vec<Variable>) -> String
+fn genassignment_new(size: i32, value: &Statement, pos: usize, vars: &Vec<Variable>) -> String
 {
-    let malloc_code = format!("movq $8, %rdi\ncall malloc\nsub $8, %rsp\nmovq %rax, -{}(%rbp)\n", pos*8); // TODO: malloc
+    let malloc_code = format!("movq ${}, %rdi\ncall malloc\nsub $8, %rsp\nmovq %rax, -{}(%rbp)\n", size, pos*8); // TODO: malloc
     let assign = genassignment_old(value, pos, &vars);
     return format!("{}{}", malloc_code, assign);
 }
@@ -58,7 +60,7 @@ fn genassignment_old(value: &Statement, pos: usize, vars: &Vec<Variable>) -> Str
         let value = value.name.clone();
         return format!("movq -{}(%rbp), %rax\nmovq ${}, (%rax)\n", pos*8, value);
     }
-    println!("value: {}", value.to_string());
+    // println!("value: {}", value.to_string());
     let expression = utils::parsebinary(value.clone(), &vars);
     return format!("{}movq -{}(%rbp), %rbx\nmovq %rax, (%rbx)\n", expression, pos*8);
 }

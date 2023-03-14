@@ -74,7 +74,7 @@ pub fn generate_function(statement: super::Statement, args: Arguments) -> String
         {
             let arg = args.arguments[i].clone();
             let name = arg.name.clone();
-            let var = Variable::new(&name, i, true);
+            let var = Variable::new(&name, i, true, arg.datatype.clone());
             vars.push(var);
         }
         data.push_str(format!("push %{}\n", argument_regs[i]).as_str());
@@ -115,7 +115,7 @@ pub fn generate_function(statement: super::Statement, args: Arguments) -> String
         {
             continue;
         }
-        let size = 8;
+        let size = utils::get_type_size(var.datatype.clone());
         data.push_str(format!("movq -{}(%rbp), %rdi\n", var.index.clone()*8).as_str());
         data.push_str(&format!("movq ${}, %rsi\n",size));
         data.push_str("call free\n");
