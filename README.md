@@ -1,4 +1,19 @@
 # Xenx Compiler
+## Comipation
+### build the compiler
+```
+root folder:
+cargo build --release
+```
+### run compiler
+```
+cargo run --release <filename>
+```
+### options
+```
+-o <output file>
+-f <os to compile for> (only elf is supported at the moment)
+```
 ## Datatypes
 - int
 - string
@@ -39,76 +54,12 @@ else
     <body>
 }
 ```
-## AST structure
-### Done
-#### a: int = 0;
-```
-{
-    tag: AssignmentExpr,
-    syntax:
-    {
-        assignment_expr:
-        {
-            type_: "a"
-            value:
-            {
-                tag: IntegerLiteral,
-                syntax:
-                {
-                    integer_literal: 0
-                }
-            }
-        }
-    }
-}
-```
-#### return 2;
-```
-{
-    tag: ReturnExpr,
-    syntax:
-    {
-        return_expr:
-        {
-            value:
-            {
-                tag: IntegerLiteral,
-                syntax:
-                {
-                    integer_literal: 2
-                }
-            }
-        }
-    }
-}
-```
-
-#### return a;
-```
-{
-    tag: ReturnExpr,
-    syntax:
-    {
-        return_expr:
-        {
-            value:
-            {
-                tag: VariableExpr,
-                syntax:
-                {
-                    variable_expr: "a"
-                }
-            }
-        }
-    }
-}
-```
-### TODO
+## TODO
 - suport unary operators
 - support if
 - support more datatypes
 
-### Done
+## Done
 - int:
     - binary operators
     - unary operators 

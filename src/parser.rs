@@ -214,7 +214,7 @@ impl Parser
             let right = self.parse_binary_expression(operator.precedence());
             left = Expression::new_binary_expr(left, operator, right, start);
         }
-        println!("Returning left: {}", left.to_string());
+        // println!("Returning left: {}", left.to_string());
         return left;
     }
     fn parse_unary_expression(&mut self) -> Expression
