@@ -238,3 +238,24 @@ pub fn get_type_size(datatype: Datatype) -> i32
     }
     return size;
 }
+
+pub fn move_literal_to_rax(state: Statement) -> String {
+    let mut data = String::new();
+    if state.type_ != StatementType::Literal {
+        panic!("Statement is not a literal");
+    }
+    let literal = state.name.clone();
+    if state.datatype.datatype == StatementDatatype::Int {
+        data.push_str(&format!("movq ${}, %rax\n", literal));
+    } else if state.datatype.datatype == StatementDatatype::Char {
+        data.push_str(&format!("movb ${}, %al\n", literal));
+    } else if state.datatype.datatype == StatementDatatype::Bool {
+        let ret = if literal == "true" { 1 } else { 0 };
+        data.push_str(&format!("movb ${}, %al\n", ret));
+    } else if state.datatype.datatype == StatementDatatype::Float {
+        data.push_str(&format!("movq ${}, %rax\n", literal));
+    } else {
+        panic!("Invalid literal type");
+    }
+    return data;
+}

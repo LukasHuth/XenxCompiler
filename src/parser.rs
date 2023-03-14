@@ -43,6 +43,7 @@ impl Parser
                     while self.peek().token == LexerToken::OpenSquareBracket
                     {
                         self.match_token(LexerToken::OpenSquareBracket);
+                        println!("{}", self.peek().text);
                         let numer = self.match_token(LexerToken::Literal);
                         if !numer.text.parse::<i32>().is_ok()
                         {

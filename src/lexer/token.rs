@@ -186,6 +186,16 @@ impl fmt::Display for LexerToken {
             LexerToken::Bang => write!(f, "Bang"),
             LexerToken::BangEquals => write!(f, "BangEquals"),
             LexerToken::Arrow => write!(f, "Arrow"),
+            LexerToken::Plus => write!(f, "Plus"),  
+            LexerToken::Minus => write!(f, "Minus"),
+            LexerToken::Star => write!(f, "Star"),
+            LexerToken::Slash => write!(f, "Slash"),
+            LexerToken::Pipe => write!(f, "Pipe"),
+            LexerToken::PipePipe => write!(f, "PipePipe"),
+            LexerToken::Ampersand => write!(f, "Ampersand"),
+            LexerToken::AmpersandAmpersand => write!(f, "AmpersandAmpersand"),
+            LexerToken::OpenSquareBracket => write!(f, "OpenSquareBracket"),
+            LexerToken::CloseSquareBracket => write!(f, "CloseSquareBracket"),
             _ => write!(f, "BadToken"),
         }
     }

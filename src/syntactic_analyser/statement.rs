@@ -18,6 +18,7 @@ pub struct Datatype
     pub datatype: StatementDatatype,
     pub array_bounds: Vec<i32>,
     pub is_array: bool,
+    pub array_bounds_unknown: bool,
 }
 impl Display for Datatype
 {
@@ -35,6 +36,17 @@ impl Datatype
             datatype,
             array_bounds,
             is_array,
+            array_bounds_unknown: false
+        }
+    }
+    pub fn new_unknown(datatype: StatementDatatype, array_bounds: Vec<i32>, is_array: bool) -> Datatype
+    {
+        Datatype
+        {
+            datatype,
+            array_bounds,
+            is_array,
+            array_bounds_unknown: true
         }
     }
     pub fn is_same(&self, other: &Datatype) -> bool
@@ -153,6 +165,7 @@ impl Statement
             datatype,
             array_bounds,
             is_array,
+            array_bounds_unknown: false
         };
         Statement {
             name,

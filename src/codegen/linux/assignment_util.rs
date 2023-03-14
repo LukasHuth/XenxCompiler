@@ -1,7 +1,6 @@
 use super::super::{
     Statement,
     StatementType,
-    StatementDatatype
 };
 use super::{
     Variable,
@@ -12,13 +11,13 @@ pub fn genassignment(statement: Statement, vars: &mut Vec<Variable>, mut used_po
     // println!("genassignment({})", statement.to_string());
     let var = statement.clone();
     let name = var.name.clone();
-    if var.datatype.datatype != StatementDatatype::Int
-    {
-        panic!("Only int variables are supported for now");
-    }
     if var.statements.len() == 0
     {
         panic!("No value for variable {}", name);
+    }
+    if var.datatype.array_bounds.len() > 0
+    {
+        panic!("Arrays not supported yet");
     }
     let value = var.statements[0].clone();
     let pos: usize;
@@ -57,8 +56,8 @@ fn genassignment_old(value: &Statement, pos: usize, vars: &Vec<Variable>) -> Str
 {
     if value.type_ == StatementType::Literal
     {
-        let value = value.name.clone();
-        return format!("movq -{}(%rbp), %rax\nmovq ${}, (%rax)\n", pos*8, value);
+        let ret = utils::move_literal_to_rax(value.clone());
+        return format!("{}movq -{}(%rbp), %rbx\nmovq %rax, (%rbx)\n", ret, pos*8);
     }
     // println!("value: {}", value.to_string());
     let expression = utils::parsebinary(value.clone(), &vars);

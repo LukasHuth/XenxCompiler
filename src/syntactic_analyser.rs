@@ -50,7 +50,7 @@ impl SyntaticAnalyser {
             }
             let function_declaration_expr = element.syntax.get_function_declaration_expr();
             let name = function_declaration_expr.get_name();
-            let datatype = self.get_datatype(function_declaration_expr.get_type());
+            let datatype = self.get_datatype(function_declaration_expr.get_type(), true);
             let parameters = self.get_parameters(function_declaration_expr);
             let mut function = Statement::new_datatype(name.clone(), StatementType::Function, datatype.clone());
             self.actual_datatype = datatype.clone();
@@ -64,20 +64,28 @@ impl SyntaticAnalyser {
         }
         return (statements, self.functions.clone());
     }
-    fn get_datatype(&self, string: String) -> Datatype
+    fn get_datatype(&self, string: String, is_arg: bool) -> Datatype
     {
-        let datatype = string.clone();
+        let mut datatype = string.clone();
         let mut dim = Vec::<i32>::new();
         let mut is_array = false;
         while datatype.ends_with("]")
         {
             is_array = true;
-            let datatype = util::remove_n_chars_from_behind(datatype.clone(), 1);
+            datatype = util::remove_n_chars_from_behind(datatype.clone(), 1);
             let split = datatype.split("[");
-            let split = split.last().unwrap();
-            let number = split.parse::<i32>().unwrap();
-            let datatype = util::remove_n_chars_from_behind(datatype.clone(), split.len());
-            dim.push(number);
+            if !is_arg
+            {
+                let split = split.last().unwrap();
+                let number = split.parse::<i32>().unwrap();
+                dim.push(number);
+            }
+            else
+            {
+                dim.push(0);
+            }
+            datatype = util::remove_n_chars_from_behind(datatype.clone(), 1);
+            println!("datatype: {}", datatype);
             util::remove_n_chars_from_behind(datatype.clone(), 1);
         }
         let datatype = util::get_datatype_from_string(datatype);
@@ -91,7 +99,7 @@ impl SyntaticAnalyser {
         {
             let arg = parameter.syntax.get_arg_variable_expr();
             let name = arg.get_name();
-            let datatype = self.get_datatype(arg.get_type());
+            let datatype = self.get_datatype(arg.get_type(), true);
             parameters.push(Statement::new(name, statement::StatementType::Argument, datatype.datatype, datatype.array_bounds, datatype.is_array));
         }
         return parameters;
@@ -141,7 +149,7 @@ impl SyntaticAnalyser {
                     }
                     if same_datatype
                     {
-                        let datatype = self.get_datatype(farg.datatype.to_string());
+                        let datatype = self.get_datatype(farg.datatype.to_string(), false);
                         let argument = Statement::new(String::from(""), StatementType::Argument, datatype.datatype, datatype.array_bounds, datatype.is_array);
                         arguments.push(argument);
                     }
@@ -174,10 +182,10 @@ impl SyntaticAnalyser {
                     let err = util::get_line_of_position(self.context.clone(),statement.get_position() + 2);
                     panic!("variable {} already exists at {}:{}", name, err.0, err.1);
                 }
-                let datatype = self.get_datatype(variable_declaration.get_type());
+                let datatype = self.get_datatype(variable_declaration.get_type(), false);
                 let value = variable_declaration.get_value();
                 let val = util::generate_binary(value.clone(), &variables, &self.functions);
-                if !datatype.is_same(&val.datatype)
+                if !datatype.is_same(&val.datatype) && !(value.is_integer_literal() && value.syntax.get_integer_literal() == 0)
                 {
                     let err = util::get_line_of_position(self.context.clone(),statement.get_position() + 2);
                     println!("{}{}", datatype.clone().to_string(), "");
