@@ -1,6 +1,8 @@
 
-use super::lexer::token::Token;
-use super::lexer::token::LexerToken;
+use super::lexer::token::{
+    Token,
+    LexerToken
+};
 pub mod expression;
 use expression::Expression;
 pub struct Parser

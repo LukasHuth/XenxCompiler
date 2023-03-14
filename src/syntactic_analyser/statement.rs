@@ -1,6 +1,9 @@
-use std::fmt::Formatter;
-use std::fmt::Error;
-use std::fmt::Display;
+use std::fmt::{Formatter,Error,Display};
+use super::{
+    Arguments,
+    util
+};
+use std::collections::HashMap;
 #[derive(Clone, Debug)]
 pub struct Statement
 {
@@ -215,7 +218,3 @@ impl Statement
         }
     }
 }
-
-use super::Arguments;
-use std::collections::HashMap;
-use super::util;

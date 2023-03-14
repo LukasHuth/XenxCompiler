@@ -2,17 +2,22 @@ use std::collections::HashMap;
 pub mod statement;
 pub mod arguments;
 mod typetest;
-use statement::Statement;
-use statement::StatementType;
-use statement::StatementDatatype;
+use statement::{
+    Datatype,
+    Statement,
+    StatementType,
+    StatementDatatype,
+};
 
 mod util;
 
 use arguments::Arguments;
-use statement::Datatype;
-
-use super::lexer::token::LexerToken;
-use super::parser::expression::Expression;
+use super::{
+    lexer,
+    parser,
+};
+use lexer::token::LexerToken;
+use parser::expression::Expression;
 
 pub struct SyntaticAnalyser {
     pub statements: Vec<Expression>,

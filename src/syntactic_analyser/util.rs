@@ -1,5 +1,13 @@
 use std::collections::HashMap;
-use super::Datatype;
+use super::{
+    Datatype,
+    LexerToken,
+    StatementDatatype,
+    Expression,
+    Statement,
+    Arguments,
+    StatementType,
+};
 
 pub fn get_variable(name: String, variables: &HashMap<String, Datatype>) -> Datatype
 {
@@ -10,8 +18,6 @@ pub fn get_variable(name: String, variables: &HashMap<String, Datatype>) -> Data
     variables.get(&name).unwrap().clone()
 }
 
-use super::StatementDatatype;
-use super::Expression;
 #[allow(unreachable_patterns)]
 pub fn test_variable_declaration_literal(datatype: Datatype, value: Expression, supress_output: bool) -> bool
 {
@@ -90,7 +96,6 @@ pub fn test_variable_declaration_literal(datatype: Datatype, value: Expression, 
     }
 }
 
-use super::Statement;
 pub fn same_datatype(arg1: Statement, arg2: Datatype) -> bool {
     let arg1 = arg1.datatype.clone();
     if arg1.datatype != arg2.datatype {
@@ -222,8 +227,6 @@ pub fn get_line_of_position(context: String, position: usize) -> (usize, usize) 
     return (line_, start);
 }
 
-use super::Arguments;
-
 pub fn generate_binary(expression: Expression, vars: &HashMap<String, Datatype>, functions: &HashMap<String, (Datatype, Arguments, Vec::<Statement>)>) -> Statement {
     if expression.is_literal()
     {
@@ -255,8 +258,6 @@ pub fn generate_binary(expression: Expression, vars: &HashMap<String, Datatype>,
     let datatype = get_datatype_by_datatype_and_operator(left_type, right_type, operator.clone());
     return Statement::new_binary(left, right, operator, Datatype::new(datatype, vec![], false));
 }
-
-use super::StatementType;
 
 fn generate_variable(expression: Expression, vars: &HashMap<String, Datatype>) -> Statement {
     let variable = expression.syntax.get_variable_expr();
@@ -350,7 +351,6 @@ fn get_datatype_by_datatype_and_operator(left: StatementDatatype, right: Stateme
     panic!("Datatype not implemented yet");
 }
 
-use super::LexerToken;
 pub fn get_op_by_token(token : LexerToken) -> String
 {
     return match token {
@@ -372,7 +372,7 @@ pub fn get_op_by_token(token : LexerToken) -> String
         _ => panic!("Token is not an operator"),
     }
 }
-pub fn get_function(name: String, pos: usize, functions: &HashMap<String, (Datatype, Arguments, Vec::<Statement>)>) -> (Datatype, Vec<Statement>) {
+pub fn get_function(name: String, _pos: usize, functions: &HashMap<String, (Datatype, Arguments, Vec::<Statement>)>) -> (Datatype, Vec<Statement>) {
     let funcs = functions.keys().map(|e| e.to_string() ).collect::<Vec<String>>();
     if !funcs.contains(&name) {
         // println!("pos: {}", pos);

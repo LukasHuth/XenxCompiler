@@ -1,7 +1,9 @@
-use super::super::Statement;
 use super::Variable;
-use super::super::StatementType;
-use super::super::StatementDatatype;
+use super::super::{
+    Statement,
+    StatementType,
+    StatementDatatype
+};
 pub fn gencall(statement: Statement, vars: &Vec<Variable>) -> String
 {
     let name = statement.name;

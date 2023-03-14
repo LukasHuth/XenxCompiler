@@ -1,5 +1,13 @@
-use super::{util,Datatype,Expression,LexerToken,StatementDatatype,Arguments,Statement};
-use super::HashMap;
+use super::{
+    util,
+    Datatype,
+    Expression,
+    LexerToken,
+    Statement,
+    StatementDatatype,
+    Arguments,
+};
+use std::collections::HashMap;
 pub fn is_datatype(datatype: Datatype, value: Expression, supressed_output: bool, variables: &HashMap<String, Datatype>,
     functions: &HashMap<String, (Datatype, Arguments, Vec::<Statement>)>) -> bool
 {

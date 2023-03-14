@@ -1,3 +1,11 @@
+use super::super::{
+    Statement,
+    StatementType
+};
+use super::{
+    Variable,
+    load_util
+};
 pub fn compile_linux(path: &str) {
     let remove_files = false;
     use std::process::Command;
@@ -41,7 +49,6 @@ pub fn save_assebly_code(str: &str) {
     file.write_all(str.as_bytes()).unwrap();
 }
 
-use super::Variable;
 pub fn findvariableindex(name: &str, variables: &Vec<Variable>) -> usize
 {
     // println!("Finding variable index for {}", name);
@@ -129,9 +136,6 @@ pub fn is_argument(name: &str, vars: &Vec<Variable>) -> bool
     }
     panic!("Variable {} not found", name);
 }
-use super::super::Statement;
-use super::super::StatementType;
-use super::load_util;
 pub fn parsebinary(statement: Statement, vars: &Vec<Variable>) -> String
 {
     let mut code = String::new();

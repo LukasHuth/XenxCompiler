@@ -1,6 +1,8 @@
 pub mod token;
-use token::LexerToken;
-use token::Token;
+use token::{
+    LexerToken,
+    Token,
+};
 pub struct Lexer {
     input: String,
     position: usize,

@@ -1,8 +1,12 @@
-use super::super::Statement;
-use super::Variable;
-use super::super::StatementType;
-use super::super::StatementDatatype;
-use super::load_util;
+use super::super::{
+    Statement,
+    StatementType,
+    StatementDatatype
+};
+use super::{
+    Variable,
+    load_util
+};
 
 pub fn genreturn(statement: Statement, vars: &mut Vec<Variable>) -> String
 {

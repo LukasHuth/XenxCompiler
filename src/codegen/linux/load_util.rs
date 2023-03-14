@@ -1,5 +1,7 @@
-use super::Variable;
-use super::utils;
+use super::{
+    Variable,
+    utils
+};
 pub fn load_int_variable(vars: &Vec<Variable>, name: String) -> String
 {
     // println!("load_variable({})", name);

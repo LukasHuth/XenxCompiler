@@ -3,12 +3,15 @@ pub use versions::OS;
 
 pub mod linux;
 
-use crate::syntactic_analyser::statement::{StatementType, StatementDatatype};
-
-use super::syntactic_analyser::statement::Statement;
-use std::collections::HashMap;
-use super::syntactic_analyser::statement::Datatype;
+use crate::syntactic_analyser::statement::{
+    StatementType,
+    StatementDatatype,
+    Statement,
+    Datatype,
+};
 use super::syntactic_analyser::arguments::Arguments;
+
+use std::collections::HashMap;
 pub struct Codegen
 {
     statements: Vec<Statement>,

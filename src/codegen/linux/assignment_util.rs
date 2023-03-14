@@ -1,11 +1,12 @@
-use super::super::StatementDatatype;
-use super::super::StatementType;
-use super::super::Statement;
-use super::Variable;
-use super::call_util;
-use super::utils;
-use super::load_util;
-
+use super::super::{
+    Statement,
+    StatementType,
+    StatementDatatype
+};
+use super::{
+    Variable,
+    utils
+};
 pub fn genassignment(statement: Statement, vars: &mut Vec<Variable>, mut used_positions: &mut Vec<usize>, mut highest_position: &mut usize) -> String
 {
     // println!("genassignment({})", statement.to_string());
