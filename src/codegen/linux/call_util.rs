@@ -1,7 +1,6 @@
-use super::Variable;
+use super::{Variable, utils};
 use super::super::{
     Statement,
-    StatementType,
     StatementDatatype
 };
 pub fn gencall(statement: Statement, vars: &Vec<Variable>) -> String
@@ -16,36 +15,21 @@ pub fn gencall(statement: Statement, vars: &Vec<Variable>) -> String
     // println!("argc: {}", argc);
     for i in 0..argc
     {
+        let i = argc - i - 1;
         let expr = statement.statements[i].clone();
         if expr.datatype.datatype != StatementDatatype::Int
         {
             panic!("Only integers are supported as arguments for now");
         }
-        let load_from: String;
-        if expr.type_ == StatementType::Literal
-        {
-            load_from = format!("${}", expr.name.clone());
-        }
-        else
-        if expr.type_ == StatementType::Variable
-        {
-            let load_var = super::load_util::load_int_variable(vars, expr.name.clone());
-            // println!("load_var: {}", load_var);
-            string.push_str(load_var.as_str());
-            load_from = "%rax".to_string();
-        }
-        else
-        {
-            panic!("Invalid argument type");
-        }
-
+        let binary = utils::parsebinary(expr, vars);
+        string.push_str(binary.as_str());
         if i < registers.len()
         {
-            string.push_str(&format!("mov {}, {}\n", load_from, registers[i]));
+            string.push_str(&format!("mov %rax, {}\n", registers[i]));
         }
         else
         {
-            string.push_str(&format!("push ${}\n", load_from));
+            string.push_str("push %rax\n");
         }
     }
     string.push_str(&format!("push %rcx\npush %rdx\n"));

@@ -67,6 +67,26 @@ impl Lexer
                 return Token::new(token, text, start, self.position);
             },
             '/' => {
+                if self.peek(0) == '/'
+                {
+                    self.next();
+                    while self.peek(0) != '\r' && self.peek(0) != '\n' && self.peek(0) != '\0'
+                    {
+                        self.next();
+                    }
+                    return self.lex_token();
+                }
+                if self.peek(0) == '*'
+                {
+                    self.next();
+                    while self.peek(0) != '*' && self.peek(1) != '/'
+                    {
+                        self.next();
+                    }
+                    self.next();
+                    self.next();
+                    return self.lex_token();
+                }
                 token = LexerToken::Slash;
                 text = "/".to_string();
                 return Token::new(token, text, start, self.position);
