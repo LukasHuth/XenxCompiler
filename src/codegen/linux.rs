@@ -5,8 +5,51 @@ pub mod load_util;
 pub mod return_util;
 pub mod utils;
 pub mod call_util;
-use super::Arguments;
-pub fn generate(statement: super::Statement, args: Arguments) -> String
+use super::{
+    Arguments,
+    Datatype,
+    Statement,
+};
+use std::collections::HashMap;
+pub fn generate(statements: Vec<Statement>, functions: HashMap<String, (Datatype, Arguments, Vec::<Statement>)>) -> String
+{
+    let mut data = String::new();
+    data.push_str(".data\n");
+    data.push_str(".extern exit\n");
+    data.push_str(".extern malloc\n");
+    data.push_str(".extern free\n");
+    data.push_str(".extern printf\n");
+    data.push_str(".data\n");
+    data.push_str("format: .asciz \"%d\\n\"\n");
+    data.push_str(".text\n");
+    data.push_str(".globl _start\n");
+    data.push_str("_start:\n");
+    data.push_str("pop %rdi\n");
+    data.push_str("movq %rsp, %rsi\n");
+    // data.push_str("lea 0(%rsp), %rsi\n");
+    data.push_str("call main\n");
+    data.push_str("movq %rax, %rdi\n");
+    data.push_str("movq $60, %rax\n");
+    data.push_str("syscall\n\n");
+    data.push_str("");
+    for statement in statements.clone()
+    {
+        let state = statement.clone();
+        let functions = functions.clone();
+        let name = statement.name.clone();
+        let function = functions.get(&name);
+        let args = function.unwrap().1.clone();
+        let func = generate_function(state, args);
+        data.push_str(func.as_str());
+    }
+    let registers = utils::get_registers();
+    for register in registers
+    {
+        data = data.replace(format!("push %{}\npop %{}\n", register, register).as_str(), "");
+    }
+    return data;
+}
+pub fn generate_function(statement: super::Statement, args: Arguments) -> String
 {
     use super::StatementType;
     let mut vars = Vec::<Variable>::new();
