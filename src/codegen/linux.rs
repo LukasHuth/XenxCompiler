@@ -78,7 +78,7 @@ pub fn generate_function(statement: super::Statement, args: Arguments) -> String
             vars.push(var);
         }
         data.push_str(format!("push %{}\n", argument_regs[i]).as_str());
-        used_positions.push(i);
+        used_positions.push(i+1);
     }
     // data.push_str(print_first.as_str());
     for expr in statement.statements
