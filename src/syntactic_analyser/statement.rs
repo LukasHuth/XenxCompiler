@@ -132,6 +132,7 @@ pub enum StatementType
     Argument,
     Binary,
     Unary,
+    Body,
 }
 impl StatementType
 {
@@ -152,6 +153,7 @@ impl StatementType
             StatementType::Argument => string.push_str("Argument"),
             StatementType::Binary => string.push_str("Binary"),
             StatementType::Unary => string.push_str("Unary"),
+            StatementType::Body => string.push_str("Body"),
         }
         return string;
     }
@@ -228,6 +230,24 @@ impl Statement
             type_: StatementType::Unary,
             datatype: vec,
             statements: vec![operand],
+        }
+    }
+    pub fn new_if(condition: Statement, if_body: Vec<Statement>, else_body: Vec<Statement>) -> Statement
+    {
+        Statement {
+            name: String::from("if"),
+            type_: StatementType::If,
+            datatype: Datatype::new(StatementDatatype::Void, Vec::<i32>::new(), false),
+            statements: vec![condition, Statement::new_body(if_body), Statement::new_body(else_body)],
+        }
+    }
+    fn new_body(body: Vec<Statement>) -> Statement
+    {
+        Statement {
+            name: String::from("body"),
+            type_: StatementType::Body,
+            datatype: Datatype::new(StatementDatatype::Void, Vec::<i32>::new(), false),
+            statements: body,
         }
     }
 }

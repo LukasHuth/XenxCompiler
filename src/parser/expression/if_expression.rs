@@ -32,4 +32,20 @@ impl IfExpression
     {
         IfExpression{condition, then_branch, else_branch}
     }
+    pub fn get_condition(&self) -> &Expression
+    {
+        &self.condition
+    }
+    pub fn get_then_branch(&self) -> &Vec<Expression>
+    {
+        &self.then_branch
+    }
+    pub fn get_else_branch(&self) -> &Vec<Expression>
+    {
+        &self.else_branch
+    }
+    pub fn has_else_branch(&self) -> bool
+    {
+        self.else_branch.len() > 0
+    }
 }

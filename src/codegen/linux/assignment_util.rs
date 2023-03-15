@@ -1,6 +1,5 @@
 use super::super::{
     Statement,
-    StatementType,
 };
 use super::{
     Variable,
@@ -30,7 +29,10 @@ pub fn genassignment(statement: Statement, vars: &mut Vec<Variable>, mut used_po
     else
     {
         pos = utils::findemptyposition(&mut used_positions, &mut highest_position);
-        used_positions.push(pos);
+        for i in pos..(pos+8)
+        {
+            used_positions.push(i);
+        }
         let var_type = var.datatype.clone();
         vars.push(Variable::new(name.as_str(), pos.clone(), false, var_type));
         new = true;
@@ -48,18 +50,22 @@ pub fn genassignment(statement: Statement, vars: &mut Vec<Variable>, mut used_po
 }
 fn genassignment_new(size: i32, value: &Statement, pos: usize, vars: &Vec<Variable>) -> String
 {
-    let malloc_code = format!("movq ${}, %rdi\ncall malloc\nsub $8, %rsp\nmovq %rax, -{}(%rbp)\n", size, pos*8); // TODO: malloc
+    let malloc_code = format!("movq ${}, %rdi\ncall malloc\nsub $8, %rsp\nmovq %rax, -{}(%rbp)\n", size, pos); // TODO: malloc
     let assign = genassignment_old(value, pos, &vars);
     return format!("{}{}", malloc_code, assign);
 }
 fn genassignment_old(value: &Statement, pos: usize, vars: &Vec<Variable>) -> String
 {
-    if value.type_ == StatementType::Literal
-    {
-        let ret = utils::move_literal_to_rax(value.clone());
-        return format!("{}movq -{}(%rbp), %rbx\nmovq %rax, (%rbx)\n", ret, pos*8);
-    }
     // println!("value: {}", value.to_string());
+    let size = utils::get_type_size(value.datatype.clone());
     let expression = utils::parsebinary(value.clone(), &vars);
-    return format!("{}movq -{}(%rbp), %rbx\nmovq %rax, (%rbx)\n", expression, pos*8);
+    if size == 1
+    {
+        return format!("{}movq -{}(%rbp), %rbx\nmovb %al, (%rbx)\n", expression, pos);
+    }
+    if size == 8
+    {
+        return format!("{}movq -{}(%rbp), %rbx\nmovq %rax, (%rbx)\n", expression, pos);
+    }
+    panic!("Invalid size for assignment ({} bytes)", size);
 }

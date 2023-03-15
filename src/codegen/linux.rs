@@ -6,10 +6,12 @@ pub mod return_util;
 pub mod utils;
 pub mod call_util;
 pub mod basic_functions;
+pub mod if_util;
 use super::{
     Arguments,
     Datatype,
     Statement,
+    StatementType,
 };
 use std::collections::HashMap;
 pub fn generate(statements: Vec<Statement>, functions: HashMap<String, (Datatype, Arguments, Vec::<Statement>)>) -> String
@@ -30,6 +32,7 @@ pub fn generate(statements: Vec<Statement>, functions: HashMap<String, (Datatype
     data.push_str("movq %rax, %rdi\n");
     data.push_str("call exit\n\n");
     data.push_str("");
+    let mut if_positions = 0;
     for statement in statements.clone()
     {
         let state = statement.clone();
@@ -37,7 +40,7 @@ pub fn generate(statements: Vec<Statement>, functions: HashMap<String, (Datatype
         let name = statement.name.clone();
         let function = functions.get(&name);
         let args = function.unwrap().1.clone();
-        let func = generate_function(state, args);
+        let func = generate_function(state, args, &mut if_positions);
         data.push_str(func.as_str());
     }
     let registers = utils::get_registers();
@@ -52,9 +55,8 @@ pub fn generate(statements: Vec<Statement>, functions: HashMap<String, (Datatype
     return data;
 }
 
-pub fn generate_function(statement: super::Statement, args: Arguments) -> String
+pub fn generate_function(statement: super::Statement, args: Arguments, if_positions: &mut usize) -> String
 {
-    use super::StatementType;
     let mut vars = Vec::<Variable>::new();
     let mut used_positions = Vec::<usize>::new();
     let mut data = String::new();
@@ -67,7 +69,7 @@ pub fn generate_function(statement: super::Statement, args: Arguments) -> String
     data.push_str("push %rsi\n");
     data.push_str("mov %rsp, %rbp\n");
     let argument_regs = utils::get_argument_registers();
-    let mut highest_position: usize = argument_regs.len().clone();
+    let highest_position: usize = argument_regs.len().clone()*8; // 8 bytes per register
     for i in 0..argument_regs.len()
     {
         if i < args.arguments.len()
@@ -78,10 +80,31 @@ pub fn generate_function(statement: super::Statement, args: Arguments) -> String
             vars.push(var);
         }
         data.push_str(format!("push %{}\n", argument_regs[i]).as_str());
-        used_positions.push(i);
+        for j in (i*8)..((i+1)*8)
+        {
+            used_positions.push(j);
+        }
     }
+    // */
+    let body = generate_body(statement.statements, vars, used_positions, highest_position, if_positions);
+    data.push_str(body.as_str());
+    data.push_str("mov %rbp, %rsp\n");
+    data.push_str("pop %rsi\n");
+    data.push_str("pop %rdi\n");
+    data.push_str("pop %rbx\n");
+    data.push_str("pop %rbp\n");
+    data.push_str("ret\n\n");
+    data
+}
+pub fn generate_body(statements: Vec<Statement>, vars: Vec<Variable>, used_positions: Vec<usize>, highest_position: usize, if_points: &mut usize) -> String
+{
+    let old_vars = vars.clone();
+    let mut vars = vars.clone();
+    let mut used_positions = used_positions;
+    let mut highest_position = highest_position;
+    let mut data = String::new();
     // data.push_str(print_first.as_str());
-    for expr in statement.statements
+    for expr in statements
     {
         // println!("|expr: {}", expr.to_string());
         // println!("|type: {}", expr.type_.to_string());
@@ -105,28 +128,27 @@ pub fn generate_function(statement: super::Statement, args: Arguments) -> String
             println!("Unnecessary call: {}", expr.name);
             data.push_str(str.as_str());
         }
+        if expr.type_ == StatementType::If
+        {
+            let str = if_util::genif(expr.clone(), &vars, &used_positions, &highest_position, if_points);
+            data.push_str(str.as_str());
+        }
     }
     // println!("vars: {}", vars.len());
     //*
     data.push_str("push %rax\n");
-    for var in vars
+    for i in old_vars.len()..vars.len()
     {
+        let var = vars[i].clone();
         if var.is_argument
         {
             continue;
         }
         let size = utils::get_type_size(var.datatype.clone());
-        data.push_str(format!("movq -{}(%rbp), %rdi\n", var.index.clone()*8).as_str());
+        data.push_str(format!("movq -{}(%rbp), %rdi\n", var.index.clone()).as_str());
         data.push_str(&format!("movq ${}, %rsi\n",size));
         data.push_str("call free\n");
     }
     data.push_str("pop %rax\n");
-    // */
-    data.push_str("mov %rbp, %rsp\n");
-    data.push_str("pop %rsi\n");
-    data.push_str("pop %rdi\n");
-    data.push_str("pop %rbx\n");
-    data.push_str("pop %rbp\n");
-    data.push_str("ret\n\n");
-    data
+    return data;
 }

@@ -54,7 +54,8 @@ impl SyntaticAnalyser {
             let parameters = self.get_parameters(function_declaration_expr);
             let mut function = Statement::new_datatype(name.clone(), StatementType::Function, datatype.clone());
             self.actual_datatype = datatype.clone();
-            let body = self.get_body(element.syntax.get_function_declaration_expr().get_inside(), datatype.clone(), parameters.clone());
+            let body = self.get_body(element.syntax.get_function_declaration_expr().get_inside(),
+                HashMap::<String, Datatype>::new(), datatype.clone(), parameters.clone(), true);
             function.statements = body.clone();
             self.functions.insert(name, (datatype, parameters, body));
             // println!("function: {}", function.to_string());
@@ -104,12 +105,12 @@ impl SyntaticAnalyser {
         }
         return parameters;
     }
-    fn get_body(&mut self, statements: Vec<Expression>, functiondatatype: Datatype, args: Arguments) -> Vec<Statement>
+    fn get_body(&mut self, statements: Vec<Expression>, variables: HashMap<String,Datatype>, functiondatatype: Datatype, args: Arguments, of_function: bool) -> Vec<Statement>
     {
         let mut body = Vec::<Statement>::new();
         let mut returned = false;
-        let mut variables = HashMap::<String, Datatype>::new();
-        for arg in args.arguments
+        let mut variables = variables;
+        for arg in args.clone().arguments
         {
             variables.insert(arg.name, arg.datatype);
         }
@@ -242,10 +243,35 @@ impl SyntaticAnalyser {
                 variable.statements.push(value.clone());
                 body.push(variable);
             }
+            else
+            if statement.is_if()
+            {
+                let if_statement = statement.syntax.get_if_expr();
+                let condition = if_statement.get_condition();
+                let condition = util::generate_binary(condition.clone(), &variables, &self.functions);
+                if condition.datatype.datatype != StatementDatatype::Bool
+                {
+                    let err = util::get_line_of_position(self.context.clone(),statement.get_position() + 2);
+                    panic!("if condition {} is not valid at {}:{}", condition.clone().to_string(), err.0, err.1);
+                }
+                let if_then = if_statement.get_then_branch();
+                let if_body = self.get_body(if_then.clone(), variables.clone(), functiondatatype.clone(), args.clone(), false);
+                let mut else_body = Vec::<Statement>::new();
+                if if_statement.has_else_branch()
+                {
+                    let if_else = if_statement.get_else_branch();
+                    else_body = self.get_body(if_else.clone(), variables.clone(), functiondatatype.clone(), args.clone(), false);
+                }
+                let if_statement = Statement::new_if(condition, if_body, else_body);
+                body.push(if_statement);
+            }
         }
-        if !returned && functiondatatype.datatype != StatementDatatype::Void
+        if of_function
         {
-            panic!("function does not return a value");
+            if !returned && functiondatatype.datatype != StatementDatatype::Void
+            {
+                panic!("function does not return a value");
+            }
         }
         return body;
     }

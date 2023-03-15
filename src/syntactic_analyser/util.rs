@@ -320,7 +320,7 @@ fn generate_function_call(expression: Expression, vars: &HashMap<String, Datatyp
 }
 
 fn get_datatype_by_datatype_and_operator(left: StatementDatatype, right: StatementDatatype, operator: String) -> StatementDatatype {
-    if left == StatementDatatype::Int && right == StatementDatatype::Int
+    if left == right && left == StatementDatatype::Int
     {
         if operator == "+" || operator == "-" || operator == "*" || operator == "/" || operator == "%"
         {
@@ -330,6 +330,36 @@ fn get_datatype_by_datatype_and_operator(left: StatementDatatype, right: Stateme
         {
             return StatementDatatype::Bool;
         }
+    }
+    if left == right && left == StatementDatatype::Float
+    {
+        if operator == "+" || operator == "-" || operator == "*" || operator == "/"
+        {
+            return StatementDatatype::Float;
+        }
+        if operator == "==" || operator == "!=" || operator == ">" || operator == "<" || operator == ">=" || operator == "<="
+        {
+            return StatementDatatype::Bool;
+        }
+    }
+    if left == right && left == StatementDatatype::String
+    {
+        if operator == "+"
+        {
+            return StatementDatatype::String;
+        }
+        if operator == "==" || operator == "!="
+        {
+            return StatementDatatype::Bool;
+        }
+    }
+    if left == right && left == StatementDatatype::Bool
+    {
+        if operator == "==" || operator == "!=" || operator == "&&" || operator == "||"
+        {
+            return StatementDatatype::Bool;
+        }
+        panic!("Invalid operator for bool");
     }
     if right == StatementDatatype::Void
     {

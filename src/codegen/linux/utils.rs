@@ -78,20 +78,30 @@ pub fn havevariable(name: &str, variables: &Vec<Variable>) -> bool
 }
 pub fn findemptyposition(used_positions: &mut Vec<usize>, highest_position: &mut usize) -> usize
 {
+    let size = 8;
     if used_positions.len() == 0
     {
-        *highest_position=1;
+        *highest_position=size;
         return *highest_position;
     }
     for i in 1..*highest_position+1
     {
-        if used_positions.contains(&i)
+        let mut found = false;
+        for j in i..(i+size)
+        {
+            if used_positions.contains(&j)
+            {
+                found = true;
+            }
+        }
+        if found
         {
             continue;
         }
+        *highest_position+=size;
         return i;
     }
-    *highest_position+=1;
+    *highest_position+=size;
     return *highest_position;
 }
 // source: https://www.tortall.net/projects/yasm/manual/html/arch-x86-registers.html
@@ -179,6 +189,11 @@ pub fn parsebinary(statement: Statement, vars: &Vec<Variable>) -> String
             code.push_str("movq %rax, %rcx\nmovq %rbx, %rax\nmovq %rcx, %rbx\nmovq $0, %rcx\ncqto\nidivq %rbx\n");
         }
         else
+        if statement.name == "=="
+        {
+            code.push_str("cmpq %rbx, %rax\nsete %al\nmovzbq %al, %rax\n");
+        }
+        else
         {
             panic!("Invalid binary operator");
         }
@@ -187,12 +202,25 @@ pub fn parsebinary(statement: Statement, vars: &Vec<Variable>) -> String
     else
     if statement.type_ == StatementType::Variable
     {
-        code = load_util::load_int_variable(&vars, statement.name.clone());
+        code = load_util::load_variable(&vars, statement.name.clone(), statement.datatype.clone());
     }
     else
     if statement.type_ == StatementType::Literal
     {
-        code = format!("movq ${}, %rax\n", statement.name);
+        if statement.datatype.datatype == StatementDatatype::Int
+        {
+            code = format!("movq ${}, %rax\n", statement.name);
+        }
+        else
+        if statement.datatype.datatype == StatementDatatype::Bool
+        {
+            let val = if statement.name == "true" {1} else {0};
+            code = format!("movb ${}, %al\n", val);
+        }
+        else
+        {
+            panic!("Invalid literal type");
+        }
     }
     else if statement.type_ == StatementType::Unary
     {
