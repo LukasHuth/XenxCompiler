@@ -15,7 +15,7 @@ pub fn gencall(statement: Statement, vars: &Vec<Variable>) -> String
     // println!("argc: {}", argc);
     for i in 0..argc
     {
-        let i = argc - i - 1;
+        // let i = argc - i - 1;
         let expr = statement.statements[i].clone();
         if expr.datatype.datatype != StatementDatatype::Int
         {
@@ -23,13 +23,14 @@ pub fn gencall(statement: Statement, vars: &Vec<Variable>) -> String
         }
         let binary = utils::parsebinary(expr, vars);
         string.push_str(binary.as_str());
+        string.push_str("push %rax\n");
+    }
+    for i in 0..argc
+    {
+        let i = argc - i - 1;
         if i < registers.len()
         {
-            string.push_str(&format!("mov %rax, {}\n", registers[i]));
-        }
-        else
-        {
-            string.push_str("push %rax\n");
+            string.push_str(&format!("pop {}\n", registers[i]));
         }
     }
     string.push_str(&format!("push %rcx\npush %rdx\n"));
