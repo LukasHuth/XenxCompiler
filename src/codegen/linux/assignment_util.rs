@@ -63,6 +63,14 @@ fn genassignment_old(value: &Statement, pos: usize, vars: &Vec<Variable>) -> Str
     {
         return format!("{}movq -{}(%rbp), %rbx\nmovb %al, (%rbx)\n", expression, pos);
     }
+    if size == 2
+    {
+        return format!("{}movq -{}(%rbp), %rbx\nmovw %ax, (%rbx)\n", expression, pos);
+    }
+    if size == 4
+    {
+        return format!("{}movq -{}(%rbp), %rbx\nmovl %eax, (%rbx)\n", expression, pos);
+    }
     if size == 8
     {
         return format!("{}movq -{}(%rbp), %rbx\nmovq %rax, (%rbx)\n", expression, pos);
