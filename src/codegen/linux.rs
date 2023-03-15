@@ -76,7 +76,7 @@ pub fn generate_function(statement: super::Statement, args: Arguments, if_positi
         {
             let arg = args.arguments[i].clone();
             let name = arg.name.clone();
-            let var = Variable::new(&name, i+1, true, arg.datatype.clone());
+            let var = Variable::new(&name, (i+1)*8, true, arg.datatype.clone());
             vars.push(var);
         }
         data.push_str(format!("push %{}\n", argument_regs[i]).as_str());

@@ -71,6 +71,7 @@ impl Parser
                         let expression = Expression::new_assignment_expr(datatype, expr, variable_expr, start);
                         statements.push(expression);
                     }
+                    continue;
                 }
                 else
                 if self.peek().token == LexerToken::Openparenthesis
@@ -93,8 +94,17 @@ impl Parser
                         let function_call = Expression::new_call_expr(identifier.text, arguments, start);
                         statements.push(function_call);
                     }
+                    continue;
                 }
-                else
+                let mut square_brackets = Vec::<Expression>::new();
+                while self.peek().token == LexerToken::OpenSquareBracket
+                {
+                    self.match_token(LexerToken::OpenSquareBracket);
+                    let expr = self.parse_expression();
+                    self.match_token(LexerToken::CloseSquareBracket);
+                    square_brackets.push(expr);
+                }
+                // TODO: Add support for arrays
                 if self.peek().token == LexerToken::Equals
                 {
                     self.match_token(LexerToken::Equals);
@@ -103,6 +113,21 @@ impl Parser
                     let text = String::from(&identifier.text).to_owned();
                     let expression = Expression::new_overwrite_variable_expression(text, expr, start);
                     statements.push(expression);
+                }
+                else
+                if (self.peek().token == LexerToken::Plus || self.peek().token == LexerToken::Minus || self.peek().token == LexerToken::Star ||
+                    self.peek().token == LexerToken::Slash || self.peek().token == LexerToken::Percent || self.peek().token == LexerToken::Caret ||
+                    self.peek().token == LexerToken::Ampersand || self.peek().token == LexerToken::Pipe)
+                    && self.peek_off(1).token == LexerToken::Equals
+                {
+                    let operator = self.next_token();
+                    self.match_token(LexerToken::Equals);
+                    let expr = self.parse_expression();
+                    self.match_token(LexerToken::Semicolon);
+                    let text = String::from(&identifier.text).to_owned();
+                    let left = Expression::new_variable_expr(text.clone(), start);
+                    let expression = Expression::new_binary_expr(left, operator, expr, start);
+                    statements.push(Expression::new_overwrite_variable_expression(text.clone(), expression, start));
                 }
             }
             else

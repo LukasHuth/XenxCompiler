@@ -40,6 +40,8 @@ pub enum LexerToken {
     AmpersandAmpersand,
     OpenSquareBracket,
     CloseSquareBracket,
+    Percent,
+    Caret,
 }
 impl Token {
     pub fn new(token: LexerToken, text: String, pos: usize, length: usize) -> Token {
