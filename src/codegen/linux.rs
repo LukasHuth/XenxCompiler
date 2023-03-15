@@ -144,7 +144,11 @@ pub fn generate_body(statements: Vec<Statement>, vars: Vec<Variable>, used_posit
         {
             continue;
         }
-        let size = utils::get_type_size(var.datatype.clone());
+        let mut size = utils::get_type_size(var.datatype.clone());
+        if var.is_string
+        {
+            size = var.name.len()as i32-2;
+        }
         data.push_str(format!("movq -{}(%rbp), %rdi\n", var.index.clone()).as_str());
         data.push_str(&format!("movq ${}, %rsi\n",size));
         data.push_str("call free\n");

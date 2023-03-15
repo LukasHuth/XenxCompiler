@@ -218,6 +218,22 @@ pub fn parsebinary(statement: Statement, vars: &Vec<Variable>) -> String
             code = format!("movb ${}, %al\n", val);
         }
         else
+        if statement.datatype.datatype == StatementDatatype::Char
+        {
+            code = format!("movb $'{}', %al\n", statement.name);
+        }
+        else if statement.datatype.datatype == StatementDatatype::String
+        {
+            let mut str = statement.name.clone();
+            str.remove(0);
+            str.remove(str.len()-1);
+            for i in 0..str.chars().count()
+            {
+                let char = str.chars().nth(i).unwrap();
+                code.push_str(&format!("movb $'{}', {}(%rax)\n", char, i));
+            }
+        }
+        else
         {
             panic!("Invalid literal type");
         }
