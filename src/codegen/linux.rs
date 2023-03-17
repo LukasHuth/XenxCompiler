@@ -12,12 +12,18 @@ use super::{
     Datatype,
     Statement,
     StatementType,
+    ByteArray,
+};
+use super::bytecode;
+use bytecode::{
+    Register,
+    SizeType,
 };
 use std::collections::HashMap;
-pub fn generate(statements: Vec<Statement>, functions: HashMap<String, (Datatype, Arguments, Vec::<Statement>)>) -> String
+pub fn generate(statements: Vec<Statement>, functions: HashMap<String, (Datatype, Arguments, Vec::<Statement>)>, bytecode: &mut ByteArray) -> String
 {
     let mut data = String::new();
-    data.push_str(".data\n");
+    // data.push_str(".data\n");
     // data.push_str(".extern exit\n");
     data.push_str(".extern printf\n");
     data.push_str(".data\n");
@@ -32,6 +38,19 @@ pub fn generate(statements: Vec<Statement>, functions: HashMap<String, (Datatype
     data.push_str("movq %rax, %rdi\n");
     data.push_str("call exit\n\n");
     data.push_str("");
+    bytecode.add_section("data");
+    // TODO: store constants (for printf)
+    bytecode.add_section("text");
+    bytecode.add_store_constant_string("format", "\"%d\\n\"");
+    bytecode.add_section("text");
+    bytecode.add_global("_start");
+    bytecode.add_entry("_start");
+    // if linux:
+    bytecode.add_pop(Register::RDI, SizeType::QWORD);
+    bytecode.add_move(Register::RSP, Register::RSI, SizeType::QWORD);
+    bytecode.add_call("main");
+    bytecode.add_move(Register::RAX, Register::RDI, SizeType::QWORD);
+    bytecode.add_call("exit");
     let mut if_positions = 0;
     for statement in statements.clone()
     {

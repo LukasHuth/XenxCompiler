@@ -2,6 +2,8 @@ mod versions;
 pub use versions::OS;
 
 pub mod linux;
+pub mod bytecode;
+pub use bytecode::ByteArray;
 
 use crate::syntactic_analyser::statement::{
     StatementType,
@@ -27,14 +29,9 @@ impl Codegen
     }
     pub fn generate(&mut self)
     {
-        if self.os == OS::Linux
-        {
-            self.data = linux::generate(self.statements.clone(), self.functions.clone());
-        }
-        else
-        {
-            panic!("OS not supported");
-        }
+        let mut bytecode = ByteArray::new();
+        self.data = linux::generate(self.statements.clone(), self.functions.clone(), &mut bytecode);
+        let result = bytecode.generate(self.os);
     }
     fn save_asm(&self)
     {
