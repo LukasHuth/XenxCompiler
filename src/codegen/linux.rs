@@ -40,9 +40,9 @@ pub fn generate(statements: Vec<Statement>, functions: HashMap<String, (Datatype
     data.push_str("");
     bytecode.add_section("data");
     // TODO: store constants (for printf)
+    bytecode.add_store_constant_string("format", "%d\\n");
     bytecode.add_section("text");
-    bytecode.add_store_constant_string("format", "\"%d\\n\"");
-    bytecode.add_section("text");
+    bytecode.add_external("exit");
     bytecode.add_global("_start");
     bytecode.add_entry("_start");
     // if linux:

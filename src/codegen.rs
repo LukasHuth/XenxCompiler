@@ -32,6 +32,7 @@ impl Codegen
         let mut bytecode = ByteArray::new();
         self.data = linux::generate(self.statements.clone(), self.functions.clone(), &mut bytecode);
         let result = bytecode.generate(self.os);
+        println!("result: {{\n{}\n}}", result);
     }
     fn save_asm(&self)
     {

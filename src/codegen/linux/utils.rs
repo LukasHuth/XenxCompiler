@@ -12,6 +12,9 @@ use super::{
 pub fn compile_linux(path: &str) {
     let remove_files = false;
     use std::process::Command;
+    // use this when the code is in intel syntax
+    // let mut command = Command::new("nasm");
+    // command.arg("-felf64");
     let mut command = Command::new("as");
     command.arg("-o");
     command.arg("out.o");
