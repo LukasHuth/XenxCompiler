@@ -1,4 +1,11 @@
-pub fn generate_malloc() -> String
+use crate::codegen::bytecode;
+use bytecode::{
+    ByteArray,
+    Register,
+    SizeType,
+};
+
+pub fn generate_malloc(bytecode: &mut ByteArray) -> String
 {
     let mut data = String::new();
     data.push_str("malloc:\n");
@@ -19,9 +26,27 @@ pub fn generate_malloc() -> String
     data.push_str("pop %rdi\n");
     data.push_str("pop %rsi\n");
     data.push_str("ret\n");
+    bytecode.add_entry("malloc");
+    bytecode.add_push_reg(Register::RSI);
+    bytecode.add_push_reg(Register::RDI);
+    bytecode.add_push_reg(Register::RBP);
+    bytecode.add_move_reg_to_reg(Register::RSP, Register::RBP, SizeType::QWORD);
+    bytecode.add_move_reg_to_reg(Register::RDI, Register::RSI, SizeType::QWORD);
+    bytecode.add_move_lit_to_reg("9", Register::RAX, SizeType::QWORD);
+    bytecode.add_move_lit_to_reg("0", Register::R9, SizeType::QWORD);
+    bytecode.add_move_lit_to_reg("-1", Register::R8, SizeType::QWORD);
+    bytecode.add_move_lit_to_reg("34", Register::R10, SizeType::QWORD);
+    bytecode.add_move_lit_to_reg("3", Register::RDX, SizeType::QWORD);
+    bytecode.add_move_lit_to_reg("0", Register::RDI, SizeType::QWORD);
+    bytecode.add_syscall();
+    bytecode.add_move_reg_to_reg(Register::RBP, Register::RSP, SizeType::QWORD);
+    bytecode.add_pop(Register::RBP);
+    bytecode.add_pop(Register::RDI);
+    bytecode.add_pop(Register::RSI);
+    bytecode.add_ret();
     return data;
 }
-pub fn generate_free() -> String
+pub fn generate_free(bytecode: &mut ByteArray) -> String
 {
     let mut data = String::new();
     data.push_str("free:\n");
@@ -44,5 +69,23 @@ pub fn generate_free() -> String
     data.push_str("popq %rdi\n");
     data.push_str("popq %rsi\n");
     data.push_str("ret\n");
+    bytecode.add_entry("free");
+    bytecode.add_push_reg(Register::RSI);
+    bytecode.add_push_reg(Register::RDI);
+    bytecode.add_push_reg(Register::RBP);
+    bytecode.add_move_reg_to_reg(Register::RSP, Register::RBP, SizeType::QWORD);
+    bytecode.add_move_lit_to_reg("11", Register::RAX, SizeType::QWORD);
+    bytecode.add_syscall();
+    bytecode.add_cmp_let("0".to_string(), Register::RAX, SizeType::QWORD);
+    bytecode.add_jmp_if_eq(".L1");
+    bytecode.add_move_reg_to_reg(Register::RAX, Register::RDI, SizeType::QWORD);
+    bytecode.add_move_lit_to_reg("60", Register::RAX, SizeType::QWORD);
+    bytecode.add_syscall();
+    bytecode.add_entry(".L1");
+    bytecode.add_move_reg_to_reg(Register::RBP, Register::RSP, SizeType::QWORD);
+    bytecode.add_pop(Register::RBP);
+    bytecode.add_pop(Register::RDI);
+    bytecode.add_pop(Register::RSI);
+    bytecode.add_ret();
     return data;
 }
