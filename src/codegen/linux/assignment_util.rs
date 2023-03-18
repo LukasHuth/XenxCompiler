@@ -80,7 +80,7 @@ fn genassignment_new(size: i32, value: &Statement, pos: usize, vars: &Vec<Variab
 fn genassignment_old(value: &Statement, pos: usize, vars: &Vec<Variable>, bytecode: &mut ByteArray)
 {
     // println!("value: {}", value.to_string());
-    println!("genassignment_old('{}')", value.to_string());
+    // println!("genassignment_old('{}')", value.to_string());
     let size = utils::get_type_size(value.datatype.clone());
     let mut expression_bytecode = ByteArray::new();
     utils::parsebinary(value.clone(), &vars, &mut expression_bytecode);

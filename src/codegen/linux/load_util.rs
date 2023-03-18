@@ -13,6 +13,7 @@ pub fn load_variable(vars: &Vec<Variable>, name: String, datatype: Datatype, byt
     if utils::is_argument(&name, &vars)
     {
         bytecode.add_move_mem_to_reg(Register::RBP, &value_pos.to_string(), Register::RAX, SizeType::QWORD);
+        return;
     }
     match datatype.datatype
     {
@@ -22,7 +23,7 @@ pub fn load_variable(vars: &Vec<Variable>, name: String, datatype: Datatype, byt
         },
         StatementDatatype::Char | StatementDatatype::Bool => {
             bytecode.add_move_mem_to_reg(Register::RBP, &value_pos.to_string(), Register::RAX, SizeType::QWORD);
-            bytecode.add_move_mem_to_reg(Register::RAX, "0", Register::RAX, SizeType::QWORD);
+            bytecode.add_move_mem_to_reg(Register::RAX, "0", Register::RAX, SizeType::BYTE);
         },
         StatementDatatype::String =>
         {

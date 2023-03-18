@@ -195,6 +195,7 @@ pub fn parsebinary(statement: Statement, vars: &Vec<Variable>, bytecode: &mut By
         else
         if statement.name == "/"
         {
+            bytecode.add_swap(Register::RAX, Register::RBX);
             bytecode.add_div(SizeType::QWORD);
         }
         else
@@ -209,11 +210,13 @@ pub fn parsebinary(statement: Statement, vars: &Vec<Variable>, bytecode: &mut By
         {
             panic!("Invalid binary operator");
         }
+        return;
     }
     else
     if statement.type_ == StatementType::Variable
     {
         load_util::load_variable(&vars, statement.name.clone(), statement.datatype.clone(), bytecode);
+        return;
     }
     else
     if statement.type_ == StatementType::Literal
@@ -249,6 +252,7 @@ pub fn parsebinary(statement: Statement, vars: &Vec<Variable>, bytecode: &mut By
         {
             panic!("Invalid literal type");
         }
+        return;
     }
     else if statement.type_ == StatementType::Unary
     {
@@ -264,10 +268,12 @@ pub fn parsebinary(statement: Statement, vars: &Vec<Variable>, bytecode: &mut By
         {
             panic!("Unary operator not supported (yet)");
         }
+        return;
     }
     else if statement.type_ == StatementType::Call
     {
         call_util::gencall(statement.clone(), &vars, bytecode);
+        return;
     }
     else
     {

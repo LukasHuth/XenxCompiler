@@ -28,7 +28,7 @@ pub fn genif(statement: Statement, vars: &Vec<Variable>, used_positions: &Vec<us
     }
     let if_branch = statement.statements[1].clone();
     let else_branch = statement.statements[2].clone();
-    println!("if_branch: {}", if_branch.type_.to_string());
+    // println!("if_branch: {}", if_branch.type_.to_string());
     if if_branch.type_ == else_branch.type_ && if_branch.type_ != StatementType::Body
     {
         panic!("If and else branches must be statements");
@@ -40,7 +40,7 @@ pub fn genif(statement: Statement, vars: &Vec<Variable>, used_positions: &Vec<us
     generate_body(if_branch.statements, vars.clone(), used_positions.clone(), highest_position.clone(), if_points, &mut if_branch_bytecode);
     generate_body(else_branch.statements, vars.clone(), used_positions.clone(), highest_position.clone(), if_points, &mut else_branch_bytecode);
     bytecode.add_array(&condition_bytecode);
-    bytecode.add_cmp_let("1".to_string(), Register::RAX, SizeType::BYTE); // 1 = true
+    bytecode.add_cmp_let("0".to_string(), Register::RAX, SizeType::BYTE); // 1 = true
     bytecode.add_jmp_if_eq(&format!(".Lelse{}", if_points));
     bytecode.add_array(&if_branch_bytecode);
     bytecode.add_jmp(&format!(".Lend{}", if_points));

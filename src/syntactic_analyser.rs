@@ -86,7 +86,7 @@ impl SyntaticAnalyser {
                 dim.push(0);
             }
             datatype = util::remove_n_chars_from_behind(datatype.clone(), 1);
-            println!("datatype: {}", datatype);
+            // println!("datatype: {}", datatype);
             util::remove_n_chars_from_behind(datatype.clone(), 1);
         }
         let datatype = util::get_datatype_from_string(datatype);

@@ -199,7 +199,7 @@ impl ByteArray{
         self.add_byte(ByteInstruction::Jn, vec![name.to_string()], None);
     }
     pub fn add_swap(&mut self, register1: Register, register2: Register){
-        self.add_byte(ByteInstruction::Swap, Vec::new(), None);
+        self.add_byte(ByteInstruction::Swap, Vec::new(), SizeType::QWORD);
         self.set_register_in_last_instruction(register1, 1);
         self.set_register_in_last_instruction(register2, 2);
     }
