@@ -7,7 +7,7 @@ pub struct Instruction
     register1: Option<Register>,
     register2: Option<Register>,
 }
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Register
 {
     RAX,
@@ -26,6 +26,8 @@ pub enum Register
     R13,
     R14,
     R15,
+    XMM0,
+    XMM1,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SizeType
@@ -40,7 +42,19 @@ pub enum SizeType
     STRING,
     None,
 }
-#[derive(Clone, Copy, Debug)]
+impl SizeType {
+    pub fn get_name(&self) -> String {
+        match self
+        {
+            SizeType::BYTE | SizeType::CHAR => "byte".to_string(),
+            SizeType::WORD => "word".to_string(),
+            SizeType::DWORD => "dword".to_string(),
+            SizeType::QWORD | SizeType::STRING => "qword".to_string(),
+            _ => "".to_string()
+        }
+    }
+}
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum ByteInstruction
 {
     Add,
@@ -55,7 +69,6 @@ pub enum ByteInstruction
     Shl,
     Shr,
     Cmp,
-    Mov,
     Push,
     Pop,
     Ret,
@@ -82,12 +95,59 @@ pub enum ByteInstruction
     Section,
     Entry,
     Global,
+    MovRegToMem,
+    MovMemToReg,
+    MovRegToReg,
+    MovLitToReg,
+    Swap,
+    Sete,
+    Neg,
+    Syscall,
 }
 impl Instruction
 {
     pub fn new(instruction: ByteInstruction, arguments: Vec<String>, size_type: SizeType) -> Instruction
     {
         Instruction { instruction, arguments, size_type, register1: None, register2: None }
+    }
+    pub fn push_argument(&mut self, argument: String)
+    {
+        self.arguments.push(argument);
+    }
+    pub fn is_same(&self, other: &Instruction) -> bool
+    {
+        if self.instruction != other.instruction
+        {
+            return false;
+        }
+        if self.size_type != other.size_type
+        {
+            return false;
+        }
+        if self.register1 != other.register1
+        {
+            return false;
+        }
+        if self.register2 != other.register2
+        {
+            return false;
+        }
+        if self.arguments.len() != other.arguments.len()
+        {
+            return false;
+        }
+        if self.arguments.len() != 0
+        {
+            for i in 0..self.arguments.len()
+            {
+                if self.arguments[i] != other.arguments[i]
+                {
+                    return false;
+                }
+            }
+            return false;
+        }
+        return true;
     }
     pub fn set_register(&mut self, register: Register, pos: u32)
     {

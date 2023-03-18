@@ -18,6 +18,22 @@ impl ByteArray{
             data: Vec::new(),
         }
     }
+    pub fn add_array(&mut self, array: &ByteArray){
+        for i in 0..array.data.len(){
+            self.data.push(array.data[i].clone());
+        }
+    }
+    pub fn is_same(&self, other: &ByteArray) -> bool{
+        if self.data.len() != other.data.len(){
+            return false;
+        }
+        for i in 0..self.data.len(){
+            if !self.data[i].is_same(&other.data[i]){
+                return false;
+            }
+        }
+        return true;
+    }
     pub fn add(&mut self, instruction: Instruction){
         self.data.push(instruction);
     }
@@ -39,8 +55,8 @@ impl ByteArray{
     pub fn add_global(&mut self, name: &str){
         self.add_byte(ByteInstruction::Global, vec![name.to_string()], None);
     }
-    pub fn add_store_variable(&mut self, position: &str, value: &str, size: SizeType){
-        self.add_byte(ByteInstruction::StoreVariable, vec![position.to_string(), value.to_string()], size);
+    pub fn add_store_variable(&mut self, position: &str, size: SizeType){
+        self.add_byte(ByteInstruction::StoreVariable, vec![position.to_string()], size);
     }
     pub fn add_load_constant(&mut self, name: &str, size: SizeType){
         self.add_byte(ByteInstruction::LoadConstant, vec![name.to_string()], size);
@@ -62,6 +78,8 @@ impl ByteArray{
     }
     pub fn add_sub(&mut self, size: SizeType){
         self.add_byte(ByteInstruction::Sub, Vec::new(), size);
+        self.set_register_in_last_instruction(Register::RAX, 1);
+        self.set_register_in_last_instruction(Register::RBX, 2);
     }
     pub fn add_mul(&mut self, size: SizeType){
         self.add_byte(ByteInstruction::Mul, Vec::new(), size);
@@ -90,18 +108,57 @@ impl ByteArray{
     pub fn add_shr(&mut self, size: SizeType){
         self.add_byte(ByteInstruction::Shr, Vec::new(), size);
     }
-    pub fn add_cmp(&mut self, size: SizeType){
+    fn add_cmp(&mut self, size: SizeType){
         self.add_byte(ByteInstruction::Cmp, Vec::new(), size);
     }
-    pub fn add_move(&mut self, from: Register, to: Register, size: SizeType){
-        self.add_byte(ByteInstruction::Mov, Vec::new(), size);
+    pub fn add_cmp_reg(&mut self, source: Register, destination: Register, size: SizeType){
+        self.add_cmp(size);
+        self.set_register_in_last_instruction(source, 2);
+        self.set_register_in_last_instruction(destination, 1);
+    }
+    pub fn add_cmp_let(&mut self, source: String, destination: Register, size: SizeType){
+        self.add_cmp(size);
+        let length = self.data.len();
+        self.data[length - 1].push_argument(source);
+        self.set_register_in_last_instruction(destination, 1);
+    }
+    pub fn add_move_reg_to_reg(&mut self, from: Register, to: Register, size: SizeType){
+        self.add_byte(ByteInstruction::MovRegToReg, Vec::new(), size);
+        self.set_register_in_last_instruction(from, 1);
+        self.set_register_in_last_instruction(to, 2);
+    }
+    pub fn add_move_mem_to_reg(&mut self, from: Register, offset: &str, to: Register, size: SizeType){ //////
+        self.add_byte(ByteInstruction::MovMemToReg, vec![offset.to_string()], size);
+        self.set_register_in_last_instruction(from, 1);
+        self.set_register_in_last_instruction(to, 2);
+    }
+    pub fn add_move_lit_to_reg(&mut self, value: &str, from: Register, size: SizeType){
+        self.add_byte(ByteInstruction::MovLitToReg, vec![value.to_string()], size);
+        self.set_register_in_last_instruction(from, 1);
+    }
+    pub fn add_move_lit_from_reg_to_reg(&mut self, offset: &str, from: Register, to: Register, size: SizeType){
+        self.add_byte(ByteInstruction::MovLitToReg, vec![offset.to_string()], size);
+        self.set_register_in_last_instruction(from, 1);
+        self.set_register_in_last_instruction(to, 1);
+    }
+    pub fn add_move_reg_to_mem(&mut self, from: Register, offset: &str, to: Register, size: SizeType){
+        self.add_byte(ByteInstruction::MovRegToMem, vec![offset.to_string()], size);
         self.set_register_in_last_instruction(from, 1);
         self.set_register_in_last_instruction(to, 2);
     }
     pub fn add_push(&mut self){
-        self.add_byte(ByteInstruction::Push, Vec::new(), None);
+        self.add_byte(ByteInstruction::Push, Vec::new(), SizeType::QWORD);
+        self.set_register_in_last_instruction(Register::RAX, 1);
     }
-    pub fn add_pop(&mut self, register: Register, size: SizeType){
+    pub fn add_push_reg(&mut self, register: Register){
+        self.add_byte(ByteInstruction::Push, Vec::new(), SizeType::QWORD);
+        self.set_register_in_last_instruction(register, 1);
+    }
+    pub fn add_pop(&mut self, register: Register){
+        self.add_byte(ByteInstruction::Pop, Vec::new(), SizeType::QWORD);
+        self.set_register_in_last_instruction(register, 1);
+    }
+    pub fn add_pop_size(&mut self, register: Register, size: SizeType){
         self.add_byte(ByteInstruction::Pop, Vec::new(), size);
         self.set_register_in_last_instruction(register, 1);
     }
@@ -141,6 +198,31 @@ impl ByteArray{
     pub fn add_jmp_if_negative(&mut self, name: &str){
         self.add_byte(ByteInstruction::Jn, vec![name.to_string()], None);
     }
+    pub fn add_swap(&mut self, register1: Register, register2: Register){
+        self.add_byte(ByteInstruction::Swap, Vec::new(), None);
+        self.set_register_in_last_instruction(register1, 1);
+        self.set_register_in_last_instruction(register2, 2);
+    }
+    pub fn add_sub_lit(&mut self, lit: &str, size: SizeType){
+        self.add_byte(ByteInstruction::Sub, vec![lit.to_string()], size);
+        self.set_register_in_last_instruction(Register::RAX, 1);
+    }
+    pub fn add_sub_lit_reg(&mut self, lit: &str, reg: Register, size: SizeType){
+        self.add_byte(ByteInstruction::Sub, vec![lit.to_string()], size);
+        self.set_register_in_last_instruction(reg, 1);
+    }
+    pub fn add_set_equal(&mut self, reg: Register){
+        self.add_byte(ByteInstruction::Sete, Vec::new(), SizeType::QWORD);
+        self.set_register_in_last_instruction(reg, 1);
+    }
+    pub fn add_neg(&mut self, reg: Register){
+        self.add_byte(ByteInstruction::Neg, Vec::new(), SizeType::QWORD);
+        self.set_register_in_last_instruction(reg, 1);
+    }
+    pub fn add_syscall(&mut self)
+    {
+        self.add_byte(ByteInstruction::Syscall, Vec::new(), None);
+    }
     fn set_register_in_last_instruction(&mut self, register: Register, pos: u32){
         self.data.last_mut().unwrap().set_register(register, pos);
     }
@@ -151,4 +233,5 @@ impl ByteArray{
     {
         util::generate(self.data.clone(), os)
     }
+
 }

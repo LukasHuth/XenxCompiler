@@ -13,8 +13,10 @@ use super::{
     Statement,
     StatementType,
     ByteArray,
+    bytecode,
 };
-use super::bytecode;
+use bytecode::bytecode_util;
+use bytecode_util::register_util;
 use bytecode::{
     Register,
     SizeType,
@@ -42,14 +44,15 @@ pub fn generate(statements: Vec<Statement>, functions: HashMap<String, (Datatype
     // TODO: store constants (for printf)
     bytecode.add_store_constant_string("format", "%d\\n");
     bytecode.add_section("text");
+    bytecode.add_external("printf");
     bytecode.add_external("exit");
     bytecode.add_global("_start");
     bytecode.add_entry("_start");
     // if linux:
-    bytecode.add_pop(Register::RDI, SizeType::QWORD);
-    bytecode.add_move(Register::RSP, Register::RSI, SizeType::QWORD);
+    bytecode.add_pop(Register::RDI);
+    bytecode.add_move_reg_to_reg(Register::RSP, Register::RSI, SizeType::QWORD);
     bytecode.add_call("main");
-    bytecode.add_move(Register::RAX, Register::RDI, SizeType::QWORD);
+    bytecode.add_move_reg_to_reg(Register::RAX, Register::RDI, SizeType::QWORD);
     bytecode.add_call("exit");
     let mut if_positions = 0;
     for statement in statements.clone()
@@ -59,7 +62,7 @@ pub fn generate(statements: Vec<Statement>, functions: HashMap<String, (Datatype
         let name = statement.name.clone();
         let function = functions.get(&name);
         let args = function.unwrap().1.clone();
-        let func = generate_function(state, args, &mut if_positions);
+        let func = generate_function(state, args, &mut if_positions, bytecode);
         data.push_str(func.as_str());
     }
     let registers = utils::get_registers();
@@ -68,44 +71,49 @@ pub fn generate(statements: Vec<Statement>, functions: HashMap<String, (Datatype
         data = data.replace(format!("push %{}\npop %{}\n", register, register).as_str(), "");
     }
     let mut own_functions = String::from("# here begins the section for system functions\n\n");
-    own_functions.push_str(&basic_functions::generate_malloc());
-    own_functions.push_str(&basic_functions::generate_free());
+    own_functions.push_str(&basic_functions::generate_malloc(bytecode));
+    own_functions.push_str(&basic_functions::generate_free(bytecode));
     data.push_str(own_functions.as_str());
     return data;
 }
 
-pub fn generate_function(statement: super::Statement, args: Arguments, if_positions: &mut usize) -> String
+pub fn generate_function(statement: super::Statement, args: Arguments, if_positions: &mut usize, bytecode: &mut ByteArray) -> String
 {
     let mut vars = Vec::<Variable>::new();
     let mut used_positions = Vec::<usize>::new();
     let mut data = String::new();
     data.push_str(statement.name.as_str());
     data.push_str(":\n");
+    bytecode.add_entry(statement.name.as_str());
     // println!("statements: {}", statement.statements.len());
     data.push_str("push %rbp\n");
     data.push_str("push %rbx\n");
     data.push_str("push %rdi\n");
     data.push_str("push %rsi\n");
     data.push_str("mov %rsp, %rbp\n");
+    bytecode.add_push_reg(Register::RBP);
+    bytecode.add_push_reg(Register::RBX);
+    bytecode.add_push_reg(Register::RDI);
+    bytecode.add_push_reg(Register::RSI);
+    bytecode.add_move_reg_to_reg(Register::RSP, Register::RBP, SizeType::QWORD);
     let argument_regs = utils::get_argument_registers();
-    let highest_position: usize = argument_regs.len().clone()*8; // 8 bytes per register
-    for i in 0..argument_regs.len()
+    let highest_position: usize = args.arguments.len().clone()*8; // 8 bytes per register
+    for i in 0..args.arguments.len()
     {
-        if i < args.arguments.len()
-        {
-            let arg = args.arguments[i].clone();
-            let name = arg.name.clone();
-            let var = Variable::new(&name, (i+1)*8, true, arg.datatype.clone());
-            vars.push(var);
-        }
+        let arg = args.arguments[i].clone();
+        let name = arg.name.clone();
+        let var = Variable::new(&name, (i+1)*8, true, arg.datatype.clone());
+        vars.push(var);
+        let register = register_util::get_register_by_name(argument_regs[i].clone());
         data.push_str(format!("push %{}\n", argument_regs[i]).as_str());
+        bytecode.add_push_reg(register);
         for j in (i*8)..((i+1)*8)
         {
             used_positions.push(j);
         }
     }
     // */
-    let body = generate_body(statement.statements, vars, used_positions, highest_position, if_positions);
+    let body = generate_body(statement.statements, vars, used_positions, highest_position, if_positions, bytecode);
     data.push_str(body.as_str());
     data.push_str("mov %rbp, %rsp\n");
     data.push_str("pop %rsi\n");
@@ -113,9 +121,15 @@ pub fn generate_function(statement: super::Statement, args: Arguments, if_positi
     data.push_str("pop %rbx\n");
     data.push_str("pop %rbp\n");
     data.push_str("ret\n\n");
+    bytecode.add_move_reg_to_reg(Register::RBP, Register::RSP, SizeType::QWORD);
+    bytecode.add_pop(Register::RSI);
+    bytecode.add_pop(Register::RDI);
+    bytecode.add_pop(Register::RBX);
+    bytecode.add_pop(Register::RBP);
+    bytecode.add_ret();
     data
 }
-pub fn generate_body(statements: Vec<Statement>, vars: Vec<Variable>, used_positions: Vec<usize>, highest_position: usize, if_points: &mut usize) -> String
+pub fn generate_body(statements: Vec<Statement>, vars: Vec<Variable>, used_positions: Vec<usize>, highest_position: usize, if_points: &mut usize, bytecode: &mut ByteArray) -> String
 {
     let old_vars = vars.clone();
     let mut vars = vars.clone();
@@ -130,32 +144,33 @@ pub fn generate_body(statements: Vec<Statement>, vars: Vec<Variable>, used_posit
         if expr.type_ == StatementType::Variable
         {
             // println!("Assignment");
-            let str = assignment_util::genassignment(expr.clone(), &mut vars, &mut used_positions, &mut highest_position);
+            let str = assignment_util::genassignment(expr.clone(), &mut vars, &mut used_positions, &mut highest_position, bytecode);
             data.push_str(str.as_str());
         }
         if expr.type_ == StatementType::Return
         {
             // println!("Return");
             // let str = self.genreturn(expr.clone());
-            let str = return_util::genreturn(expr.clone(), &mut vars);
+            let str = return_util::genreturn(expr.clone(), &mut vars, bytecode);
             data.push_str(str.as_str());
             break;
         }
         if expr.type_ == StatementType::Call
         {
-            let str = call_util::gencall(expr.clone(), &vars);
+            let str = call_util::gencall(expr.clone(), &vars, bytecode);
             println!("Unnecessary call: {}", expr.name);
             data.push_str(str.as_str());
         }
         if expr.type_ == StatementType::If
         {
-            let str = if_util::genif(expr.clone(), &vars, &used_positions, &highest_position, if_points);
+            let str = if_util::genif(expr.clone(), &vars, &used_positions, &highest_position, if_points, bytecode);
             data.push_str(str.as_str());
         }
     }
     // println!("vars: {}", vars.len());
     //*
     data.push_str("push %rax\n");
+    bytecode.add_push();
     for i in old_vars.len()..vars.len()
     {
         let var = vars[i].clone();
@@ -171,7 +186,12 @@ pub fn generate_body(statements: Vec<Statement>, vars: Vec<Variable>, used_posit
         data.push_str(format!("movq -{}(%rbp), %rdi\n", var.index.clone()).as_str());
         data.push_str(&format!("movq ${}, %rsi\n",size));
         data.push_str("call free\n");
+        let offset = var.index.clone().to_string();
+        bytecode.add_move_mem_to_reg(Register::RBP, &offset, Register::RDI, SizeType::QWORD);
+        bytecode.add_move_lit_to_reg(&size.to_string(), Register::RSI, SizeType::QWORD);
+        bytecode.add_call("free");
     }
     data.push_str("pop %rax\n");
+    bytecode.add_pop(Register::RAX);
     return data;
 }

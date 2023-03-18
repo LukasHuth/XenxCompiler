@@ -1,3 +1,13 @@
+pub mod mov_util;
+pub mod register_util;
+pub mod xor_util;
+pub mod movement_utils;
+pub mod jump_util;
+pub mod binary_util;
+pub mod logical_util;
+pub mod compare_util;
+pub mod stack_util;
+pub mod kernel_util;
 use super::super::OS;
 use super::{
     Instruction,
@@ -45,55 +55,61 @@ fn generate_instruction_linux(instruction: Instruction) -> String
     match inst.clone()
     {
         ByteInstruction::Add | ByteInstruction::Sub | ByteInstruction::Mul | ByteInstruction::Div | ByteInstruction::Or | ByteInstruction::Xor | ByteInstruction::And
-            | ByteInstruction::Mod | ByteInstruction::Not =>
+            | ByteInstruction::Mod | ByteInstruction::Not | ByteInstruction::Neg =>
         {
-            let destination = get_register_name(Register::RAX, size);
-            let source = get_register_name(Register::RBX, size);
-            let operand = match inst
+            let result = match inst
             {
-                ByteInstruction::Add => "add",
-                ByteInstruction::Sub => "sub",
-                ByteInstruction::Mul => "mul",
-                ByteInstruction::Div => "div",
-                ByteInstruction::Or => "or",
-                ByteInstruction::Xor => "xor",
-                ByteInstruction::And => "and",
-                ByteInstruction::Mod => "mod",
-                ByteInstruction::Not => "not",
+                ByteInstruction::Add => binary_util::add(),
+                ByteInstruction::Sub => binary_util::sub(instruction),
+                ByteInstruction::Mul => binary_util::mul(),
+                ByteInstruction::Div => binary_util::div(),
+                ByteInstruction::Or => logical_util::or(),
+                ByteInstruction::Xor => logical_util::xor(),
+                ByteInstruction::And => logical_util::and(),
+                ByteInstruction::Mod => logical_util::mod_(),
+                ByteInstruction::Not => logical_util::not(),
+                ByteInstruction::Neg => logical_util::neg(instruction),
                 _ => panic!("Invalid instruction"),
             };
-            data.push_str(format!("{} {}, {}\n", operand, source, destination).as_str());
+            data.push_str(result.as_str());
         },
         ByteInstruction::Jz | ByteInstruction::Jnz | ByteInstruction::Je | ByteInstruction::Jne | ByteInstruction::Jg | ByteInstruction::Jge | ByteInstruction::Jl
             | ByteInstruction::Jle | ByteInstruction::Jn | ByteInstruction::Jmp =>
         {
-            let operation = match inst
+            let result = match inst
             {
-                ByteInstruction::Jz => "jz",
-                ByteInstruction::Jnz => "jnz",
-                ByteInstruction::Je => "je",
-                ByteInstruction::Jne => "jne",
-                ByteInstruction::Jg => "jg",
-                ByteInstruction::Jge => "jge",
-                ByteInstruction::Jl => "jl",
-                ByteInstruction::Jle => "jle",
-                ByteInstruction::Jn => "jn",
-                ByteInstruction::Jmp => "jmp",
+                ByteInstruction::Jz => jump_util::jump_zero(instruction),
+                ByteInstruction::Jnz => jump_util::jump_not_zero(instruction),
+                ByteInstruction::Je => jump_util::jump_equal(instruction),
+                ByteInstruction::Jne => jump_util::jump_not_equal(instruction),
+                ByteInstruction::Jg => jump_util::jump_greater(instruction),
+                ByteInstruction::Jge => jump_util::jump_greater_equal(instruction),
+                ByteInstruction::Jl => jump_util::jump_less(instruction),
+                ByteInstruction::Jle => jump_util::jump_less_equal(instruction),
+                ByteInstruction::Jn => jump_util::jump_negative(instruction),
+                ByteInstruction::Jmp => jump_util::jump(instruction),
                 _ => panic!("Invalid instruction"),
             };
-            if arguments.len() < 1
-            {
-                panic!("{} expected a label", operation);
-            }
-            data.push_str(format!("{} {}\n", operation, arguments[0]).as_str());
+            data.push_str(result.as_str());
+        },
+        ByteInstruction::Sete =>
+        {
+            let result = compare_util::set_equal(instruction);
+            data.push_str(result.as_str());
         },
         ByteInstruction::LoadVariable =>
         {
             todo!();
         },
-        ByteInstruction::StoreVariable =>
+        ByteInstruction::StoreVariable => // register1 is the value, register2 is the destination
         {
-            todo!();
+            let result = mov_util::mov_reg_to_mem(instruction);
+            data.push_str(result.as_str());
+        },
+        ByteInstruction::Swap =>
+        {
+            let result = movement_utils::swap(instruction);
+            data.push_str(result.as_str());
         },
         ByteInstruction::LoadConstant =>
         {
@@ -107,56 +123,19 @@ fn generate_instruction_linux(instruction: Instruction) -> String
         {
             todo!();
         },
-        ByteInstruction::StoreValue =>
+        ByteInstruction::StoreValue => // like mov reg, <value|reg>
         {
-            todo!();
-        },
-        ByteInstruction::LoadValue =>
-        {
-            todo!();
-        },
-        ByteInstruction::Shl | ByteInstruction::Shr =>
-        {
-            let operation = match inst
-            {
-                ByteInstruction::Shl => "shl",
-                ByteInstruction::Shr => "shr",
-                _ => panic!("Invalid instruction"),
-            };
-            if register1.is_none()
-            {
-                panic!("Shl/Shr expected a source");
-            }
-            if register2.is_none() && arguments.len() < 1
-            {
-                panic!("Shl/Shr expected a destination");
-            }
-            let register1 = register1.unwrap();
-            let source = get_register_name(register1.clone(), size);
-            let destination: String;
             if register2.is_none()
             {
-                destination = arguments[0].clone();
+                panic!("StoreValue expected a destination");
             }
-            else
-            {
-                let register2 = register2.unwrap();
-                destination = get_register_name(register2.clone(), size);
-            }
-            data.push_str(format!("{} {}, {}\n", operation, source, destination).as_str());
-        },
-        ByteInstruction::Cmp =>
-        {
             if register1.is_none() && arguments.len() < 1
             {
-                panic!("Shl/Shr expected a source");
+                panic!("StoreValue expected a source");
             }
-            if register2.is_none() && arguments.len() < 1
-            {
-                panic!("Shl/Shr expected a destination");
-            }
+            let register2 = register2.unwrap();
+            let destination = register_util::get_name(register2.clone(), size);
             let source: String;
-            let destination: String;
             if register1.is_none()
             {
                 source = arguments[0].clone();
@@ -164,66 +143,65 @@ fn generate_instruction_linux(instruction: Instruction) -> String
             else
             {
                 let register1 = register1.unwrap();
-                source = get_register_name(register1.clone(), size);
+                source = register_util::get_name(register1.clone(), size);
             }
-            if register2.is_none()
-            {
-                destination = arguments[0].clone();
-            }
-            else
-            {
-                let register2 = register2.unwrap();
-                destination = get_register_name(register2.clone(), size);
-            }
-            data.push_str(format!("cmp {}, {}\n", source, destination).as_str());
-        },
-        ByteInstruction::Mov =>
-        {
-            if register1.is_none() || register2.is_none()
-            {
-                panic!("Mov expected 2 registers");
-            }
-            // TODO: add support for mov [reg], reg
-            // TODO: add support for mov reg, [reg]
-            // TODO: add support for mov [reg], [reg]
-            // TODO: add support for mov [reg], [reg + reg]
-            let register1 = register1.unwrap();
-            let register2 = register2.unwrap();
-            let source = get_register_name(register1.clone(), size);
-            let destination = get_register_name(register2.clone(), size);
             data.push_str(format!("mov {}, {}\n", destination, source).as_str());
+        },
+        ByteInstruction::LoadValue => // unknown and unused at the moment
+        {
+            todo!();
+        },
+        ByteInstruction::Shl | ByteInstruction::Shr =>
+        {
+            let result = match inst
+            {
+                ByteInstruction::Shl => binary_util::shl(),
+                ByteInstruction::Shr => binary_util::shr(),
+                _ => panic!("Invalid instruction"),
+            };
+            data.push_str(result.as_str());
+        },
+        ByteInstruction::Syscall =>
+        {
+            let result = kernel_util::syscall();
+            data.push_str(result.as_str());
+        }
+        ByteInstruction::Cmp =>
+        {
+        },
+        ByteInstruction::MovRegToReg =>
+        {
+            let result = mov_util::mov_reg_to_reg(instruction);
+            data.push_str(result.as_str());
+        },
+        ByteInstruction::MovRegToMem =>
+        {
+            let result = mov_util::mov_reg_to_mem(instruction);
+            data.push_str(result.as_str());
+        },
+        ByteInstruction::MovMemToReg =>
+        {
+            let result = mov_util::mov_mem_to_reg(instruction);
+            data.push_str(result.as_str());
+        },
+        ByteInstruction::MovLitToReg =>
+        {
+            let result = mov_util::mov_lit_to_reg(instruction);
+            data.push_str(result.as_str());
         },
         ByteInstruction::Push=>
         {
-            if register1.is_none() && arguments.len() < 1
-            {
-                panic!("Push expected 1 register or 1 argument");
-            }
-            let value: String;
-            if register1.is_none()
-            {
-                value = arguments[0].clone();
-            }
-            else
-            {
-                let register1 = register1.unwrap();
-                value = get_register_name(register1.clone(), size);
-            }
-            data.push_str(format!("push {}\n", value).as_str());
+            let result = stack_util::push(instruction);
+            data.push_str(result.as_str());
         },
         ByteInstruction::Pop =>
         {
-            if register1.is_none()
-            {
-                panic!("Pop expected 1 register");
-            }
-            let register1 = register1.unwrap();
-            let destination = get_register_name(register1.clone(), size);
-            data.push_str(format!("pop {}\n", destination).as_str());
+            let result = stack_util::pop(instruction);
+            data.push_str(result.as_str());
         },
         ByteInstruction::Ret =>
         {
-            data.push_str("ret");
+            data.push_str("ret\n");
         },
         ByteInstruction::Call =>
         {
@@ -302,83 +280,5 @@ fn get_constant_size(size: SizeType) -> String
         SizeType::QWORD => return String::from("dq"),
         SizeType::STRING => return String::from("db"),
         _ => panic!("Size not supported (yet)"),
-    }
-}
-fn get_register_name(register: Register, size: SizeType) -> String
-{
-    let mut name = String::new();
-    let is_named_register = is_named_register(register);
-    match register
-    {
-        Register::RAX => name.push_str("ax"),
-        Register::RBX => name.push_str("bx"),
-        Register::RCX => name.push_str("cx"),
-        Register::RDX => name.push_str("dx"),
-        Register::RDI => name.push_str("di"),
-        Register::RSI => name.push_str("si"),
-        Register::RBP => name.push_str("bp"),
-        Register::RSP => name.push_str("sp"),
-        Register::R8 => name.push_str("r8"),
-        Register::R9 => name.push_str("r9"),
-        Register::R10 => name.push_str("r10"),
-        Register::R11 => name.push_str("r11"),
-        Register::R12 => name.push_str("r12"),
-        Register::R13 => name.push_str("r13"),
-        Register::R14 => name.push_str("r14"),
-        Register::R15 => name.push_str("r15"),
-    }
-    if is_named_register
-    {
-        match size
-        {
-            SizeType::BYTE => name = name, // TODO: not implemented
-            SizeType::WORD => name = name,
-            SizeType::DWORD => name = "e".to_string() + name.as_str(),
-            SizeType::QWORD => name = "r".to_string() + name.as_str(),
-            SizeType::FLOAT => name = name, // TODO: not implemented
-            SizeType::DOUBLE => name = name, // TODO: not implemented
-            SizeType::CHAR => name = name, // TODO: not implemented
-            SizeType::STRING => name = "r".to_string() + name.as_str(),
-            SizeType::None => panic!("SizeType not supported"),
-        }
-    }
-    else
-    {
-        match size
-        {
-            SizeType::BYTE => name.push_str("b"), // TODO: not implemented
-            SizeType::WORD => name.push_str("w"), // TODO: not implemented
-            SizeType::DWORD => name.push_str("d"),
-            SizeType::QWORD => name.push_str(""),
-            SizeType::FLOAT => name = name, // TODO: not implemented
-            SizeType::DOUBLE => name = name, // TODO: not implemented
-            SizeType::CHAR => name = name, // TODO: not implemented
-            SizeType::STRING => name.push_str(""),
-            SizeType::None => panic!("SizeType not supported"),
-        }
-    }
-    return name;
-}
-fn is_named_register(register: Register) -> bool
-{
-    match register
-    {
-        Register::RAX => true,
-        Register::RBX => true,
-        Register::RCX => true,
-        Register::RDX => true,
-        Register::RDI => true,
-        Register::RSI => true,
-        Register::RBP => true,
-        Register::RSP => true,
-        Register::R8 => false,
-        Register::R9 => false,
-        Register::R10 => false,
-        Register::R11 => false,
-        Register::R12 => false,
-        Register::R13 => false,
-        Register::R14 => false,
-        Register::R15 => false,
-        _ => false,
     }
 }
