@@ -168,6 +168,8 @@ fn generate_instruction_linux(instruction: Instruction) -> String
         }
         ByteInstruction::Cmp =>
         {
+            let result = compare_util::compare(instruction);
+            data.push_str(result.as_str());
         },
         ByteInstruction::MovRegToReg =>
         {

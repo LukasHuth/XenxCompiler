@@ -132,9 +132,9 @@ impl ByteArray{
         self.set_register_in_last_instruction(from, 1);
         self.set_register_in_last_instruction(to, 2);
     }
-    pub fn add_move_lit_to_reg(&mut self, value: &str, from: Register, size: SizeType){
+    pub fn add_move_lit_to_reg(&mut self, value: &str, to: Register, size: SizeType){
         self.add_byte(ByteInstruction::MovLitToReg, vec![value.to_string()], size);
-        self.set_register_in_last_instruction(from, 1);
+        self.set_register_in_last_instruction(to, 1);
     }
     pub fn add_move_lit_from_reg_to_reg(&mut self, offset: &str, from: Register, to: Register, size: SizeType){
         self.add_byte(ByteInstruction::MovLitToReg, vec![offset.to_string()], size);

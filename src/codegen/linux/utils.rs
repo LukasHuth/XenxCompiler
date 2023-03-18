@@ -9,15 +9,16 @@ use super::super::{
 };
 use super::{
     Variable,
-    load_util
+    load_util,
+    call_util,
 };
 pub fn compile_linux(path: &str) {
     let remove_files = false;
     use std::process::Command;
     // use this when the code is in intel syntax
-    // let mut command = Command::new("nasm");
-    // command.arg("-felf64");
-    let mut command = Command::new("as");
+    let mut command = Command::new("nasm");
+    command.arg("-felf64");
+    // let mut command = Command::new("as");
     command.arg("-o");
     command.arg("out.o");
     command.arg("out.s");
@@ -154,30 +155,18 @@ pub fn is_argument(name: &str, vars: &Vec<Variable>) -> bool
     }
     panic!("Variable {} not found", name);
 }
-pub fn parsebinary(statement: Statement, vars: &Vec<Variable>, bytecode: &mut ByteArray) -> String
+pub fn parsebinary(statement: Statement, vars: &Vec<Variable>, bytecode: &mut ByteArray)
 {
     // TODO: bytecode
-    let mut code = String::new();
     if statement.type_ == StatementType::Binary
     {
         let left = statement.statements[0].clone();
         let right = statement.statements[1].clone();
         let mut bytecode_left = ByteArray::new();
         let mut bytecode_right = ByteArray::new();
-        let left = parsebinary(left, &vars, &mut bytecode_left);
-        code.push_str(&left);
+        parsebinary(left, &vars, &mut bytecode_left);
         bytecode.add_array(&bytecode_left);
-        let right = parsebinary(right, &vars, &mut bytecode_right);
-        if left == right
-        {
-            code.push_str("movq %rax, %rbx\n");
-        }
-        else
-        {
-            code.push_str("pushq %rax\n");
-            code.push_str(&right);
-            code.push_str("popq %rbx\n");
-        }
+        parsebinary(right, &vars, &mut bytecode_right);
         if bytecode_left.is_same(&bytecode_right)
         {
             bytecode.add_move_reg_to_reg(Register::RAX, Register::RBX, SizeType::QWORD);
@@ -186,35 +175,31 @@ pub fn parsebinary(statement: Statement, vars: &Vec<Variable>, bytecode: &mut By
         {
             bytecode.add_push_reg(Register::RAX);
             bytecode.add_array(&bytecode_right);
+            bytecode.add_pop(Register::RBX);
         }
         if statement.name == "+"
         {
-            code.push_str("addq %rbx, %rax\n");
             bytecode.add_add(SizeType::QWORD);
         }
         else
         if statement.name == "-"
         {
-            code.push_str("subq %rax, %rbx\nmovq %rbx, %rax\n");
             bytecode.add_swap(Register::RAX, Register::RBX);
             bytecode.add_sub(SizeType::QWORD);
         }
         else
         if statement.name == "*"
         {
-            code.push_str("imulq %rbx, %rax\n");
             bytecode.add_mul(SizeType::QWORD);
         }
         else
         if statement.name == "/"
         {
-            code.push_str("movq %rax, %rcx\nmovq %rbx, %rax\nmovq %rcx, %rbx\nmovq $0, %rcx\ncqto\nidivq %rbx\n");
             bytecode.add_div(SizeType::QWORD);
         }
         else
         if statement.name == "=="
         {
-            code.push_str("cmpq %rbx, %rax\nsete %al\nmovzbq %al, %rax\n");
             bytecode.add_move_reg_to_reg(Register::RAX, Register::RCX, SizeType::QWORD);
             bytecode.add_move_lit_to_reg("1", Register::RAX, SizeType::QWORD);
             bytecode.add_cmp_reg(Register::RBX, Register::RCX, SizeType::QWORD);
@@ -224,32 +209,28 @@ pub fn parsebinary(statement: Statement, vars: &Vec<Variable>, bytecode: &mut By
         {
             panic!("Invalid binary operator");
         }
-        return code;
     }
     else
     if statement.type_ == StatementType::Variable
     {
-        code = load_util::load_variable(&vars, statement.name.clone(), statement.datatype.clone(), bytecode);
+        load_util::load_variable(&vars, statement.name.clone(), statement.datatype.clone(), bytecode);
     }
     else
     if statement.type_ == StatementType::Literal
     {
         if statement.datatype.datatype == StatementDatatype::Int
         {
-            code = format!("movq ${}, %rax\n", statement.name);
             bytecode.add_move_lit_to_reg(&statement.name, Register::RAX, SizeType::QWORD);
         }
         else
         if statement.datatype.datatype == StatementDatatype::Bool
         {
             let val = if statement.name == "true" {1} else {0};
-            code = format!("movb ${}, %al\n", val);
-            bytecode.add_move_lit_to_reg(&statement.name, Register::RAX, SizeType::QWORD);
+            bytecode.add_move_lit_to_reg(&val.to_string(), Register::RAX, SizeType::QWORD);
         }
         else
         if statement.datatype.datatype == StatementDatatype::Char
         {
-            code = format!("movb $'{}', %al\n", statement.name);
             bytecode.add_move_lit_to_reg(&format!("'{}'", statement.name), Register::RAX, SizeType::BYTE);
         }
         else if statement.datatype.datatype == StatementDatatype::String
@@ -260,8 +241,7 @@ pub fn parsebinary(statement: Statement, vars: &Vec<Variable>, bytecode: &mut By
             for i in 0..str.chars().count()
             {
                 let char = str.chars().nth(i).unwrap();
-                code.push_str(&format!("movb $'{}', {}(%rax)\n", char, i));
-                bytecode.add_move_lit_to_reg(&format!("'{}'", statement.name), Register::RBX, SizeType::BYTE);
+                bytecode.add_move_lit_to_reg(&format!("'{}'", char), Register::RBX, SizeType::BYTE);
                 bytecode.add_move_reg_to_mem(Register::RBX, &i.to_string(), Register::RAX, SizeType::BYTE);
             }
         }
@@ -274,12 +254,10 @@ pub fn parsebinary(statement: Statement, vars: &Vec<Variable>, bytecode: &mut By
     {
         let left = statement.statements[0].clone();
         let mut left_bytecode = ByteArray::new();
-        let left = parsebinary(left, &vars, &mut left_bytecode);
-        code.push_str(&left);
+        parsebinary(left, &vars, &mut left_bytecode);
         bytecode.add_array(&left_bytecode);
         if statement.name == "-"
         {
-            code.push_str("negq %rax\n");
             bytecode.add_neg(Register::RAX);
         }
         else
@@ -289,15 +267,13 @@ pub fn parsebinary(statement: Statement, vars: &Vec<Variable>, bytecode: &mut By
     }
     else if statement.type_ == StatementType::Call
     {
-        let callstr = super::call_util::gencall(statement.clone(), &vars, bytecode);
-        code.push_str(callstr.as_str());
+        call_util::gencall(statement.clone(), &vars, bytecode);
     }
     else
     {
         println!("{:?}", statement);
         panic!("Invalid statement type");
     }
-    return code;
 }
 pub fn get_type_size(datatype: Datatype) -> i32
 {

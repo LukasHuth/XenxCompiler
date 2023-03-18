@@ -1,6 +1,7 @@
 use super::{
     Instruction,
     register_util,
+    SizeType,
 };
 
 pub fn compare(instruction: Instruction) -> String
@@ -41,6 +42,7 @@ pub fn set_equal(instruction: Instruction) -> String
     }
     let register1 = register1.unwrap();
     let size = instruction.get_size_type();
-    let register1 = register_util::get_name(register1.clone(), size);
-    return format!("sete {}\n", register1);
+    let sete_reg = register_util::get_name(register1.clone(), SizeType::BYTE);
+    let register1 = register_util::get_name(register1.clone(), size);   
+    return format!("sete {}\nmovzx {}, {}\n", sete_reg, register1, sete_reg);
 }
