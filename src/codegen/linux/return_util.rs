@@ -10,12 +10,12 @@ use super::{
     utils,
 };
 
-pub fn genreturn(statement: Statement, vars: &mut Vec<Variable>, bytecode: &mut ByteArray) -> String
+pub fn genreturn(statement: Statement, vars: &mut Vec<Variable>, bytecode: &mut ByteArray)
 {
     if statement.statements.len() == 0
     {
         panic!("No value for return");
     }
     let value = statement.statements[0].clone();
-    return utils::parsebinary(value, vars, bytecode);
+    utils::parsebinary(value, vars, bytecode);
 }

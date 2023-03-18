@@ -12,7 +12,7 @@ use super::{
     Variable,
     utils
 };
-pub fn genassignment(statement: Statement, vars: &mut Vec<Variable>, mut used_positions: &mut Vec<usize>, mut highest_position: &mut usize, bytecode: &mut ByteArray) -> String
+pub fn genassignment(statement: Statement, vars: &mut Vec<Variable>, mut used_positions: &mut Vec<usize>, mut highest_position: &mut usize, bytecode: &mut ByteArray)
 {
     // println!("genassignment({})", statement.to_string());
     let var = statement.clone();
@@ -55,14 +55,14 @@ pub fn genassignment(statement: Statement, vars: &mut Vec<Variable>, mut used_po
     if new
     {
         let size = utils::get_type_size(var.datatype.clone());
-        return genassignment_new(size, &value, pos, &vars, bytecode);
+        genassignment_new(size, &value, pos, &vars, bytecode);
     }
     else
     {
-        return genassignment_old(&value, pos, &vars, bytecode);
+        genassignment_old(&value, pos, &vars, bytecode);
     }
 }
-fn genassignment_new(size: i32, value: &Statement, pos: usize, vars: &Vec<Variable>, bytecode: &mut ByteArray) -> String
+fn genassignment_new(size: i32, value: &Statement, pos: usize, vars: &Vec<Variable>, bytecode: &mut ByteArray)
 {
     let mut size = size;
     if value.datatype.datatype == StatementDatatype::String
@@ -70,48 +70,32 @@ fn genassignment_new(size: i32, value: &Statement, pos: usize, vars: &Vec<Variab
         let expression = value.name.clone();
         size = expression.len() as i32 - 2;
     }
-    let malloc_code = format!("movq ${}, %rdi\ncall malloc\nsub $8, %rsp\nmovq %rax, -{}(%rbp)\n", size, pos); // TODO: malloc
     bytecode.add_move_lit_to_reg(&size.to_string(), Register::RDI, SizeType::QWORD);
     bytecode.add_call("malloc");
     bytecode.add_move_lit_to_reg("8", Register::RBX, SizeType::QWORD);
     bytecode.add_sub_lit_reg(&size.to_string(), Register::RSP, SizeType::QWORD);
-    let assign = genassignment_old(value, pos, &vars, bytecode);
-    return format!("{}{}", malloc_code, assign);
+    bytecode.add_move_reg_to_mem(Register::RAX, &pos.to_string(), Register::RBP, SizeType::QWORD);
+    genassignment_old(value, pos, &vars, bytecode);
 }
-fn genassignment_old(value: &Statement, pos: usize, vars: &Vec<Variable>, bytecode: &mut ByteArray) -> String
+fn genassignment_old(value: &Statement, pos: usize, vars: &Vec<Variable>, bytecode: &mut ByteArray)
 {
     // println!("value: {}", value.to_string());
-    println!("genassignment_old('{}')", value.to_string());
+    // println!("genassignment_old('{}')", value.to_string());
     let size = utils::get_type_size(value.datatype.clone());
-    let expression = utils::parsebinary(value.clone(), &vars, bytecode);
+    let mut expression_bytecode = ByteArray::new();
+    utils::parsebinary(value.clone(), &vars, &mut expression_bytecode);
     if value.datatype.datatype == StatementDatatype::String
     {
-        bytecode.add_move_lit_to_reg(&pos.to_string(), Register::RBP, SizeType::QWORD);  
-        return format!("movq -{}(%rbp), %rax\n{}", pos, expression);
+        bytecode.add_move_mem_to_reg(Register::RBP, &pos.to_string(), Register::RBP, SizeType::QWORD);
+        bytecode.add_array(&expression_bytecode);
     }
     else
     {
-        bytecode.add_move_lit_from_reg_to_reg(&pos.to_string(), Register::RBP, Register::RBX, SizeType::QWORD);
-        bytecode.add_move_reg_to_mem(Register::RAX, "0", Register::RBX, SizeType::QWORD); // TODO: size
-        if size == 1
-        {
-            return format!("{}movq -{}(%rbp), %rbx\nmovb %al, (%rbx)\n", expression, pos);
-        }
-        else
-        if size == 2
-        {
-            return format!("{}movq -{}(%rbp), %rbx\nmovw %ax, (%rbx)\n", expression, pos);
-        }
-        else
-        if size == 4
-        {
-            return format!("{}movq -{}(%rbp), %rbx\nmovl %eax, (%rbx)\n", expression, pos);
-        }
-        else
-        if size == 8
-        {
-            return format!("{}movq -{}(%rbp), %rbx\nmovq %rax, (%rbx)\n", expression, pos);
-        }
+        let size = SizeType::QWORD;
+        bytecode.add_array(&expression_bytecode);
+        bytecode.add_move_mem_to_reg(Register::RBP, &pos.to_string(), Register::RBX, SizeType::QWORD);
+        bytecode.add_move_reg_to_mem(Register::RAX, "0", Register::RBX, size); // TODO: size
+        return;
     }
     panic!("Invalid size for assignment ({} bytes)", size);
 }
