@@ -55,19 +55,18 @@ fn generate_instruction_linux(instruction: Instruction) -> String
     match inst.clone()
     {
         ByteInstruction::Add | ByteInstruction::Sub | ByteInstruction::Mul | ByteInstruction::Div | ByteInstruction::Or | ByteInstruction::Xor | ByteInstruction::And
-            | ByteInstruction::Mod | ByteInstruction::Not | ByteInstruction::Neg =>
+            | ByteInstruction::Not | ByteInstruction::Neg =>
         {
             let result = match inst
             {
-                ByteInstruction::Add => binary_util::add(),
+                ByteInstruction::Add => binary_util::add(instruction),
                 ByteInstruction::Sub => binary_util::sub(instruction),
-                ByteInstruction::Mul => binary_util::mul(),
-                ByteInstruction::Div => binary_util::div(),
-                ByteInstruction::Or => logical_util::or(),
-                ByteInstruction::Xor => logical_util::xor(),
-                ByteInstruction::And => logical_util::and(),
-                ByteInstruction::Mod => logical_util::mod_(),
-                ByteInstruction::Not => logical_util::not(),
+                ByteInstruction::Mul => binary_util::mul(instruction),
+                ByteInstruction::Div => binary_util::div(instruction),
+                ByteInstruction::Or => logical_util::or(instruction),
+                ByteInstruction::Xor => logical_util::xor(instruction),
+                ByteInstruction::And => logical_util::and(instruction),
+                ByteInstruction::Not => logical_util::not(instruction),
                 ByteInstruction::Neg => logical_util::neg(instruction),
                 _ => panic!("Invalid instruction"),
             };
@@ -155,8 +154,8 @@ fn generate_instruction_linux(instruction: Instruction) -> String
         {
             let result = match inst
             {
-                ByteInstruction::Shl => binary_util::shl(),
-                ByteInstruction::Shr => binary_util::shr(),
+                ByteInstruction::Shl => binary_util::shl(instruction),
+                ByteInstruction::Shr => binary_util::shr(instruction),
                 _ => panic!("Invalid instruction"),
             };
             data.push_str(result.as_str());
@@ -283,4 +282,31 @@ fn get_constant_size(size: SizeType) -> String
         SizeType::STRING => return String::from("db"),
         _ => panic!("Size not supported (yet)"),
     }
+}
+fn get_register_names(instruction: Instruction) -> (String, String)
+{
+    let r1 = instruction.get_register(1);
+    let r2 = instruction.get_register(2);
+    if r1.is_none() || r2.is_none()
+    {
+        panic!("expected 2 registers");
+    }
+    let r1 = r1.unwrap();
+    let r2 = r2.unwrap();
+    let size = instruction.get_size_type();
+    let r1 = register_util::get_name(r1, size);
+    let r2 = register_util::get_name(r2, size);
+    (r1, r2)
+}
+fn get_register_name(instruction: Instruction) -> String
+{
+    let r1 = instruction.get_register(1);
+    if r1.is_none()
+    {
+        panic!("expected 1 register");
+    }
+    let r1 = r1.unwrap();
+    let size = instruction.get_size_type();
+    let r1 = register_util::get_name(r1, size);
+    r1
 }

@@ -1,11 +1,16 @@
 use super::{
     Instruction,
     register_util,
+    get_register_name,
+    get_register_names,
 };
 
-pub fn add() -> String
+pub fn add(instruction: Instruction) -> String
 {
-    format!("add rax, rbx\n")
+    let names = get_register_names(instruction);
+    let r1 = names.0;
+    let r2 = names.1;
+    format!("add {}, {}\n", r1, r2)
 }
 pub fn sub(instruction: Instruction) -> String
 {
@@ -29,19 +34,27 @@ pub fn sub(instruction: Instruction) -> String
     let source_name = register_util::get_name(source, instruction.get_size_type());
     format!("sub {}, {}\n", dest_name, source_name)
 }
-pub fn mul() -> String
+pub fn mul(instruction: Instruction) -> String
 {
-    format!("mul rbx\n")
+    let name = get_register_name(instruction);
+    format!("mul {}\n", name)
 }
-pub fn div() -> String
+pub fn div(instruction: Instruction) -> String
 {
-    format!("div rbx\n")
+    let name = get_register_name(instruction);
+    format!("div {}\n", name)
 }
-pub fn shl() -> String
+pub fn shl(instruction: Instruction) -> String
 {
-    format!("shl rax, rbx\n")
+    let names = get_register_names(instruction);
+    let r1 = names.0;
+    let r2 = names.1;
+    format!("shl {}, {}\n", r1, r2)
 }
-pub fn shr() -> String
+pub fn shr(instruction: Instruction) -> String
 {
-    format!("shr rax, rbx\n")
+    let names = get_register_names(instruction);
+    let r1 = names.0;
+    let r2 = names.1;
+    format!("shr {}, {}\n", r1, r2)
 }

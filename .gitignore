@@ -4,4 +4,5 @@
 *.o
 *.out
 *.sh
+!clean.sh
 out

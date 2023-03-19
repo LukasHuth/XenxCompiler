@@ -37,14 +37,15 @@ pub fn genif(statement: Statement, vars: &Vec<Variable>, used_positions: &Vec<us
     let mut if_branch_bytecode = ByteArray::new();
     let mut else_branch_bytecode = ByteArray::new();
     utils::parsebinary(condition, vars, &mut condition_bytecode);
+    let points = if_points.clone();
     generate_body(if_branch.statements, vars.clone(), used_positions.clone(), highest_position.clone(), if_points, &mut if_branch_bytecode);
     generate_body(else_branch.statements, vars.clone(), used_positions.clone(), highest_position.clone(), if_points, &mut else_branch_bytecode);
     bytecode.add_array(&condition_bytecode);
     bytecode.add_cmp_let("0".to_string(), Register::RAX, SizeType::BYTE); // 1 = true
-    bytecode.add_jmp_if_eq(&format!(".Lelse{}", if_points));
+    bytecode.add_jmp_if_eq(&format!(".Lelse{}", points));
     bytecode.add_array(&if_branch_bytecode);
-    bytecode.add_jmp(&format!(".Lend{}", if_points));
-    bytecode.add_entry(&format!(".Lelse{}", if_points));
+    bytecode.add_jmp(&format!(".Lend{}", points));
+    bytecode.add_entry(&format!(".Lelse{}", points));
     bytecode.add_array(&else_branch_bytecode);
-    bytecode.add_entry(&format!(".Lend{}", if_points));
+    bytecode.add_entry(&format!(".Lend{}", points));
 }

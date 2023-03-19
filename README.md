@@ -39,6 +39,7 @@ func <name>(<argname1>: <datatype1>, <argname2>: <datatype2>): <function_datatyp
 <name> = <value>;
 ```
 ### if else
+else if is not working right at the moment
 ```
 if(<condition>)
 {
@@ -54,6 +55,9 @@ else
     <body>
 }
 ```
+## Known Bugs
+- else if() is throwing an error
+- <variable> == <literal> is not working correctly
 ## TODO
 - suport unary operators
 - support if

@@ -1,26 +1,42 @@
 use super::{
     Instruction,
     register_util,
+    get_register_names,
+    get_register_name,
 };
-pub fn mod_() -> String
+pub fn and(instruction: Instruction) -> String
 {
-    format!("mod rax, rbx\n")
+    let names = get_register_names(instruction);
+    let r1 = names.0;
+    let r2 = names.1;
+    format!("and {}, {}\n", r1, r2)
 }
-pub fn and() -> String
+pub fn or(instruction: Instruction) -> String
 {
-    format!("and rax, rbx\n")
+    let names = get_register_names(instruction);
+    let r1 = names.0;
+    let r2 = names.1;
+    format!("or {}, {}\n", r1, r2)
 }
-pub fn or() -> String
+pub fn xor(instruction: Instruction) -> String
 {
-    format!("or rax, rbx\n")
+    let r1 = instruction.get_register(1);
+    let r2 = instruction.get_register(2);
+    if r1.is_none() || r2.is_none()
+    {
+        panic!("Xor expected 2 registers");
+    }
+    let r1 = r1.unwrap();
+    let r2 = r2.unwrap();
+    let size = instruction.get_size_type();
+    let r1 = register_util::get_name(r1, size);
+    let r2 = register_util::get_name(r2, size);
+    format!("xor {}, {}\n", r1, r2)
 }
-pub fn xor() -> String
+pub fn not(instruction: Instruction) -> String
 {
-    format!("xor rax, rbx\n")
-}
-pub fn not() -> String
-{
-    format!("not rax\n")
+    let name = get_register_name(instruction);
+    format!("not {}\n", name)
 }
 pub fn neg(instruction: Instruction) -> String
 {

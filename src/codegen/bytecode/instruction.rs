@@ -61,7 +61,6 @@ pub enum ByteInstruction
     Sub,
     Mul,
     Div,
-    Mod,
     And,
     Or,
     Xor,

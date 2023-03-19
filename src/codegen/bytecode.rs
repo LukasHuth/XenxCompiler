@@ -75,6 +75,8 @@ impl ByteArray{
     }
     pub fn add_add(&mut self, size: SizeType){
         self.add_byte(ByteInstruction::Add, Vec::new(), size);
+        self.set_register_in_last_instruction(Register::RAX, 1);
+        self.set_register_in_last_instruction(Register::RBX, 2);
     }
     pub fn add_sub(&mut self, size: SizeType){
         self.add_byte(ByteInstruction::Sub, Vec::new(), size);
@@ -83,30 +85,41 @@ impl ByteArray{
     }
     pub fn add_mul(&mut self, size: SizeType){
         self.add_byte(ByteInstruction::Mul, Vec::new(), size);
+        self.set_register_in_last_instruction(Register::RBX, 1);
     }
     pub fn add_div(&mut self, size: SizeType){
         self.add_byte(ByteInstruction::Div, Vec::new(), size);
-    }
-    pub fn add_mod(&mut self, size: SizeType){
-        self.add_byte(ByteInstruction::Mod, Vec::new(), size);
+        self.set_register_in_last_instruction(Register::RBX, 1);
     }
     pub fn add_and(&mut self, size: SizeType){
         self.add_byte(ByteInstruction::And, Vec::new(), size);
+        self.set_register_in_last_instruction(Register::RAX, 1);
+        self.set_register_in_last_instruction(Register::RBX, 2);
     }
     pub fn add_or(&mut self, size: SizeType){
         self.add_byte(ByteInstruction::Or, Vec::new(), size);
+        self.set_register_in_last_instruction(Register::RAX, 1);
+        self.set_register_in_last_instruction(Register::RBX, 2);
     }
     pub fn add_xor(&mut self, size: SizeType){
         self.add_byte(ByteInstruction::Xor, Vec::new(), size);
+        self.set_register_in_last_instruction(Register::RAX, 1);
+        self.set_register_in_last_instruction(Register::RBX, 2);
     }
     pub fn add_not(&mut self, size: SizeType){
         self.add_byte(ByteInstruction::Not, Vec::new(), size);
+        self.set_register_in_last_instruction(Register::RAX, 1);
+        self.set_register_in_last_instruction(Register::RBX, 2);
     }
     pub fn add_shl(&mut self, size: SizeType){
         self.add_byte(ByteInstruction::Shl, Vec::new(), size);
+        self.set_register_in_last_instruction(Register::RAX, 1);
+        self.set_register_in_last_instruction(Register::RBX, 2);
     }
     pub fn add_shr(&mut self, size: SizeType){
         self.add_byte(ByteInstruction::Shr, Vec::new(), size);
+        self.set_register_in_last_instruction(Register::RAX, 1);
+        self.set_register_in_last_instruction(Register::RBX, 2);
     }
     fn add_cmp(&mut self, size: SizeType){
         self.add_byte(ByteInstruction::Cmp, Vec::new(), size);
@@ -223,6 +236,12 @@ impl ByteArray{
     {
         self.add_byte(ByteInstruction::Syscall, Vec::new(), None);
     }
+    pub fn add_clear(&mut self, register: Register)
+    {
+        self.add_byte(ByteInstruction::Xor, vec![], SizeType::QWORD);
+        self.set_register_in_last_instruction(register, 1);
+        self.set_register_in_last_instruction(register, 2);
+    }
     fn set_register_in_last_instruction(&mut self, register: Register, pos: u32){
         self.data.last_mut().unwrap().set_register(register, pos);
     }
@@ -233,5 +252,4 @@ impl ByteArray{
     {
         util::generate(self.data.clone(), os)
     }
-
 }

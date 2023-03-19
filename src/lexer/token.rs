@@ -65,7 +65,7 @@ impl Token {
         {
             return 2;
         }
-        if self.token == LexerToken::Plus || self.token == LexerToken::Minus {
+        if self.token == LexerToken::Plus || self.token == LexerToken::Minus || self.token == LexerToken::Caret || self.token == LexerToken::Percent {
             return 3;
         }
         if self.token == LexerToken::Star || self.token == LexerToken::Slash {

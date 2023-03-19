@@ -388,7 +388,6 @@ pub fn get_op_by_token(token : LexerToken) -> String
         LexerToken::Minus => String::from("-"),
         LexerToken::Star => String::from("*"),
         LexerToken::Slash => String::from("/"),
-        // LexerToken::Percent => String::from("%"), // TODO: Implement
         LexerToken::EqualsEquals => String::from("=="),
         LexerToken::BangEquals => String::from("!="),
         LexerToken::Less => String::from("<"),
@@ -399,6 +398,9 @@ pub fn get_op_by_token(token : LexerToken) -> String
         LexerToken::PipePipe => String::from("||"),
         LexerToken::Ampersand => String::from("&"),
         LexerToken::Pipe => String::from("|"),
+        LexerToken::Caret => String::from("^"),
+        LexerToken::Bang => String::from("!"),
+        LexerToken::Percent => String::from("%"),
         _ => panic!("Token is not an operator"),
     }
 }

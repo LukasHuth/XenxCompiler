@@ -116,6 +116,11 @@ impl Lexer
                 text = ";".to_string();
                 return Token::new(token, text, start, self.position);
             },
+            '%' => {
+                token = LexerToken::Percent;
+                text = "%".to_string();
+                return Token::new(token, text, start, self.position);
+            },
             '|' => {
                 if self.peek(0) == '|'
                 {

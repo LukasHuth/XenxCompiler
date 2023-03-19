@@ -29,6 +29,9 @@ pub fn generate(statements: Vec<Statement>, functions: HashMap<String, (Datatype
     bytecode.add_store_constant_string("format", "%d\\n");
     bytecode.add_section("text");
     bytecode.add_external("printf");
+    bytecode.add_external("malloc");
+    bytecode.add_external("free");
+    bytecode.add_external("exit");
     bytecode.add_global("_start");
     bytecode.add_entry("_start");
     // if linux:
@@ -49,9 +52,9 @@ pub fn generate(statements: Vec<Statement>, functions: HashMap<String, (Datatype
         generate_function(state, args, &mut if_positions, bytecode);
         // data.push_str(func.as_str());
     }
-    basic_functions::generate_malloc(bytecode);
-    basic_functions::generate_free(bytecode);
-    basic_functions::generate_exit(bytecode);
+    // basic_functions::generate_malloc(bytecode);
+    // basic_functions::generate_free(bytecode);
+    // basic_functions::generate_exit(bytecode);
     // return data;
 }
 

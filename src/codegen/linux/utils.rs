@@ -196,7 +196,16 @@ pub fn parsebinary(statement: Statement, vars: &Vec<Variable>, bytecode: &mut By
         if statement.name == "/"
         {
             bytecode.add_swap(Register::RAX, Register::RBX);
+            bytecode.add_clear(Register::RDX);
             bytecode.add_div(SizeType::QWORD);
+        }
+        else
+        if statement.name == "%"
+        {
+            bytecode.add_swap(Register::RAX, Register::RBX);
+            bytecode.add_clear(Register::RDX);
+            bytecode.add_div(SizeType::QWORD);
+            bytecode.add_move_reg_to_reg(Register::RDX, Register::RAX, SizeType::QWORD);
         }
         else
         if statement.name == "=="
