@@ -105,7 +105,7 @@ impl SyntaticAnalyser {
         }
         return parameters;
     }
-    fn get_body(&mut self, statements: Vec<Expression>, variables: HashMap<String,Datatype>, functiondatatype: Datatype, args: Arguments, of_function: bool) -> Vec<Statement>
+    fn get_body(&mut self, statements: Vec<Expression>, variables: HashMap<String,Datatype>, functiondatatype: Datatype, args: Arguments, _of_function: bool) -> Vec<Statement>
     {
         let mut body = Vec::<Statement>::new();
         let mut returned = false;
@@ -290,13 +290,13 @@ impl SyntaticAnalyser {
                 body.push(statement);
             }
         }
-        if of_function
-        {
-            if !returned && functiondatatype.datatype != StatementDatatype::Void
-            {
-                panic!("function does not return a value");
-            }
-        }
+        // if of_function
+        // {
+        //     if !returned && functiondatatype.datatype != StatementDatatype::Void
+        //     {
+        //         panic!("function does not return a value");
+        //     }
+        // }
         return body;
     }
     

@@ -78,9 +78,9 @@ fn genassignment_new(size: i32, value: &Statement, pos: usize, vars: &Vec<Variab
     let size = size * size_multiplier;
     bytecode.add_move_lit_to_reg(&size.to_string(), Register::RDI, SizeType::QWORD);
     bytecode.add_call("malloc");
-    bytecode.add_move_lit_to_reg("8", Register::RBX, SizeType::QWORD);
+    // bytecode.add_move_lit_to_reg("8", Register::RBX, SizeType::QWORD);
     bytecode.add_sub_lit_reg("8", Register::RSP, SizeType::QWORD);
-    bytecode.add_move_reg_to_mem(Register::RAX, &(pos as i32 * -1).to_string(), Register::RBP, SizeType::QWORD);
+    bytecode.add_move_reg_to_mem(Register::RAX, &((pos as i32*-1) as i32 * -1).to_string(), Register::RBP, SizeType::QWORD);
     genassignment_old(value, pos, &vars, bytecode);
 }
 fn genassignment_old(value: &Statement, pos: usize, vars: &Vec<Variable>, bytecode: &mut ByteArray)
@@ -92,14 +92,14 @@ fn genassignment_old(value: &Statement, pos: usize, vars: &Vec<Variable>, byteco
     utils::parsebinary(value.clone(), &vars, &mut expression_bytecode);
     if value.datatype.datatype == StatementDatatype::String
     {
-        bytecode.add_move_mem_to_reg(Register::RBP, &(pos as i32 * -1).to_string(), Register::RBP, SizeType::QWORD);
+        bytecode.add_move_mem_to_reg(Register::RBP, &pos.to_string(), Register::RBP, SizeType::QWORD);
         bytecode.add_array(&expression_bytecode);
     }
     else
     {
         let size = SizeType::QWORD;
         bytecode.add_array(&expression_bytecode);
-        bytecode.add_move_mem_to_reg(Register::RBP, &(pos as i32 * -1).to_string(), Register::RBX, SizeType::QWORD);
+        bytecode.add_move_mem_to_reg(Register::RBP, &pos.to_string(), Register::RBX, SizeType::QWORD);
         bytecode.add_move_reg_to_mem(Register::RAX, "0", Register::RBX, size); // TODO: size
         return;
     }
