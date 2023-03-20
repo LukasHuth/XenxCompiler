@@ -87,7 +87,7 @@ impl SyntaticAnalyser {
             }
             datatype = util::remove_n_chars_from_behind(datatype.clone(), 1);
             // println!("datatype: {}", datatype);
-            util::remove_n_chars_from_behind(datatype.clone(), 1);
+            datatype = util::remove_n_chars_from_behind(datatype.clone(), 1);
         }
         let datatype = util::get_datatype_from_string(datatype);
         let datatype = Datatype::new(datatype, dim, is_array);
@@ -264,6 +264,30 @@ impl SyntaticAnalyser {
                 }
                 let if_statement = Statement::new_if(condition, if_body, else_body);
                 body.push(if_statement);
+            }
+            else if statement.is_array_overwrite()
+            {
+                let var_expr = statement.syntax.get_overwrite_array_expr();
+                let name = var_expr.get_name();
+                let value = var_expr.get_value();
+                let value = util::generate_binary(value.clone(), &variables, &self.functions);
+                let indices = var_expr.get_indices();
+                let mut indices_statement = Vec::<Statement>::new();
+                for index in indices
+                {
+                    let bin = util::generate_binary(index.clone(), &variables, &self.functions);
+                    indices_statement.push(bin);
+                }
+                let datatype = util::get_variable(name.clone(), &variables);
+                if !datatype.is_array
+                {
+                    let err = util::get_line_of_position(self.context.clone(),statement.get_position() + 2);
+                    panic!("array overwrite {} is not valid at {}:{}", name, err.0, err.1);
+                }
+                let mut statement = Statement::new(name.clone(), statement::StatementType::ArrayOverwrite, datatype.datatype, datatype.clone().array_bounds, datatype.clone().is_array);
+                statement.statements.push(value.clone());
+                statement.statements.append(&mut indices_statement);
+                body.push(statement);
             }
         }
         if of_function

@@ -17,6 +17,7 @@ pub use return_expression::ReturnExpression;
 pub use call_expression::CallExpression;
 pub use assignment_expression::AssignmentExpression;
 pub use overwrite_variable_expression::OverwriteVariableExpression;
+pub use overwrite_variable_expression::OverwriteArrayExpression;
 pub use arg_variable_expression::ArgVariableExpression;
 pub use function_declaration_expression::FunctionDeclarationExpression;
 pub use variable_expression::VariableExpression;
@@ -346,6 +347,28 @@ impl Expression
             return false;
         }
         return true;
+    }
+
+    pub fn new_array_overwrite_expr(name: String, square_brackets: Vec<Expression>, value: Expression, start: usize) -> Expression
+    {
+        let overwrite_variable_expr = OverwriteArrayExpression::new(value, name, square_brackets);
+        let syntax = Syntax::new_overwrite_array_expr(overwrite_variable_expr);
+        let syntax = Box::new(syntax);
+        Expression
+        {
+            tag: ExpressionTag::OverwriteArrayExpr,
+            syntax,
+            start,
+        }
+    }
+
+    pub fn is_array_overwrite(&self) -> bool
+    {
+        match self.tag
+        {
+            ExpressionTag::OverwriteArrayExpr => true,
+            _ => false,
+        }
     }
     
 }

@@ -111,7 +111,7 @@ impl Parser
                     let expr = self.parse_expression();
                     self.match_token(LexerToken::Semicolon);
                     let text = String::from(&identifier.text).to_owned();
-                    let expression = Expression::new_overwrite_variable_expression(text, expr, start);
+                    let expression = Expression::new_array_overwrite_expr(text.clone(), square_brackets, expr, start);
                     statements.push(expression);
                 }
                 else

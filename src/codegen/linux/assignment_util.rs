@@ -21,10 +21,6 @@ pub fn genassignment(statement: Statement, vars: &mut Vec<Variable>, mut used_po
     {
         panic!("No value for variable {}", name);
     }
-    if var.datatype.array_bounds.len() > 0
-    {
-        panic!("Arrays not supported yet");
-    }
     let value = var.statements[0].clone();
     let pos: usize;
     let new: bool;
@@ -55,14 +51,23 @@ pub fn genassignment(statement: Statement, vars: &mut Vec<Variable>, mut used_po
     if new
     {
         let size = utils::get_type_size(var.datatype.clone());
-        genassignment_new(size, &value, pos, &vars, bytecode);
+        if var.datatype.array_bounds.len() > 0
+        {
+            let mut array_size = 1;
+            for bound in var.datatype.array_bounds.clone()
+            {
+                array_size *= bound;
+            }
+            genassignment_new(size * array_size, &value, pos, &vars, array_size, bytecode);
+        }
+        else
+        {
+            genassignment_new(size, &value, pos, &vars, 1, bytecode);
+        }
     }
-    else
-    {
-        genassignment_old(&value, pos, &vars, bytecode);
-    }
+    genassignment_old(&value, pos, &vars, bytecode);
 }
-fn genassignment_new(size: i32, value: &Statement, pos: usize, vars: &Vec<Variable>, bytecode: &mut ByteArray)
+fn genassignment_new(size: i32, value: &Statement, pos: usize, vars: &Vec<Variable>, size_multiplier: i32, bytecode: &mut ByteArray)
 {
     let mut size = size;
     if value.datatype.datatype == StatementDatatype::String
@@ -70,11 +75,12 @@ fn genassignment_new(size: i32, value: &Statement, pos: usize, vars: &Vec<Variab
         let expression = value.name.clone();
         size = expression.len() as i32 - 2;
     }
+    let size = size * size_multiplier;
     bytecode.add_move_lit_to_reg(&size.to_string(), Register::RDI, SizeType::QWORD);
     bytecode.add_call("malloc");
     bytecode.add_move_lit_to_reg("8", Register::RBX, SizeType::QWORD);
-    bytecode.add_sub_lit_reg(&size.to_string(), Register::RSP, SizeType::QWORD);
-    bytecode.add_move_reg_to_mem(Register::RAX, &pos.to_string(), Register::RBP, SizeType::QWORD);
+    bytecode.add_sub_lit_reg("8", Register::RSP, SizeType::QWORD);
+    bytecode.add_move_reg_to_mem(Register::RAX, &(pos as i32 * -1).to_string(), Register::RBP, SizeType::QWORD);
     genassignment_old(value, pos, &vars, bytecode);
 }
 fn genassignment_old(value: &Statement, pos: usize, vars: &Vec<Variable>, bytecode: &mut ByteArray)
@@ -86,16 +92,43 @@ fn genassignment_old(value: &Statement, pos: usize, vars: &Vec<Variable>, byteco
     utils::parsebinary(value.clone(), &vars, &mut expression_bytecode);
     if value.datatype.datatype == StatementDatatype::String
     {
-        bytecode.add_move_mem_to_reg(Register::RBP, &pos.to_string(), Register::RBP, SizeType::QWORD);
+        bytecode.add_move_mem_to_reg(Register::RBP, &(pos as i32 * -1).to_string(), Register::RBP, SizeType::QWORD);
         bytecode.add_array(&expression_bytecode);
     }
     else
     {
         let size = SizeType::QWORD;
         bytecode.add_array(&expression_bytecode);
-        bytecode.add_move_mem_to_reg(Register::RBP, &pos.to_string(), Register::RBX, SizeType::QWORD);
+        bytecode.add_move_mem_to_reg(Register::RBP, &(pos as i32 * -1).to_string(), Register::RBX, SizeType::QWORD);
         bytecode.add_move_reg_to_mem(Register::RAX, "0", Register::RBX, size); // TODO: size
         return;
     }
     panic!("Invalid size for assignment ({} bytes)", size);
+}
+pub fn genoverwrite_array(value: Statement, vars: &mut Vec<Variable>, bytecode: &mut ByteArray)
+{
+    let name = value.name.clone();
+    let pos = utils::findvariableindex(&name, &vars);
+    genload_array(&value, pos, &vars, bytecode);
+    bytecode.add_push();
+    let val = value.statements[0].clone();
+    utils::parsebinary(val, &vars, bytecode);
+    bytecode.add_pop(Register::RBX);
+    bytecode.add_move_reg_to_mem(Register::RAX, "0", Register::RBX, SizeType::QWORD);
+}
+fn genload_array(value: &Statement, pos: usize, vars: &Vec<Variable>, bytecode: &mut ByteArray)
+{
+    println!("genload_array({})", value.to_string());
+    bytecode.add_move_mem_to_reg(Register::RBP, &(pos as i32 * -1).to_string(), Register::RBX, SizeType::QWORD);
+    for i in 1..value.statements.len()
+    {
+        bytecode.add_push_reg(Register::RBX);
+        let statement = value.statements[i].clone();
+        utils::parsebinary(statement, &vars, bytecode);
+        bytecode.add_pop(Register::RBX);
+        bytecode.add_swap(Register::RBX, Register::RAX);
+        bytecode.add_add(SizeType::QWORD);
+        bytecode.add_swap(Register::RBX, Register::RAX);
+    }
+    bytecode.add_move_reg_to_reg(Register::RBX, Register::RAX, SizeType::QWORD);
 }

@@ -133,6 +133,8 @@ pub enum StatementType
     Binary,
     Unary,
     Body,
+    ArrayIndices,
+    ArrayOverwrite,
 }
 impl StatementType
 {
@@ -154,6 +156,8 @@ impl StatementType
             StatementType::Binary => string.push_str("Binary"),
             StatementType::Unary => string.push_str("Unary"),
             StatementType::Body => string.push_str("Body"),
+            StatementType::ArrayIndices => string.push_str("ArrayIndices"),
+            StatementType::ArrayOverwrite => string.push_str("ArrayOverwrite"),
         }
         return string;
     }
@@ -248,6 +252,15 @@ impl Statement
             type_: StatementType::Body,
             datatype: Datatype::new(StatementDatatype::Void, Vec::<i32>::new(), false),
             statements: body,
+        }
+    }
+
+    pub fn new_array_indices(array_indices: Vec<Statement>) -> Statement {
+        Statement {
+            name: String::from("array_indices"),
+            type_: StatementType::ArrayIndices,
+            datatype: Datatype::new(StatementDatatype::Void, Vec::<i32>::new(), false),
+            statements: array_indices,
         }
     }
 }

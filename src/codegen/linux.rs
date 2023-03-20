@@ -100,6 +100,7 @@ pub fn generate_body(statements: Vec<Statement>, vars: Vec<Variable>, used_posit
     let mut highest_position = highest_position;
     for expr in statements
     {
+        println!("Statement: {:?}", expr);
         if expr.type_ == StatementType::Variable
         {
             assignment_util::genassignment(expr.clone(), &mut vars, &mut used_positions, &mut highest_position, bytecode);
@@ -118,6 +119,10 @@ pub fn generate_body(statements: Vec<Statement>, vars: Vec<Variable>, used_posit
         {
             if_util::genif(expr.clone(), &vars, &used_positions, &highest_position, if_points, bytecode);
         }
+        if expr.type_ == StatementType::ArrayOverwrite
+        {
+            assignment_util::genoverwrite_array(expr.clone(), &mut vars, bytecode);
+        }
     }
     bytecode.add_push();
     for i in old_vars.len()..vars.len()
@@ -132,7 +137,9 @@ pub fn generate_body(statements: Vec<Statement>, vars: Vec<Variable>, used_posit
         {
             size = var.name.len()as i32-2;
         }
-        let offset = var.index.clone().to_string();
+        let index = var.index.clone();
+        let index = index as i32 * -1;
+        let offset = index.to_string();
         bytecode.add_move_mem_to_reg(Register::RBP, &offset, Register::RDI, SizeType::QWORD);
         bytecode.add_move_lit_to_reg(&size.to_string(), Register::RSI, SizeType::QWORD);
         bytecode.add_call("free");

@@ -26,6 +26,20 @@ pub fn mov_reg_to_mem(instruction: Instruction) -> String
     {
         offset = arguments[0].clone();
     }
+    let offset = offset.parse::<i32>();
+    if offset.is_err()
+    {
+        panic!("MovRegToMem expected offset to be an integer");
+    }
+    let offset = offset.unwrap();
+    if offset < 0
+    {
+        return format!("mov [{} - {}], {}\n", destination, offset.abs(), source);
+    }
+    if offset == 0
+    {
+        return format!("mov [{}], {}\n", destination, source);
+    }
     return format!("mov [{} + {}], {}\n", destination, offset, source);
 }
 pub fn mov_reg_to_reg(instruction: Instruction) -> String
@@ -68,6 +82,20 @@ pub fn mov_mem_to_reg(instruction: Instruction) -> String
     else
     {
         offset = arguments[0].clone();
+    }
+    let offset = offset.parse::<i32>();
+    if offset.is_err()
+    {
+        panic!("MovMemToReg expected offset to be an integer");
+    }
+    let offset = offset.unwrap();
+    if offset < 0
+    {
+        return format!("mov {}, [{} - {}]\n", destination, source, offset.abs());
+    }
+    if offset == 0
+    {
+        return format!("mov {}, [{}]\n", destination, source);
     }
     return format!("mov {}, [{} + {}]\n", destination, source, offset);
 }
