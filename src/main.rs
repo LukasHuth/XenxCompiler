@@ -42,10 +42,11 @@ fn main() {
     // let filename = "test.xenx";
     println!("Reading file: {}", filename);
     let context = std::fs::read_to_string(filename).expect("Unable to read file");
-    let mut lexer = lexer::Lexer::new(context.clone());
-    let tokens = lexer.lex();
-    let mut parser = parser::Parser::new(tokens);
-    let statements = parser.parse();
+    // let mut lexer = lexer::Lexer::new(context.clone());
+    // let tokens = lexer.lex();
+    // let mut parser = parser::Parser::new(tokens);
+    // let statements = parser.parse();
+    let statements = parse_file(filename);
     let mut syntactic_analyser = syntactic_analyser::SyntaticAnalyser::new(statements, context.clone());
     let _statements_function_tuple = syntactic_analyser.analyse();
     // println!("Statements: {}", _statements.clone().len());
@@ -55,6 +56,32 @@ fn main() {
     codegen.generate();
     codegen.compile(outfile.as_str());
     // from here i can use _statements to generate code
+}
+fn parse_file(filename: &str) -> Vec<parser::expression::Expression> {
+    let mut tokens = get_tokens_from_file(filename);
+    let mut filenames = Vec::<String>::new();
+    let mut statements = Vec::<parser::expression::Expression>::new();
+    while tokens[0].token == lexer::token::LexerToken::Keyword && tokens[0].text == "import" {
+        tokens.drain(0..1);
+        let mut filename = String::new();
+        while tokens[0].token != lexer::token::LexerToken::Semicolon {
+            filename.push_str(tokens[0].text.as_str());
+            tokens.drain(0..1);
+        }
+        filenames.push(filename);
+    }
+    for filename in filenames {
+        statements.append(&mut parse_file(filename.as_str()));
+    }
+    let mut parser = parser::Parser::new(tokens);
+    statements.append(&mut parser.parse());
+    return statements;
+}
+fn get_tokens_from_file(filename: &str) -> Vec<lexer::token::Token> {
+    let context = std::fs::read_to_string(filename).expect("Unable to read file");
+    let mut lexer = lexer::Lexer::new(context.clone());
+    let tokens = lexer.lex();
+    return tokens;
 }
 #[allow(dead_code)]
 fn export_arguments(mut args: Vec<String>) -> (HashMap<String, String>, Vec<String>) {

@@ -42,6 +42,7 @@ pub enum LexerToken {
     CloseSquareBracket,
     Percent,
     Caret,
+    Dot,
 }
 impl Token {
     pub fn new(token: LexerToken, text: String, pos: usize, length: usize) -> Token {
@@ -142,6 +143,9 @@ impl Token {
             LexerToken::AmpersandAmpersand => "AmpersandAmpersand".to_string(),
             LexerToken::OpenSquareBracket => "OpenSquareBracket".to_string(),
             LexerToken::CloseSquareBracket => "CloseSquareBracket".to_string(),
+            LexerToken::Percent => "Percent".to_string(),
+            LexerToken::Caret => "Caret".to_string(),
+            LexerToken::Dot => "Dot".to_string(),
             _ => "BadToken".to_string(),
         }
     }

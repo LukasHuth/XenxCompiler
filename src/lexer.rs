@@ -232,7 +232,8 @@ impl Lexer
                 }
                 text = self.input[start..self.position].to_string();
                 if text == "return" || text == "float" || text == "int" || text == "func" || text == "bool" || text == "string"
-                    || text == "if" || text == "else" || text == "char"
+                    || text == "if" || text == "else" || text == "char" || text == "while" || text == "for" || text == "break"
+                    || text == "continue" || text == "struct" || text == "import" || text == "as" || text == "null"
                 {
                     token = LexerToken::Keyword;
                 }
@@ -245,6 +246,11 @@ impl Lexer
                 {
                     token = LexerToken::Identifier;
                 }
+                return Token::new(token, text, start, self.position);
+            },
+            '.' => {
+                token = LexerToken::Dot;
+                text = ".".to_string();
                 return Token::new(token, text, start, self.position);
             },
             _ =>  {
