@@ -53,3 +53,17 @@ pub fn generate_exit(bytecode: &mut ByteArray)
     bytecode.add_move_lit_to_reg("60", Register::RAX, SizeType::QWORD);
     bytecode.add_syscall();
 }
+pub fn generate_print(bytecode: &mut ByteArray)
+{
+    bytecode.add_entry("print");
+    bytecode.add_push_reg(Register::RBP);
+    bytecode.add_move_reg_to_reg(Register::RSP, Register::RBP, SizeType::QWORD);
+    bytecode.add_load_constant("format_int", SizeType::QWORD);
+    bytecode.add_move_reg_to_reg(Register::RDI, Register::RSI, SizeType::QWORD);
+    bytecode.add_move_reg_to_reg(Register::RAX, Register::RDI, SizeType::QWORD);
+    bytecode.add_xor_reg(Register::RAX, Register::RAX, SizeType::QWORD);
+    bytecode.add_call("printf");
+    bytecode.add_move_reg_to_reg(Register::RBP, Register::RSP, SizeType::QWORD);
+    bytecode.add_pop(Register::RBP);
+    bytecode.add_ret();
+}

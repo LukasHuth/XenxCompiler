@@ -8,6 +8,7 @@ pub mod logical_util;
 pub mod compare_util;
 pub mod stack_util;
 pub mod kernel_util;
+pub mod load_store_util;
 use super::super::OS;
 use super::{
     Instruction,
@@ -112,7 +113,8 @@ fn generate_instruction_linux(instruction: Instruction) -> String
         },
         ByteInstruction::LoadConstant =>
         {
-            todo!();
+            let result = load_store_util::load_constant(instruction);
+            data.push_str(result.as_str());
         },
         ByteInstruction::LoadArgument =>
         {

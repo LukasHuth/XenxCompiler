@@ -26,7 +26,7 @@ pub fn generate(statements: Vec<Statement>, functions: HashMap<String, (Datatype
 {
     bytecode.add_section("data");
     // TODO: store constants (for printf)
-    bytecode.add_store_constant_string("format", "%d\\n");
+    bytecode.add_store_constant_string("format_int", "%d\\n");
     bytecode.add_section("text");
     bytecode.add_external("printf");
     bytecode.add_external("malloc");

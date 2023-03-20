@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 pub mod statement;
 pub mod arguments;
+mod standartfunctions;
 mod typetest;
 use statement::{
     Datatype,
@@ -25,17 +26,30 @@ pub struct SyntaticAnalyser {
     functions: HashMap<String, (Datatype, Arguments, Vec::<Statement>)>,
     context: String,
     actual_datatype: Datatype,
+    std_function_count: HashMap<String, usize>,
 }
 impl SyntaticAnalyser {
     pub fn new(statements: Vec<Expression>, context: String) -> SyntaticAnalyser {
         // println!("start syntactic analyser");
+        let mut functions = HashMap::<String, (Datatype, Arguments, Vec::<Statement>)>::new();
+        standartfunctions::generate_functions(&mut functions);
+        let mut std_function_count = HashMap::<String, usize>::new();
+        for key in functions.keys()
+        {
+            std_function_count.insert(key.clone(), 0);
+        }
         SyntaticAnalyser {
             statements: statements,
             pos: 0,
-            functions: HashMap::<String, (Datatype, Arguments, Vec::<Statement>)>::new(),
+            functions,
             context: context,
             actual_datatype: Datatype::new(StatementDatatype::Void, vec![], false),
+            std_function_count,
         }
+    }
+    pub fn get_std_functions(&self) -> HashMap<String, usize>
+    {
+        self.std_function_count.clone()
     }
     pub fn analyse(&mut self) -> (Vec<Statement>, HashMap<String, (Datatype, Arguments, Vec::<Statement>)>)
     {
@@ -169,6 +183,10 @@ impl SyntaticAnalyser {
                         }
                     }
                 }
+                if standartfunctions::is_std_function(&name)
+                {
+                    self.increment_std_function_count(&name);
+                }
                 let function = self.functions.get(&name).unwrap().0.clone();
                 let call = Statement::new_call(name, arguments, function);
                 body.push(call);
@@ -293,6 +311,17 @@ impl SyntaticAnalyser {
         }
         return body;
     }
-    
+    fn increment_std_function_count(&mut self, name: &str)
+    {
+        if self.std_function_count.contains_key(name)
+        {
+            let count = self.std_function_count.get(name).unwrap();
+            self.std_function_count.insert(name.to_string(), count + 1);
+        }
+        else
+        {
+            self.std_function_count.insert(name.to_string(), 1);
+        }
+    }
 }
 

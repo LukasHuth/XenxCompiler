@@ -20,17 +20,25 @@ pub struct Codegen
     functions: HashMap<String, (Datatype, Arguments, Vec::<Statement>)>,
     data: String,
     os: OS,
+    std_functions: HashMap<String, usize>,
 }
 impl Codegen
 {
-    pub fn new(statements: Vec<Statement>, functions: HashMap<String, (Datatype, Arguments, Vec::<Statement>)>,os: OS) -> Codegen
+    pub fn new(statements: Vec<Statement>, functions: HashMap<String, (Datatype, Arguments, Vec::<Statement>)>,os: OS, std_functions: HashMap<String, usize>) -> Codegen
     {
-        Codegen { statements: statements, functions, data: "".to_string(), os }
+        Codegen { statements: statements, functions, data: "".to_string(), os , std_functions}
     }
     pub fn generate(&mut self)
     {
         let mut bytecode = ByteArray::new();
         linux::generate(self.statements.clone(), self.functions.clone(), &mut bytecode);
+        for std_function in self.std_functions.clone()
+        {
+            if std_function.0 == "print" && std_function.1 > 0
+            {
+                linux::basic_functions::generate_print(&mut bytecode);
+            }
+        }
         let result = bytecode.generate(self.os);
         self.data = result;
     }

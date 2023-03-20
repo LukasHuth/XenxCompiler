@@ -60,6 +60,7 @@ impl ByteArray{
     }
     pub fn add_load_constant(&mut self, name: &str, size: SizeType){
         self.add_byte(ByteInstruction::LoadConstant, vec![name.to_string()], size);
+        self.set_register_in_last_instruction(Register::RAX, 1);
     }
     pub fn add_store_constant(&mut self, name: &str, value: &str, size: SizeType){
         self.add_byte(ByteInstruction::StoreConstant, vec![name.to_string(), value.to_string()], size);
@@ -105,6 +106,11 @@ impl ByteArray{
         self.add_byte(ByteInstruction::Xor, Vec::new(), size);
         self.set_register_in_last_instruction(Register::RAX, 1);
         self.set_register_in_last_instruction(Register::RBX, 2);
+    }
+    pub fn add_xor_reg(&mut self, r1: Register, r2: Register, size: SizeType){
+        self.add_byte(ByteInstruction::Xor, Vec::new(), size);
+        self.set_register_in_last_instruction(r1, 1);
+        self.set_register_in_last_instruction(r2, 2);
     }
     pub fn add_not(&mut self, size: SizeType){
         self.add_byte(ByteInstruction::Not, Vec::new(), size);

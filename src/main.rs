@@ -52,7 +52,8 @@ fn main() {
     // println!("Statements: {}", _statements.clone().len());
     let functions = _statements_function_tuple.1;
     let _statements = _statements_function_tuple.0;
-    let mut codegen = codegen::Codegen::new(_statements,functions, os);
+    let std_functions = syntactic_analyser.get_std_functions();
+    let mut codegen = codegen::Codegen::new(_statements,functions, os, std_functions);
     codegen.generate();
     codegen.compile(outfile.as_str());
     // from here i can use _statements to generate code
