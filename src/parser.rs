@@ -225,6 +225,7 @@ impl Parser
             {
                 self.match_token(LexerToken::Keyword);
                 let else_if_statement = self.parse_if_statement(true);
+                self.match_token(LexerToken::Closebrace);
                 return Expression::new_if_expr(condition, body, vec![else_if_statement], start);
             }
         }
