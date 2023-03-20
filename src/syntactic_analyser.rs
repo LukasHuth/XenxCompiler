@@ -208,6 +208,7 @@ impl SyntaticAnalyser {
                 // let value = self.get_body(vec![value.clone()]);
                 // let value = value.get(0).unwrap();
                 let value = util::generate_binary(value, &variables, &self.functions);
+                println!("{}", value.datatype);
                 if !datatype.is_same(&value.datatype)
                 {
                     let err = util::get_line_of_position(self.context.clone(),statement.get_position() + 2);
@@ -290,13 +291,6 @@ impl SyntaticAnalyser {
                 body.push(statement);
             }
         }
-        // if of_function
-        // {
-        //     if !returned && functiondatatype.datatype != StatementDatatype::Void
-        //     {
-        //         panic!("function does not return a value");
-        //     }
-        // }
         return body;
     }
     

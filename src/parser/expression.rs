@@ -21,6 +21,7 @@ pub use overwrite_variable_expression::OverwriteArrayExpression;
 pub use arg_variable_expression::ArgVariableExpression;
 pub use function_declaration_expression::FunctionDeclarationExpression;
 pub use variable_expression::VariableExpression;
+pub use variable_expression::ArrayExpression;
 
 pub mod syntax;
 pub use syntax::Syntax;
@@ -69,6 +70,8 @@ impl Expression
             ExpressionTag::FunctionDeclarationExpr => syntax.function_declaration_expr.as_ref().unwrap().to_string(),
             ExpressionTag::IfExpr => syntax.if_expr.as_ref().unwrap().to_string(),
             ExpressionTag::OverwriteVariableExpr => syntax.overwrite_variable_expr.as_ref().unwrap().to_string(),
+            ExpressionTag::OverwriteArrayExpr => syntax.overwrite_array_expr.as_ref().unwrap().to_string(),
+            ExpressionTag::ArrayExpr => syntax.array_expr.as_ref().unwrap().to_string(),
             _ => String::new(),
         }
     }
@@ -185,6 +188,14 @@ impl Expression
         match self.tag
         {
             ExpressionTag::FloatLiteral => true,
+            _ => false,
+        }
+    }
+    pub fn is_array(&self) -> bool
+    {
+        match self.tag
+        {
+            ExpressionTag::ArrayExpr => true,
             _ => false,
         }
     }
@@ -361,7 +372,17 @@ impl Expression
             start,
         }
     }
-
+    pub fn new_array_access_expr(name: String, square_brackets: Vec<Expression>, start: usize) -> Expression {
+        let arr_expr = ArrayExpression::new(name, square_brackets);
+        let syntax = Syntax::new_array_expr(arr_expr);
+        let syntax = Box::new(syntax);
+        Expression
+        {
+            tag: ExpressionTag::ArrayExpr,
+            syntax,
+            start,
+        }
+    }
     pub fn is_array_overwrite(&self) -> bool
     {
         match self.tag
@@ -370,5 +391,4 @@ impl Expression
             _ => false,
         }
     }
-    
 }

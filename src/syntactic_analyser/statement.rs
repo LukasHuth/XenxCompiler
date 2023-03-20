@@ -135,6 +135,7 @@ pub enum StatementType
     Body,
     ArrayIndices,
     ArrayOverwrite,
+    Array,
 }
 impl StatementType
 {
@@ -158,6 +159,7 @@ impl StatementType
             StatementType::Body => string.push_str("Body"),
             StatementType::ArrayIndices => string.push_str("ArrayIndices"),
             StatementType::ArrayOverwrite => string.push_str("ArrayOverwrite"),
+            StatementType::Array => string.push_str("Array"),
         }
         return string;
     }

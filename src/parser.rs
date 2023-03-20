@@ -104,14 +104,21 @@ impl Parser
                     self.match_token(LexerToken::CloseSquareBracket);
                     square_brackets.push(expr);
                 }
-                // TODO: Add support for arrays
                 if self.peek().token == LexerToken::Equals
                 {
                     self.match_token(LexerToken::Equals);
-                    let expr = self.parse_expression();
+                    let value = self.parse_expression();
                     self.match_token(LexerToken::Semicolon);
                     let text = String::from(&identifier.text).to_owned();
-                    let expression = Expression::new_array_overwrite_expr(text.clone(), square_brackets, expr, start);
+                    let expression: Expression;
+                    if square_brackets.len() > 0
+                    {
+                        expression = Expression::new_array_overwrite_expr(text.clone(), square_brackets, value, start);
+                    }
+                    else
+                    {
+                        expression = Expression::new_overwrite_variable_expression(text.clone(), value, start);
+                    }
                     statements.push(expression);
                 }
                 else
@@ -126,8 +133,17 @@ impl Parser
                     self.match_token(LexerToken::Semicolon);
                     let text = String::from(&identifier.text).to_owned();
                     let left = Expression::new_variable_expr(text.clone(), start);
-                    let expression = Expression::new_binary_expr(left, operator, expr, start);
-                    statements.push(Expression::new_overwrite_variable_expression(text.clone(), expression, start));
+                    let value = Expression::new_binary_expr(left, operator, expr, start);
+                    let expression: Expression;
+                    if square_brackets.len() > 0
+                    {
+                        expression = Expression::new_array_overwrite_expr(text.clone(), square_brackets, value, start);
+                    }
+                    else
+                    {
+                        expression = Expression::new_overwrite_variable_expression(text.clone(), value, start);
+                    }
+                    statements.push(expression);
                 }
             }
             else
@@ -303,6 +319,18 @@ impl Parser
                 }
                 self.match_token(LexerToken::Closeparenthesis);
                 return Expression::new_call_expr(identifier.text, arguments, start);
+            }
+            let mut square_brackets = Vec::<Expression>::new();
+            while self.peek().token == LexerToken::OpenSquareBracket
+            {
+                self.match_token(LexerToken::OpenSquareBracket);
+                let expr = self.parse_expression();
+                self.match_token(LexerToken::CloseSquareBracket);
+                square_brackets.push(expr);
+            }
+            if square_brackets.len() > 0
+            {
+                return Expression::new_array_access_expr(identifier.text, square_brackets, start);
             }
             return Expression::new_variable_expr(identifier.text, start);
         }

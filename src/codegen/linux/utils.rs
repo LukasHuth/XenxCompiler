@@ -7,6 +7,7 @@ use super::super::{
     StatementType,
     StatementDatatype,
 };
+use super::load_util::load_variable_pointer;
 use super::{
     Variable,
     load_util,
@@ -283,6 +284,23 @@ pub fn parsebinary(statement: Statement, vars: &Vec<Variable>, bytecode: &mut By
     {
         call_util::gencall(statement.clone(), &vars, bytecode);
         return;
+    }
+    else if statement.type_ == StatementType::Array
+    {
+        let name = statement.name.clone();
+        load_variable_pointer(vars, name, bytecode);
+        let indices = statement.statements.clone();
+        bytecode.add_push();
+        for i in 0..indices.len()
+        {
+            let mut index_bytecode = ByteArray::new();
+            parsebinary(indices[i].clone(), &vars, &mut index_bytecode);
+            bytecode.add_array(&index_bytecode);
+            bytecode.add_move_reg_to_reg(Register::RAX, Register::RBX, SizeType::QWORD);
+            bytecode.add_pop(Register::RAX);
+            bytecode.add_add(SizeType::QWORD);
+            bytecode.add_move_mem_to_reg(Register::RAX, "0", Register::RAX, SizeType::QWORD);
+        }
     }
     else
     {

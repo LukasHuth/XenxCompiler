@@ -35,3 +35,14 @@ pub fn load_variable(vars: &Vec<Variable>, name: String, datatype: Datatype, byt
         }
     }
 }
+pub fn load_variable_pointer(vars: &Vec<Variable>, name: String, bytecode: &mut ByteArray)
+{
+    // println!("load_variable({})", name);
+    let value_pos = utils::findvariableindex(&name, &vars);
+    if utils::is_argument(&name, &vars)
+    {
+        bytecode.add_move_mem_to_reg(Register::RBP, &(value_pos as i32 * -1).to_string(), Register::RAX, SizeType::QWORD);
+        return;
+    }
+    bytecode.add_move_mem_to_reg(Register::RBP, &(value_pos as i32 * -1).to_string(), Register::RAX, SizeType::QWORD);
+}

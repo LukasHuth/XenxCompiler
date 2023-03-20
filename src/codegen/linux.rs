@@ -100,7 +100,7 @@ pub fn generate_body(statements: Vec<Statement>, vars: Vec<Variable>, used_posit
     let mut highest_position = highest_position;
     for expr in statements
     {
-        println!("Statement: {:?}", expr);
+        // println!("Statement: {:?}", expr);
         if expr.type_ == StatementType::Variable
         {
             assignment_util::genassignment(expr.clone(), &mut vars, &mut used_positions, &mut highest_position, bytecode);

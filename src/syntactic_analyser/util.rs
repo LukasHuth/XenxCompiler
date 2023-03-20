@@ -232,6 +232,10 @@ pub fn generate_binary(expression: Expression, vars: &HashMap<String, Datatype>,
     {
         return generate_literal(expression);
     }
+    if expression.is_array()
+    {
+        return generate_array(expression, vars, functions);
+    }
     if expression.is_variable()
     {
         return generate_variable(expression, vars);
@@ -257,6 +261,34 @@ pub fn generate_binary(expression: Expression, vars: &HashMap<String, Datatype>,
     let operator = get_op_by_token(operator.token);
     let datatype = get_datatype_by_datatype_and_operator(left_type, right_type, operator.clone());
     return Statement::new_binary(left, right, operator, Datatype::new(datatype, vec![], false));
+}
+
+fn generate_array(expression: Expression, vars: &HashMap<String, Datatype>, functions: &HashMap<String, (Datatype, Arguments, Vec::<Statement>)>) -> Statement {
+    let array = expression.syntax.get_array();
+    let name = array.get_name();
+    let index = array.get_index();
+    let mut indices = Vec::<Statement>::new();
+    for index in index
+    {
+        let index = generate_binary(index, vars, functions);
+        indices.push(index);
+    }
+    let datatype = get_variable(name.clone(), &vars);
+    let mut array_bounds = datatype.array_bounds.clone();
+    array_bounds.pop();
+    let is_array: bool;
+    if array_bounds.len() == 0
+    {
+        is_array = false;
+    }
+    else
+    {
+        is_array = true;
+    }
+    let datatype = Datatype::new(datatype.datatype, array_bounds, is_array);
+    let mut statement = Statement::new(name.clone(), StatementType::Array, datatype.datatype, datatype.array_bounds, datatype.is_array);
+    statement.statements.append(&mut indices);
+    return statement;
 }
 
 fn generate_variable(expression: Expression, vars: &HashMap<String, Datatype>) -> Statement {

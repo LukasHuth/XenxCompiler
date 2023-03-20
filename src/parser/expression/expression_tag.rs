@@ -16,4 +16,5 @@ pub enum ExpressionTag
     OverwriteVariableExpr,
     FloatLiteral,
     OverwriteArrayExpr,
+    ArrayExpr,
 }
