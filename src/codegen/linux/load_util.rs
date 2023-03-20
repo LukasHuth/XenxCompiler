@@ -12,7 +12,7 @@ pub fn load_variable(vars: &Vec<Variable>, name: String, datatype: Datatype, byt
     let value_pos = utils::findvariableindex(&name, &vars);
     if utils::is_argument(&name, &vars)
     {
-        bytecode.add_move_mem_to_reg(Register::RBP, &value_pos.to_string(), Register::RAX, SizeType::QWORD);
+        bytecode.add_move_mem_to_reg(Register::RBP, &(value_pos as i32 * -1).to_string(), Register::RAX, SizeType::QWORD);
         return;
     }
     bytecode.add_move_mem_to_reg(Register::RBP, &(value_pos as i32 * -1).to_string(), Register::RAX, SizeType::QWORD);
