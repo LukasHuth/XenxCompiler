@@ -3,7 +3,6 @@ pub mod lexer;
 pub mod parser;
 pub mod syntactic_analyser;
 pub mod codegen;
-mod test;
 // https://norasandler.com/2017/11/29/Write-a-Compiler.html
 #[allow(dead_code)]
 fn main() {
