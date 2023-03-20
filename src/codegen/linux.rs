@@ -132,7 +132,9 @@ pub fn generate_body(statements: Vec<Statement>, vars: Vec<Variable>, used_posit
         {
             size = var.name.len()as i32-2;
         }
-        let offset = var.index.clone().to_string();
+        let number = var.index.clone() as i32;
+        let number = number * -1;
+        let offset = number.to_string();
         bytecode.add_move_mem_to_reg(Register::RBP, &offset, Register::RDI, SizeType::QWORD);
         bytecode.add_move_lit_to_reg(&size.to_string(), Register::RSI, SizeType::QWORD);
         bytecode.add_call("free");
