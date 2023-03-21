@@ -29,7 +29,19 @@ impl Parser
             let start = self.peek().pos;
             if self.peek().token == LexerToken::Identifier
             {
-                let identifier = self.next_token();
+                let identifier: Token;
+                if self.peek_off(1).token == LexerToken::Colon && self.peek_off(2).token == LexerToken::Colon && self.peek_off(3).token == LexerToken::Identifier
+                {
+                    println!("namespace");
+                    let identifier1 = self.match_token(LexerToken::Identifier);
+                    self.match_token(LexerToken::Colon);
+                    self.match_token(LexerToken::Colon);
+                    let identifier2 = self.match_token(LexerToken::Identifier);
+                    identifier = Token::new(LexerToken::Identifier, format!("{}::{}", identifier1.text, identifier2.text), identifier1.pos, identifier1.length + identifier2.length + 2);
+                }
+                else{
+                    identifier = self.match_token(LexerToken::Identifier);
+                }
                 if self.peek().token == LexerToken::Colon
                 {
                     self.match_token(LexerToken::Colon);

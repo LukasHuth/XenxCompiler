@@ -18,5 +18,5 @@ pub fn load_constant(instruction: Instruction) -> String
     let register = register.unwrap();
     let size_type = instruction.get_size_type();
     let r1 = register_util::get_name(register, size_type);
-    return format!("lea {}, [rel {}]", r1, name);
+    return format!("lea {}, [rel {}]\n", r1, name);
 }

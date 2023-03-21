@@ -229,6 +229,11 @@ pub fn parsebinary(statement: Statement, vars: &Vec<Variable>, bytecode: &mut By
         return;
     }
     else
+    if statement.type_ == StatementType::Argument
+    {
+        println!("Argument: {}", statement.to_string());
+    }
+    else
     if statement.type_ == StatementType::Literal
     {
         if statement.datatype.datatype == StatementDatatype::Int
@@ -301,10 +306,6 @@ pub fn parsebinary(statement: Statement, vars: &Vec<Variable>, bytecode: &mut By
             bytecode.add_add(SizeType::QWORD);
             bytecode.add_move_mem_to_reg(Register::RAX, "0", Register::RAX, SizeType::QWORD);
         }
-    }
-    else if statement.type_ == StatementType::Argument
-    {
-        // TODO: 
     }
     else
     {

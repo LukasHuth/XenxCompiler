@@ -452,3 +452,43 @@ pub fn test_datatype(datatype: Datatype, left: Expression, right: Expression, su
     let second = super::typetest::is_datatype(datatype.clone(), right, supress_output, &variables, &functions);
     return first && second;
 }
+pub fn get_datatype(string: String, is_arg: bool) -> Datatype
+{
+    let mut datatype = string.clone();
+    let mut dim = Vec::<i32>::new();
+    let mut is_array = false;
+    while datatype.ends_with("]")
+    {
+        is_array = true;
+        datatype = remove_n_chars_from_behind(datatype.clone(), 1);
+        let split = datatype.split("[");
+        if !is_arg
+        {
+            let split = split.last().unwrap();
+            let number = split.parse::<i32>().unwrap();
+            dim.push(number);
+        }
+        else
+        {
+            dim.push(0);
+        }
+        datatype = remove_n_chars_from_behind(datatype.clone(), 1);
+        // println!("datatype: {}", datatype);
+        datatype = remove_n_chars_from_behind(datatype.clone(), 1);
+    }
+    let datatype = super::util::get_datatype_from_string(datatype);
+    let datatype = Datatype::new(datatype, dim, is_array);
+    return datatype;
+}
+pub fn get_parameters(function_declaration_expr: crate::parser::expression::FunctionDeclarationExpression) -> Arguments
+{
+    let mut parameters = Arguments::new(vec![]);
+    for parameter in function_declaration_expr.get_args()
+    {
+        let arg = parameter.syntax.get_arg_variable_expr();
+        let name = arg.get_name();
+        let datatype = get_datatype(arg.get_type(), true);
+        parameters.push(Statement::new(name, super::statement::StatementType::Argument, datatype.datatype, datatype.array_bounds, datatype.is_array));
+    }
+    return parameters;
+}

@@ -213,6 +213,7 @@ fn generate_instruction_linux(instruction: Instruction) -> String
                 panic!("Call expected 1 argument");
             }
             let argument = arguments[0].clone();
+            let argument = argument.replace(":", "_");
             data.push_str(format!("call {}\n", argument).as_str());
         },
         ByteInstruction::Section =>
@@ -249,6 +250,7 @@ fn generate_instruction_linux(instruction: Instruction) -> String
                 panic!("Label expected 1 argument");
             }
             let argument = arguments[0].clone();
+            let argument = argument.replace(":", "_");
             data.push_str(format!("{}:\n", argument).as_str());
         },
         ByteInstruction::StoreConstant =>
@@ -262,7 +264,7 @@ fn generate_instruction_linux(instruction: Instruction) -> String
             let size_name = get_constant_size(size);
             if size == SizeType::STRING
             {
-                data.push_str(format!("{}: {} '{}', 0\n", name, size_name, value).as_str());
+                data.push_str(format!("{}: {} '{}', 0\n", name, size_name, value.replace("\\n", "', 0x0a, '")).as_str());
             }
             else
             {

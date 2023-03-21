@@ -10,7 +10,7 @@ use statement::{
     StatementDatatype,
 };
 
-mod util;
+pub mod util;
 
 use arguments::Arguments;
 use super::{
@@ -29,14 +29,17 @@ pub struct SyntaticAnalyser {
     std_function_count: HashMap<String, usize>,
 }
 impl SyntaticAnalyser {
-    pub fn new(statements: Vec<Expression>, context: String) -> SyntaticAnalyser {
+    pub fn new(statements: Vec<Expression>, context: String, std_included: bool) -> SyntaticAnalyser {
         // println!("start syntactic analyser");
         let mut functions = HashMap::<String, (Datatype, Arguments, Vec::<Statement>)>::new();
-        standartfunctions::generate_functions(&mut functions);
         let mut std_function_count = HashMap::<String, usize>::new();
-        for key in functions.keys()
+        if std_included
         {
-            std_function_count.insert(key.clone(), 0);
+            standartfunctions::generate_functions(&mut functions);
+            for key in functions.keys()
+            {
+                std_function_count.insert(key.clone(), 0);
+            }
         }
         SyntaticAnalyser {
             statements: statements,
@@ -53,6 +56,7 @@ impl SyntaticAnalyser {
     }
     pub fn analyse(&mut self) -> (Vec<Statement>, HashMap<String, (Datatype, Arguments, Vec::<Statement>)>)
     {
+        println!("functions: {:?}", self.functions.keys());
         // println!("statements: {}", self.statements.len());
         let mut statements = Vec::<Statement>::new();
         while self.pos < self.statements.len()
@@ -64,8 +68,12 @@ impl SyntaticAnalyser {
             }
             let function_declaration_expr = element.syntax.get_function_declaration_expr();
             let name = function_declaration_expr.get_name();
-            let datatype = self.get_datatype(function_declaration_expr.get_type(), true);
-            let parameters = self.get_parameters(function_declaration_expr);
+            if self.functions.contains_key(&name)
+            {
+                panic!("function already exists: {}", name);
+            }
+            let datatype = util::get_datatype(function_declaration_expr.get_type(), true);
+            let parameters = util::get_parameters(function_declaration_expr);
             let mut function = Statement::new_datatype(name.clone(), StatementType::Function, datatype.clone());
             self.actual_datatype = datatype.clone();
             let body = self.get_body(element.syntax.get_function_declaration_expr().get_inside(),
@@ -78,46 +86,6 @@ impl SyntaticAnalyser {
             self.pos += 1;
         }
         return (statements, self.functions.clone());
-    }
-    fn get_datatype(&self, string: String, is_arg: bool) -> Datatype
-    {
-        let mut datatype = string.clone();
-        let mut dim = Vec::<i32>::new();
-        let mut is_array = false;
-        while datatype.ends_with("]")
-        {
-            is_array = true;
-            datatype = util::remove_n_chars_from_behind(datatype.clone(), 1);
-            let split = datatype.split("[");
-            if !is_arg
-            {
-                let split = split.last().unwrap();
-                let number = split.parse::<i32>().unwrap();
-                dim.push(number);
-            }
-            else
-            {
-                dim.push(0);
-            }
-            datatype = util::remove_n_chars_from_behind(datatype.clone(), 1);
-            // println!("datatype: {}", datatype);
-            datatype = util::remove_n_chars_from_behind(datatype.clone(), 1);
-        }
-        let datatype = util::get_datatype_from_string(datatype);
-        let datatype = Datatype::new(datatype, dim, is_array);
-        return datatype;
-    }
-    fn get_parameters(&self, function_declaration_expr: crate::parser::expression::FunctionDeclarationExpression) -> Arguments
-    {
-        let mut parameters = Arguments::new(vec![]);
-        for parameter in function_declaration_expr.get_args()
-        {
-            let arg = parameter.syntax.get_arg_variable_expr();
-            let name = arg.get_name();
-            let datatype = self.get_datatype(arg.get_type(), true);
-            parameters.push(Statement::new(name, statement::StatementType::Argument, datatype.datatype, datatype.array_bounds, datatype.is_array));
-        }
-        return parameters;
     }
     fn get_body(&mut self, statements: Vec<Expression>, variables: HashMap<String,Datatype>, functiondatatype: Datatype, args: Arguments, _of_function: bool) -> Vec<Statement>
     {
@@ -143,10 +111,17 @@ impl SyntaticAnalyser {
                     let err = util::get_line_of_position(self.context.clone(), statement.get_position());
                     panic!("function {} does not exist at {}:{}", name, err.0, err.1);
                 }
+                println!("call: {}", name);
+                println!("functions: {:?}", self.functions.keys());
                 let mut arguments = Vec::<Statement>::new();
                 let function = &self.functions.get(&name).unwrap().1;
                 let args = call.get_args();
                 let supressed_output = true;
+                if args.len() != function.arguments.len()
+                {
+                    let err = util::get_line_of_position(self.context.clone(), statement.get_position());
+                    panic!("function {} expects {} arguments, but {} were given at {}:{}", name, function.arguments.len(), args.len(), err.0, err.1);
+                }
                 for i in 0..args.len()
                 {
                     let arg = args.get(i).unwrap();
@@ -164,7 +139,7 @@ impl SyntaticAnalyser {
                     }
                     if same_datatype
                     {
-                        let datatype = self.get_datatype(farg.datatype.to_string(), false);
+                        let datatype = util::get_datatype(farg.datatype.to_string(), false);
                         let argument = Statement::new(String::from(""), StatementType::Argument, datatype.datatype, datatype.array_bounds, datatype.is_array);
                         arguments.push(argument);
                     }
@@ -201,7 +176,7 @@ impl SyntaticAnalyser {
                     let err = util::get_line_of_position(self.context.clone(),statement.get_position() + 2);
                     panic!("variable {} already exists at {}:{}", name, err.0, err.1);
                 }
-                let datatype = self.get_datatype(variable_declaration.get_type(), false);
+                let datatype = util::get_datatype(variable_declaration.get_type(), false);
                 let value = variable_declaration.get_value();
                 let val = util::generate_binary(value.clone(), &variables, &self.functions);
                 if !datatype.is_same(&val.datatype) && !(value.is_integer_literal() && value.syntax.get_integer_literal() == 0)

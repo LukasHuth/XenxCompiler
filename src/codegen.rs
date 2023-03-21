@@ -34,7 +34,7 @@ impl Codegen
         linux::generate(self.statements.clone(), self.functions.clone(), &mut bytecode);
         for std_function in self.std_functions.clone()
         {
-            if std_function.0 == "print" && std_function.1 > 0
+            if std_function.0 == "std::print" && std_function.1 > 0
             {
                 linux::basic_functions::generate_print(&mut bytecode);
             }

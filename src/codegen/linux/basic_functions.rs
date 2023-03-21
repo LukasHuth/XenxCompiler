@@ -55,7 +55,7 @@ pub fn generate_exit(bytecode: &mut ByteArray)
 }
 pub fn generate_print(bytecode: &mut ByteArray)
 {
-    bytecode.add_entry("print");
+    bytecode.add_entry("std::print");
     bytecode.add_push_reg(Register::RBP);
     bytecode.add_move_reg_to_reg(Register::RSP, Register::RBP, SizeType::QWORD);
     bytecode.add_load_constant("format_int", SizeType::QWORD);

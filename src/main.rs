@@ -46,8 +46,10 @@ fn main() {
     // let tokens = lexer.lex();
     // let mut parser = parser::Parser::new(tokens);
     // let statements = parser.parse();
-    let statements = parse_file(filename);
-    let mut syntactic_analyser = syntactic_analyser::SyntaticAnalyser::new(statements, context.clone());
+    let parsed_file = parse_file(filename);
+    let statements = parsed_file.0;
+    let include_std = parsed_file.1;
+    let mut syntactic_analyser = syntactic_analyser::SyntaticAnalyser::new(statements, context.clone(), include_std);
     let _statements_function_tuple = syntactic_analyser.analyse();
     // println!("Statements: {}", _statements.clone().len());
     let functions = _statements_function_tuple.1;
@@ -58,10 +60,11 @@ fn main() {
     codegen.compile(outfile.as_str());
     // from here i can use _statements to generate code
 }
-fn parse_file(filename: &str) -> Vec<parser::expression::Expression> {
+fn parse_file(filename: &str) -> (Vec<parser::expression::Expression>, bool) {
     let mut tokens = get_tokens_from_file(filename);
     let mut filenames = Vec::<String>::new();
     let mut statements = Vec::<parser::expression::Expression>::new();
+    let mut include_std = false;
     while tokens[0].token == lexer::token::LexerToken::Keyword && tokens[0].text == "import" {
         tokens.drain(0..1);
         let mut filename = String::new();
@@ -72,11 +75,18 @@ fn parse_file(filename: &str) -> Vec<parser::expression::Expression> {
         filenames.push(filename);
     }
     for filename in filenames {
-        statements.append(&mut parse_file(filename.as_str()));
+        if filename == "std" {
+            include_std = true;
+            continue;
+        }
+        let res = parse_file(filename.as_str());
+        if res.1 { include_std = true; }
+        let mut res = res.0;
+        statements.append(&mut res);
     }
     let mut parser = parser::Parser::new(tokens);
     statements.append(&mut parser.parse());
-    return statements;
+    return ( statements, include_std );
 }
 fn get_tokens_from_file(filename: &str) -> Vec<lexer::token::Token> {
     let context = std::fs::read_to_string(filename).expect("Unable to read file");
