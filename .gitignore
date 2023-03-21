@@ -4,5 +4,6 @@
 *.o
 *.out
 *.sh
+*.py
 !clean.sh
 out
