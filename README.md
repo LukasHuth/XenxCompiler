@@ -19,7 +19,12 @@ cargo run --release <filename>
 - string
 - flaot
 - bool
+- char
 ## Working structure
+### import files
+```
+import <filename>;
+```
 ### declare variable
 ```
 <name>: <datatype> = <value>;
@@ -56,12 +61,10 @@ else
 }
 ```
 ## Known Bugs
-- else if() is throwing an error
-- <variable> == <literal> is not working correctly
+- no at the moment
 ## TODO
-- suport unary operators
-- support if
 - support more datatypes
+- add support for multi dimensional arrays
 
 ## Done
 - int:
@@ -69,3 +72,5 @@ else
     - unary operators 
     - return values
     - arguments
+- booleans
+- standart functions (not many, only print at the moment)
