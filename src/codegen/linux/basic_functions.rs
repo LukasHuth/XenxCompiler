@@ -53,12 +53,14 @@ pub fn generate_exit(bytecode: &mut ByteArray)
     bytecode.add_move_lit_to_reg("60", Register::RAX, SizeType::QWORD);
     bytecode.add_syscall();
 }
-pub fn generate_print(bytecode: &mut ByteArray)
+pub fn generate_print(name: &str, bytecode: &mut ByteArray)
 {
-    bytecode.add_entry("std::print");
+    let prefix = "std::print_";
+    let type_name = &name[prefix.len()..];
+    bytecode.add_entry(name);
     bytecode.add_push_reg(Register::RBP);
     bytecode.add_move_reg_to_reg(Register::RSP, Register::RBP, SizeType::QWORD);
-    bytecode.add_load_constant("format_int", SizeType::QWORD);
+    generate_format(type_name, bytecode);
     bytecode.add_move_reg_to_reg(Register::RDI, Register::RSI, SizeType::QWORD);
     bytecode.add_move_reg_to_reg(Register::RAX, Register::RDI, SizeType::QWORD);
     bytecode.add_xor_reg(Register::RAX, Register::RAX, SizeType::QWORD);
@@ -66,4 +68,9 @@ pub fn generate_print(bytecode: &mut ByteArray)
     bytecode.add_move_reg_to_reg(Register::RBP, Register::RSP, SizeType::QWORD);
     bytecode.add_pop(Register::RBP);
     bytecode.add_ret();
+}
+fn generate_format(type_name: &str, bytecode: &mut ByteArray)
+{
+    let new_name = format!("format_{}", type_name);
+    return bytecode.add_load_constant(&new_name, SizeType::QWORD);
 }

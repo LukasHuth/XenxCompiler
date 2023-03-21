@@ -7,6 +7,7 @@ pub mod utils;
 pub mod call_util;
 pub mod basic_functions;
 pub mod if_util;
+mod constant_util;
 use super::{
     Arguments,
     Datatype,
@@ -26,7 +27,7 @@ pub fn generate(statements: Vec<Statement>, functions: HashMap<String, (Datatype
 {
     bytecode.add_section("data");
     // TODO: store constants (for printf)
-    bytecode.add_store_constant_string("format_int", "%d\\n");
+    constant_util::generate_constant_functions(bytecode);
     bytecode.add_section("text");
     bytecode.add_external("printf");
     bytecode.add_external("malloc");

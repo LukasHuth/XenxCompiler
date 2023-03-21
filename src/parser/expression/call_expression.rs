@@ -30,4 +30,8 @@ impl CallExpression
     {
         self.arguments.clone()
     }
+    pub fn set_name(&mut self, name: String)
+    {
+        self.name = name;
+    }
 }

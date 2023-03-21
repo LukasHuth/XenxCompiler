@@ -26,6 +26,11 @@ fn main() {
         };
     }
     println!("outfile: {}", outfile);
+    let comments = if dash_args.contains_key("c") {
+        true
+    } else {
+        false
+    };
     let os: codegen::OS;
     {
         os = if dash_args.contains_key("f") {
@@ -55,7 +60,7 @@ fn main() {
     let functions = _statements_function_tuple.1;
     let _statements = _statements_function_tuple.0;
     let std_functions = syntactic_analyser.get_std_functions();
-    let mut codegen = codegen::Codegen::new(_statements,functions, os, std_functions);
+    let mut codegen = codegen::Codegen::new(_statements,functions, os, std_functions, comments);
     codegen.generate();
     codegen.compile(outfile.as_str());
     // from here i can use _statements to generate code

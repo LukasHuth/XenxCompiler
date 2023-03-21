@@ -21,12 +21,14 @@ pub struct Codegen
     data: String,
     os: OS,
     std_functions: HashMap<String, usize>,
+    comments: bool,
 }
 impl Codegen
 {
-    pub fn new(statements: Vec<Statement>, functions: HashMap<String, (Datatype, Arguments, Vec::<Statement>)>,os: OS, std_functions: HashMap<String, usize>) -> Codegen
+    pub fn new(statements: Vec<Statement>, functions: HashMap<String, (Datatype, Arguments, Vec::<Statement>)>,os: OS, std_functions: HashMap<String, usize>
+        ,comments: bool) -> Codegen
     {
-        Codegen { statements: statements, functions, data: "".to_string(), os , std_functions}
+        Codegen { statements: statements, functions, data: "".to_string(), os , std_functions, comments}
     }
     pub fn generate(&mut self)
     {
@@ -34,12 +36,14 @@ impl Codegen
         linux::generate(self.statements.clone(), self.functions.clone(), &mut bytecode);
         for std_function in self.std_functions.clone()
         {
-            if std_function.0 == "std::print" && std_function.1 > 0
+            let name = std_function.0.clone();
+            println!("{}: {}", name, std_function.1);
+            if std_function.0.starts_with("std::print") && std_function.1 > 0
             {
-                linux::basic_functions::generate_print(&mut bytecode);
+                linux::basic_functions::generate_print(&name, &mut bytecode);
             }
         }
-        let result = bytecode.generate(self.os);
+        let result = bytecode.generate(self.os, self.comments);
         self.data = result;
     }
     fn save_asm(&self)
@@ -51,7 +55,7 @@ impl Codegen
         self.save_asm();
         if self.os == OS::Linux
         {
-            linux::utils::compile_linux(path);
+            linux::utils::compile_linux(path, !self.comments);
         }
         else
         {

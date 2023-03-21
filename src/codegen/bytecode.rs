@@ -40,6 +40,9 @@ impl ByteArray{
     pub fn add_byte(&mut self, instruction: ByteInstruction, arguments: Vec<String>, size: SizeType){
         self.data.push(Instruction::new(instruction, arguments, size));
     }
+    pub fn add_comment(&mut self, comment: &str){
+        self.add_byte(ByteInstruction::Comment, vec![comment.to_string()], None);
+    }
     pub fn add_external(&mut self, name: &str){
         self.add_byte(ByteInstruction::External, vec![name.to_string()], None);
     }
@@ -165,6 +168,10 @@ impl ByteArray{
         self.set_register_in_last_instruction(from, 1);
         self.set_register_in_last_instruction(to, 2);
     }
+    pub fn add_move_lit_to_mem(&mut self, offset: &str, literal: &str, r1: Register, byte: SizeType) {
+        self.add_byte(ByteInstruction::MovLitToMem, vec![offset.to_string(), literal.to_string()], byte);
+        self.set_register_in_last_instruction(r1, 1);
+    }
     pub fn add_push(&mut self){
         self.add_byte(ByteInstruction::Push, Vec::new(), SizeType::QWORD);
         self.set_register_in_last_instruction(Register::RAX, 1);
@@ -254,8 +261,8 @@ impl ByteArray{
     pub fn get_data(&self) -> Vec<Instruction>{
         self.data.clone()
     }
-    pub fn generate(&self, os: super::OS) -> String
+    pub fn generate(&self, os: super::OS, comments: bool) -> String
     {
-        util::generate(self.data.clone(), os)
+        util::generate(self.data.clone(), os, comments)
     }
 }

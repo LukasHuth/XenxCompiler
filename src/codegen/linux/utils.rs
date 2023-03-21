@@ -13,8 +13,7 @@ use super::{
     load_util,
     call_util,
 };
-pub fn compile_linux(path: &str) {
-    let remove_files = false;
+pub fn compile_linux(path: &str, delete_files: bool) {
     use std::process::Command;
     // use this when the code is in intel syntax
     let mut command = Command::new("nasm");
@@ -24,7 +23,7 @@ pub fn compile_linux(path: &str) {
     command.arg("out.o");
     command.arg("out.s");
     command.output().unwrap();
-    if remove_files
+    if delete_files
     {
         match std::fs::remove_file("out.s")
         {
@@ -45,10 +44,13 @@ pub fn compile_linux(path: &str) {
         println!("{}", res.stderr.len());
         panic!("Failed to compile");
     }
-    match std::fs::remove_file("out.o")
+    if delete_files
     {
-        Ok(_) => {},
-        Err(_) => {panic!("Failed to remove out.o");},
+        match std::fs::remove_file("out.o")
+        {
+            Ok(_) => {},
+            Err(_) => {panic!("Failed to remove out.o");},
+        }
     }
     println!("Compiled to {}", path);
 }
@@ -256,11 +258,29 @@ pub fn parsebinary(statement: Statement, vars: &Vec<Variable>, bytecode: &mut By
             let mut str = statement.name.clone();
             str.remove(0);
             str.remove(str.len()-1);
-            for i in 0..str.chars().count()
+            for i in 0..(str.chars().count()+1)
             {
-                let char = str.chars().nth(i).unwrap();
-                bytecode.add_move_lit_to_reg(&format!("'{}'", char), Register::RBX, SizeType::BYTE);
-                bytecode.add_move_reg_to_mem(Register::RBX, &i.to_string(), Register::RAX, SizeType::BYTE);
+                let char: char;
+                if i == str.chars().count()
+                {
+                    char = '\0';
+                }
+                else
+                {
+                    char = str.chars().nth(i).unwrap();
+                }
+                // bytecode.add_move_lit_to_reg(&format!("'{}'", char), Register::RBX, SizeType::BYTE);
+                // bytecode.add_move_reg_to_mem(Register::RBX, &i.to_string(), Register::RAX, SizeType::BYTE);
+                let value: String;
+                if char == '\0'
+                {
+                    value = "0".to_string();
+                }
+                else
+                {
+                    value = format!("'{}'", char);
+                }
+                bytecode.add_move_lit_to_mem(&i.to_string(), &value, Register::RAX, SizeType::BYTE);
             }
         }
         else

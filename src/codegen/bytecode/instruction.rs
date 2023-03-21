@@ -98,10 +98,12 @@ pub enum ByteInstruction
     MovMemToReg,
     MovRegToReg,
     MovLitToReg,
+    MovLitToMem,
     Swap,
     Sete,
     Neg,
     Syscall,
+    Comment,
 }
 impl Instruction
 {

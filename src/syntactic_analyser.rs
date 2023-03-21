@@ -92,6 +92,7 @@ impl SyntaticAnalyser {
         let mut body = Vec::<Statement>::new();
         let mut returned = false;
         let mut variables = variables;
+        let _this_args = args.clone();
         for arg in args.clone().arguments
         {
             variables.insert(arg.name, arg.datatype);
@@ -106,65 +107,58 @@ impl SyntaticAnalyser {
             {
                 let call = statement.syntax.get_call_expr();
                 let name = call.get_name();
-                if !self.functions.contains_key(&name)
+                let mut is_std = false;
+                if standartfunctions::is_std_function(&name)
+                {
+                    is_std = true;
+                }
+                if !self.functions.contains_key(&name) && !is_std
                 {
                     let err = util::get_line_of_position(self.context.clone(), statement.get_position());
                     panic!("function {} does not exist at {}:{}", name, err.0, err.1);
                 }
-                println!("call: {}", name);
-                println!("functions: {:?}", self.functions.keys());
-                let mut arguments = Vec::<Statement>::new();
-                let function = &self.functions.get(&name).unwrap().1;
-                let args = call.get_args();
-                let supressed_output = true;
-                if args.len() != function.arguments.len()
+                // println!("call: {}", name);
+                // println!("functions: {:?}", self.functions.keys());
+                if is_std
                 {
-                    let err = util::get_line_of_position(self.context.clone(), statement.get_position());
-                    panic!("function {} expects {} arguments, but {} were given at {}:{}", name, function.arguments.len(), args.len(), err.0, err.1);
-                }
-                for i in 0..args.len()
-                {
-                    let arg = args.get(i).unwrap();
-                    let farg = function.arguments.get(i).unwrap();
-                    let same_datatype: bool;
-                    if arg.is_literal()
+                    for name in standartfunctions::get_variants(&name)
                     {
-                        same_datatype = typetest::is_datatype(farg.datatype.clone(), arg.clone(), supressed_output.clone(), &variables, &self.functions);
-                    }
-                    else
-                    {
-                        let argname = arg.syntax.get_variable_expr().get_name();
-                        let arg = util::get_variable(argname.clone(), &variables);
-                        same_datatype = util::same_datatype(farg.clone(), arg.clone());
-                    }
-                    if same_datatype
-                    {
-                        let datatype = util::get_datatype(farg.datatype.to_string(), false);
-                        let argument = Statement::new(String::from(""), StatementType::Argument, datatype.datatype, datatype.array_bounds, datatype.is_array);
-                        arguments.push(argument);
-                    }
-                    else
-                    {
-                        if arg.is_literal()
+                        println!("name: {}", name);
+                        if self.functions.contains_key(&name)
                         {
-                            let err = util::get_line_of_position(self.context.clone(), arg.get_position());
-                            panic!("argument {} is not valid type at {}:{}", arg.clone().to_string(), err.0, err.1);
-                        }
-                        else
-                        {
-                            let argname = arg.syntax.get_variable_expr().get_name();
-                            let err = util::get_line_of_position(self.context.clone(), arg.get_position());
-                            panic!("argument {} is not valid type at {}:{}", argname, err.0, err.1);
+                            let function = self.functions.get(&name).unwrap();
+                            let fargs = function.1.clone();
+                            let args = call.get_args();
+                            if fargs.arguments.len() != args.len()
+                            {
+                                continue;
+                            }
+                            let mut is_possible = true;
+                            for i in 0..args.len()
+                            {
+                                let farg = fargs.arguments.get(i).unwrap();
+                                let arg = args.get(i).unwrap();
+                                if !self.is_possible(&arg, farg, true, &variables)
+                                {
+                                    is_possible = false;
+                                    break;
+                                }
+                            }
+                            if is_possible
+                            {
+                                println!("here!");
+                                let mut call = call.clone();
+                                call.set_name(name.clone());
+                                self.generate_call(name, call, &statement, &variables, &mut body);
+                                break;
+                            }
                         }
                     }
                 }
-                if standartfunctions::is_std_function(&name)
+                else
                 {
-                    self.increment_std_function_count(&name);
+                    self.generate_call(name, call, &statement, &variables, &mut body);
                 }
-                let function = self.functions.get(&name).unwrap().0.clone();
-                let call = Statement::new_call(name, arguments, function);
-                body.push(call);
             }
             else
             if statement.is_variable_declaration()
@@ -188,7 +182,8 @@ impl SyntaticAnalyser {
                 let mut variable = Statement::new(name.clone(), statement::StatementType::Variable, datatype.datatype, datatype.clone().array_bounds, datatype.clone().is_array);
                 // println!("variable declaration {} {} is valid", name, datatype.to_string());
                 variable.set_value(value.clone(), &variables, &self.functions);
-                body.push(variable);
+                body.push(variable.clone());
+                println!("variable: {}", variable.to_string());
                 variables.insert(name.clone(), datatype.clone()); // TODO: possible to fix with body variable
             }
             else
@@ -235,7 +230,8 @@ impl SyntaticAnalyser {
                 // println!("variable overwrite {} {} is valid", name, datatype.to_string());
                 
                 variable.statements.push(value.clone());
-                body.push(variable);
+                body.push(variable.clone());
+                println!("variable: {}", variable.to_string());
             }
             else
             if statement.is_if()
@@ -285,6 +281,66 @@ impl SyntaticAnalyser {
             }
         }
         return body;
+    }
+
+    fn generate_call(&mut self, name: String, call: parser::expression::CallExpression, statement: &Expression, variables: &HashMap<String, Datatype>, body: &mut Vec<Statement>) {
+        let mut arguments = Vec::<Statement>::new();
+        let function = &self.functions.get(&name).unwrap().1;
+        let args = call.get_args();
+        let supressed_output = true;
+        if args.len() != function.arguments.len()
+        {
+            let err = util::get_line_of_position(self.context.clone(), statement.get_position());
+            panic!("function {} expects {} arguments, but {} were given at {}:{}", name, function.arguments.len(), args.len(), err.0, err.1);
+        }
+        for i in 0..args.len()
+        {
+            let arg = args.get(i).unwrap();
+            let farg = function.arguments.get(i).unwrap();
+            let same_datatype: bool = self.is_possible(arg, farg, supressed_output, variables);
+            if same_datatype
+            {
+                // let datatype = util::get_datatype(farg.datatype.to_string(), false);
+                //let argument = Statement::new(String::from(""), StatementType::Argument, datatype.datatype, datatype.array_bounds, datatype.is_array);
+                let arg = util::generate_binary(arg.clone(), variables, &self.functions);
+                arguments.push(arg);
+            }
+            else
+            {
+                if arg.is_literal()
+                {
+                    let err = util::get_line_of_position(self.context.clone(), arg.get_position());
+                    panic!("argument {} is not valid type at {}:{}", arg.clone().to_string(), err.0, err.1);
+                }
+                else
+                {
+                    let argname = arg.syntax.get_variable_expr().get_name();
+                    let err = util::get_line_of_position(self.context.clone(), arg.get_position());
+                    panic!("argument {} is not valid type at {}:{}", argname, err.0, err.1);
+                }
+            }
+        }
+        if standartfunctions::is_std_function(&name)
+        {
+            self.increment_std_function_count(&name);
+        }
+        let function = self.functions.get(&name).unwrap().0.clone();
+        let call = Statement::new_call(name, arguments, function);
+        body.push(call.clone());
+        println!("call {}", call.to_string());
+    }
+
+    fn is_possible(&self, arg: &Expression, farg: &Statement, supressed_output: bool, variables: &HashMap<String, Datatype>) -> bool{
+        if arg.is_literal()
+        {
+            return typetest::is_datatype(farg.datatype.clone(), arg.clone(), supressed_output.clone(), variables, &self.functions);
+        }
+        else
+        {
+            let argname = arg.syntax.get_variable_expr().get_name();
+            let arg = util::get_variable(argname.clone(), variables);
+            return util::same_datatype(farg.clone(), arg.clone());
+        }
     }
     fn increment_std_function_count(&mut self, name: &str)
     {

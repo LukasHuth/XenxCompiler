@@ -16,14 +16,14 @@ use super::{
     Register,
     SizeType,
 };
-pub fn generate(instructions: Vec<Instruction>, os: OS) -> String
+pub fn generate(instructions: Vec<Instruction>, os: OS, comments: bool) -> String
 {
     let mut data = String::new();
     if os == OS::Linux
     {
         for instruction in instructions
         {
-            data.push_str(generate_instruction(instruction, os).as_str());
+            data.push_str(generate_instruction(instruction, os, comments).as_str());
         }
         return data;
     }
@@ -32,11 +32,11 @@ pub fn generate(instructions: Vec<Instruction>, os: OS) -> String
         panic!("OS not supported");
     }
 }
-fn generate_instruction(instruction: Instruction, os: OS) -> String
+fn generate_instruction(instruction: Instruction, os: OS, comments: bool) -> String
 {
     if os == OS::Linux
     {
-        return generate_instruction_linux(instruction);
+        return generate_instruction_linux(instruction, comments);
     }
     else
     {
@@ -44,7 +44,7 @@ fn generate_instruction(instruction: Instruction, os: OS) -> String
     }
 }
 // Done in intel syntax
-fn generate_instruction_linux(instruction: Instruction) -> String
+fn generate_instruction_linux(instruction: Instruction, comments: bool) -> String
 {
     let mut data = String::new();
     let arguments = instruction.get_arguments();
@@ -55,6 +55,14 @@ fn generate_instruction_linux(instruction: Instruction) -> String
     // TODO: add operand size
     match inst.clone()
     {
+        ByteInstruction::Comment =>
+        {
+            let comment = arguments[0].clone();
+            if comments
+            {
+                data.push_str(&format!("; {}\n", comment));
+            }
+        }
         ByteInstruction::Add | ByteInstruction::Sub | ByteInstruction::Mul | ByteInstruction::Div | ByteInstruction::Or | ByteInstruction::Xor | ByteInstruction::And
             | ByteInstruction::Not | ByteInstruction::Neg =>
         {
@@ -190,6 +198,11 @@ fn generate_instruction_linux(instruction: Instruction) -> String
         ByteInstruction::MovLitToReg =>
         {
             let result = mov_util::mov_lit_to_reg(instruction);
+            data.push_str(result.as_str());
+        },
+        ByteInstruction::MovLitToMem =>
+        {
+            let result = mov_util::mov_lit_to_mem(instruction);
             data.push_str(result.as_str());
         },
         ByteInstruction::Push=>

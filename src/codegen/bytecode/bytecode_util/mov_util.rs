@@ -117,3 +117,54 @@ pub fn mov_lit_to_reg(instruction: Instruction) -> String
     let argument = arguments[0].clone();
     return format!("mov {}, {}\n", destination, argument);
 }
+pub fn mov_lit_to_mem(instruction: Instruction) -> String
+{
+    let register1 = instruction.get_register(1); // destination
+    let size = instruction.get_size_type();
+    let arguments = instruction.get_arguments();
+    if register1.is_none()
+    {
+        panic!("MovLitToReg expected 1 register");
+    }
+    if arguments.len() < 1
+    {
+        panic!("MovLitToReg expected 1 argument");
+    }
+    let register1 = register1.unwrap();
+    let destination = register_util::get_name(register1.clone(), SizeType::QWORD);
+    let offset: String;
+    let value: String;
+    if arguments.len() < 1
+    {
+        offset = "0".to_string();
+    }
+    else
+    {
+        offset = arguments[0].clone();
+    }
+    if arguments.len() < 2
+    {
+        value = "0".to_string();
+    }
+    else
+    {
+        value = arguments[1].clone();
+    }
+    let offset = offset.parse::<i32>();
+    if offset.is_err()
+    {
+        panic!("MovRegToMem expected offset to be an integer");
+    }
+    let offset = offset.unwrap();
+    // println!("{} {} {}", destination, offset, value);
+    let size_name = size.get_name();
+    if offset < 0
+    {
+        return format!("mov {} [{} - {}], {}\n", size_name, destination, offset.abs(), value);
+    }
+    if offset == 0
+    {
+        return format!("mov {} [{}], {}\n", size_name, destination, value);
+    }
+    return format!("mov {} [{} + {}], {}\n", size_name, destination, offset, value);
+}
