@@ -256,7 +256,6 @@ impl Lexer
             _ =>  {
                 token = LexerToken::BadToken;
                 text = "".to_string();
-                // self.input[start..self.position].to_string();
                 return Token::new(token, text, start, self.position);
             },
         }

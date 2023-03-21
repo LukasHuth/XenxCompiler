@@ -3,7 +3,6 @@ pub mod lexer;
 pub mod parser;
 pub mod syntactic_analyser;
 pub mod codegen;
-// https://norasandler.com/2017/11/29/Write-a-Compiler.html
 #[allow(dead_code)]
 fn main() {
     let args = std::env::args().collect::<Vec<String>>();
@@ -16,7 +15,6 @@ fn main() {
         println!("Usage: {} <input>", args[0]);
     }
     let filename = &args[1];
-    // set outfile
     let outfile: String;
     {
         outfile = if dash_args.contains_key("o") {
