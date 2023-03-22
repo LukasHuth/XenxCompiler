@@ -1,44 +1,57 @@
-
+const TEST_KEYWORD: i32 = 0x1;
+const TEST_LITERAL: i32 = 0x2;
+const TEST_IDENTIFIER: i32 = 0x4;
+const TEST_SYMBOL: i32 = 0x8;
+const TEST_BADTOKEN: i32 = 0x10;
+const TEST_ALL: i32 = 0x1F;
+pub mod test_util;
 #[cfg(test)]
-mod tests
+mod lexer_tests
 {
-    use test_case::test_case;
-    #[test_case("a: int = 6;" => g_r_s_f_d_a_i("int", "6", "a") ; "string init and decl")]
-    #[test_case("a: bool = true;" => g_r_s_f_d_a_i("bool", "true", "a") ; "boolean initialization and declaration")]
-    #[test_case("a: char = \"a\";" => g_r_s_f_d_a_i("char", "\"a\"", "a") ; "character initialization and declaration")]
-    #[test_case("a: string = \"a\";" => g_r_s_f_d_a_i("string", "\"a\"", "a") ; "string initialization and declaration")]
-    #[test_case("a: float = 6.6;" => g_r_s_f_d_a_i("float", "6.6", "a") ; "float initialization and declaration")]
-    #[test_case("a: int;" => g_r_s_f_d("int", "a") ; "integer initialization")]
-    #[test_case("a: bool;" => g_r_s_f_d("bool", "a") ; "boolean initialization")]
-    #[test_case("a: char;" => g_r_s_f_d("char", "a") ; "character initialization")]
-    #[test_case("a: string;" => g_r_s_f_d("string", "a") ; "string initialization")]
-    #[test_case("a: float;" => g_r_s_f_d("float", "a") ; "float initialization")]
-    #[test_case("a = 6;" => g_r_s_f_i("a", "6") ; "integer declaration")]
-    #[test_case("a = true;" => (g_r_s_f_i("a", "true")) ; "boolean declaration")]
-    #[test_case("a = \"a\";" => g_r_s_f_i("a", "\"a\"") ; "character declaration")]
-    #[test_case("a = \"Hallo\";" => g_r_s_f_i("a", "\"Hallo\"") ; "string declaration")]
-    #[test_case("a = 6.6;" => g_r_s_f_i("a", "6.6") ; "float declaration")]
-    fn test(source: &str) -> String{
-        let src = String::from(source);
-        let mut _lexer = crate::lexer::Lexer::new(src);
-        let mut parser = crate::parser::Parser::new(_lexer.lex());
-        let p = parser.parse();
-        let f = p.first().unwrap();
-        f.to_string()
-    }
-    // generate result string for decl and init
-    fn g_r_s_f_d_a_i(type_:&str, value: &str, name: &str) -> String
+    use crate::test::test_util;
+    use crate::lexer::token::LexerToken;
+    use crate::test::*;
+    use std::collections::HashMap;
+    #[test]
+    fn lex_keyword()
     {
-        format!("AssignmentExpression: (type:{} value:{} name:VariableExpression: ({}))", type_, value, name)
+        let mut map = HashMap::<String, LexerToken>::new();
+        test_util::insert_map(&mut map, TEST_KEYWORD);
+        test_util::test_map(map);
     }
-    // generate result string for decl
-    fn g_r_s_f_d(type_:&str, name: &str) -> String
+    #[test]
+    fn lex_literal()
     {
-        format!("AssignmentExpression: (type:{} value:0 name:VariableExpression: ({}))", type_, name)
+        let mut map = HashMap::<String, LexerToken>::new();
+        test_util::insert_map(&mut map, TEST_LITERAL);
+        test_util::test_map(map);
     }
-    // generate result string forr init
-    fn g_r_s_f_i(name:&str, value: &str) -> String
+    #[test]
+    fn lex_identifier()
     {
-        format!("OverwriteVariableExpression: (name:{} value:{})", name, value)
+        let mut map = HashMap::<String, LexerToken>::new();
+        test_util::insert_map(&mut map, TEST_IDENTIFIER);
+        test_util::test_map(map);
+    }
+    #[test]
+    fn lex_symbol()
+    {
+        let mut map = HashMap::<String, LexerToken>::new();
+        test_util::insert_map(&mut map, TEST_SYMBOL);
+        test_util::test_map(map);
+    }
+    #[test]
+    fn lex_badtoken()
+    {
+        let mut map = HashMap::<String, LexerToken>::new();
+        test_util::insert_map(&mut map, TEST_BADTOKEN);
+        test_util::test_map(map);
+    }
+    #[test]
+    fn lex_badtoken_inverted()
+    {
+        let mut map = HashMap::<String, LexerToken>::new();
+        test_util::insert_inverted(&mut map, TEST_BADTOKEN);
+        test_util::test_map_inverted(map);
     }
 }

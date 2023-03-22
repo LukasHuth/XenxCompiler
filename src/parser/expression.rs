@@ -286,9 +286,9 @@ impl Expression
             start,
         }
     }
-    pub fn new_assignment_expr(name: String, value: Expression, type_: Expression, start: usize) -> Expression
+    pub fn new_assignment_expr(name: Expression, value: Expression, type_: String, start: usize) -> Expression
     {
-        let assignment_expr = AssignmentExpression::new(name, value, type_);
+        let assignment_expr = AssignmentExpression::new(type_, value, name);
         Expression
         {
             tag: ExpressionTag::AssignmentExpr,

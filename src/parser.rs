@@ -32,7 +32,7 @@ impl Parser
                 let identifier: Token;
                 if self.peek_off(1).token == LexerToken::Colon && self.peek_off(2).token == LexerToken::Colon && self.peek_off(3).token == LexerToken::Identifier
                 {
-                    println!("namespace");
+                    // println!("namespace");
                     let identifier1 = self.match_token(LexerToken::Identifier);
                     self.match_token(LexerToken::Colon);
                     self.match_token(LexerToken::Colon);
@@ -70,7 +70,8 @@ impl Parser
                         let new = Expression::new_integer_literal(0, start);
                         let text = String::from(&identifier.text).to_owned();
                         let variable_expr = Expression::new_variable_expr(text, start);
-                        let expression = Expression::new_assignment_expr(datatype.to_owned(), new, variable_expr, start);
+                        // let expression = Expression::new_assignment_expr(datatype.to_owned(), new, variable_expr, start);
+                        let expression = Expression::new_assignment_expr(variable_expr, new, datatype.to_owned(), start);
                         statements.push(expression);
                     }
                     else
@@ -80,7 +81,8 @@ impl Parser
                         self.match_token(LexerToken::Semicolon);
                         let text = String::from(&identifier.text).to_owned();
                         let variable_expr = Expression::new_variable_expr(text, start);
-                        let expression = Expression::new_assignment_expr(datatype, expr, variable_expr, start);
+                        // let expression = Expression::new_assignment_expr(datatype, expr, variable_expr, start);
+                        let expression = Expression::new_assignment_expr(variable_expr, expr, datatype, start);
                         statements.push(expression);
                     }
                     continue;

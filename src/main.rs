@@ -3,6 +3,7 @@ pub mod lexer;
 pub mod parser;
 pub mod syntactic_analyser;
 pub mod codegen;
+pub mod test;
 #[allow(dead_code)]
 fn main() {
     let args = std::env::args().collect::<Vec<String>>();
