@@ -1,7 +1,7 @@
 use super::Expression;
 use super::Token;
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct BinaryExpression
 {
     operator: Token,

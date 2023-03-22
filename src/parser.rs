@@ -4,6 +4,8 @@ use super::lexer::token::{
     LexerToken
 };
 pub mod expression;
+#[path ="tests/parser_tests.rs"]
+mod unit_tests;
 use expression::Expression;
 pub struct Parser
 {

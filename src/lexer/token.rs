@@ -1,6 +1,6 @@
 use std::fmt;
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct Token {
     pub token: LexerToken,
     pub text: String,

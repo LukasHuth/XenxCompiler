@@ -4,7 +4,7 @@ use super::{
     util
 };
 use std::collections::HashMap;
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Statement
 {
     pub name: String,
@@ -12,7 +12,7 @@ pub struct Statement
     pub datatype: Datatype,
     pub statements: Vec<Statement>,
 }
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Datatype
 {
     pub datatype: StatementDatatype,

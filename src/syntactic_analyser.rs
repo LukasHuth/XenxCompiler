@@ -10,6 +10,9 @@ use statement::{
     StatementDatatype,
 };
 
+#[path ="tests/syntactic_analyser_tests.rs"]
+mod unit_tests;
+
 pub mod util;
 
 use arguments::Arguments;
@@ -87,7 +90,7 @@ impl SyntaticAnalyser {
         }
         return (statements, self.functions.clone());
     }
-    fn get_body(&mut self, statements: Vec<Expression>, variables: HashMap<String,Datatype>, functiondatatype: Datatype, args: Arguments, _of_function: bool) -> Vec<Statement>
+    pub fn get_body(&mut self, statements: Vec<Expression>, variables: HashMap<String,Datatype>, functiondatatype: Datatype, args: Arguments, _of_function: bool) -> Vec<Statement>
     {
         let mut body = Vec::<Statement>::new();
         let mut returned = false;

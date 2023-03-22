@@ -1,5 +1,5 @@
 use super::Expression;
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct VariableExpression
 {
     name: String,
@@ -27,7 +27,7 @@ impl Default for VariableExpression
         VariableExpression{name: "".to_string()}
     }
 }
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct ArrayExpression
 {
     name: String,

@@ -1,8 +1,33 @@
-
-use crate::lexer;
-use crate::test::*;
-use lexer::token::LexerToken;
 use std::collections::HashMap;
+
+use crate::{
+    lexer::{
+        lexer_tests::*,
+        token::{
+            LexerToken,
+            Token
+        },
+        self
+    },
+};
+pub fn create_map() -> HashMap<String, LexerToken>
+{
+    HashMap::<String, LexerToken>::new()
+}
+pub fn lex_string(str: &str) -> Vec<Token>
+{
+    let mut lexer = lexer::Lexer::new(str.to_string());
+    let mut result = lexer.lex();
+    set_token_position_to_zero(&mut result);
+    return result;
+}
+fn set_token_position_to_zero(tokens: &mut Vec<Token>)
+{
+    for token in tokens
+    {
+        token.pos = 0;
+    }
+}
 pub fn test_string(str: &str, expected: LexerToken)
 {
     let mut lexer = lexer::Lexer::new(str.to_string());
@@ -124,13 +149,13 @@ fn insert_bad_token(map: &mut HashMap<String, LexerToken>) {
 pub fn test_map(map: HashMap<String, LexerToken>) {
     for keys in map
     {
-        test_util::test_string(&keys.0, keys.1);
+        test_string(&keys.0, keys.1);
     }
 }
 pub fn test_map_inverted(map: HashMap<String, LexerToken>) {
     for keys in map
     {
-        test_util::test_string_inverted(&keys.0, keys.1);
+        test_string_inverted(&keys.0, keys.1);
     }
 }
 pub fn insert_inverted(map: &mut HashMap<String, LexerToken>, test_type: i32)

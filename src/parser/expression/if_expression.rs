@@ -1,6 +1,6 @@
 use super::Expression;
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct IfExpression
 {
     condition: Expression,

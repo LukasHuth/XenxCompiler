@@ -1,4 +1,4 @@
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct ArgVariableExpression
 {
     type_: String,

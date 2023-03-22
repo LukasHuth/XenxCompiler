@@ -1,5 +1,5 @@
 use super::Expression;
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct AssignmentExpression
 {
     type_: String,

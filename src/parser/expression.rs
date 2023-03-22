@@ -23,17 +23,30 @@ pub use function_declaration_expression::FunctionDeclarationExpression;
 pub use variable_expression::VariableExpression;
 pub use variable_expression::ArrayExpression;
 
+use std::fmt::{
+    Debug,
+    Formatter,
+    Error,
+};
+
 pub mod syntax;
 pub use syntax::Syntax;
 
 mod expression_tag;
 pub use expression_tag::ExpressionTag;
-
+#[derive(PartialEq)]
 pub struct Expression
 {
     pub tag: ExpressionTag,
     pub syntax: Box<Syntax>,
     pub start: usize,
+}
+impl Debug for Expression
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error>
+    {
+        write!(f, "{}", self.to_string())
+    }
 }
 impl Clone for Expression
 {

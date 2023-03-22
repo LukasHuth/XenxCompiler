@@ -1,5 +1,5 @@
 use super::Expression;
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct OverwriteVariableExpression
 {
     value: Expression,
@@ -23,7 +23,7 @@ impl OverwriteVariableExpression
         return self.value.clone();
     }
 }
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct OverwriteArrayExpression
 {
     value: Expression,

@@ -12,6 +12,7 @@ use super::{
     ArrayExpression,
     OverwriteArrayExpression,
 };
+#[derive(PartialEq)]
 pub struct Syntax
 {
     pub integer_literal: Option<i32>,
@@ -32,7 +33,7 @@ pub struct Syntax
     pub array_expr: Option<ArrayExpression>,
     pub type_: SyntaxType,
 }
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum SyntaxType
 {
     IntegerLiteral,

@@ -3,7 +3,8 @@ pub mod lexer;
 pub mod parser;
 pub mod syntactic_analyser;
 pub mod codegen;
-pub mod test;
+#[path ="tests/test_utils.rs"]
+pub mod test_utils;
 #[allow(dead_code)]
 fn main() {
     let args = std::env::args().collect::<Vec<String>>();
