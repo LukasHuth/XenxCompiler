@@ -11,7 +11,7 @@ jobs:
     steps:
       - checkout
       - run: cargo --version
-      - run: cargo test
+      - run: cargo test --no-fail-fast
       - store_test_results:
         path: test-results
 
