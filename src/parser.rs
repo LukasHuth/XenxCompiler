@@ -313,7 +313,9 @@ impl Parser
             }
             if literal.is_float()
             {
-                return Expression::new_float_literal(literal.text.parse::<f32>().unwrap(), start);
+                let float_lit = literal.text.parse::<f32>().unwrap();
+                // println!("Float literal: {}", float_lit);
+                return Expression::new_float_literal(float_lit, start);
             }
             panic!("Invalid type of literal: {}", literal.text)
         }

@@ -176,7 +176,8 @@ impl Syntax
         {
             panic!("float_literal is none");
         }
-        self.float_literal.unwrap()
+        let float_literal = self.float_literal.unwrap();
+        return float_literal;
     }
     pub fn get_string_literal(&self) -> String
     {

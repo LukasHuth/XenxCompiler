@@ -115,6 +115,10 @@ pub fn mov_lit_to_reg(instruction: Instruction) -> String
     let register1 = register1.unwrap();
     let destination = register_util::get_name(register1.clone(), size);
     let argument = arguments[0].clone();
+    if size == SizeType::FLOAT
+    {
+        return format!("mov {}, __float64__({})\n", destination, argument);
+    }
     return format!("mov {}, {}\n", destination, argument);
 }
 pub fn mov_lit_to_mem(instruction: Instruction) -> String
@@ -145,6 +149,11 @@ pub fn mov_lit_to_mem(instruction: Instruction) -> String
     if arguments.len() < 2
     {
         value = "0".to_string();
+    }
+    else
+    if size == SizeType::FLOAT
+    {
+        value = format!("__float64__({})", arguments[1].clone());
     }
     else
     {

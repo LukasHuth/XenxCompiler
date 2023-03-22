@@ -49,7 +49,7 @@ impl SizeType {
             SizeType::BYTE | SizeType::CHAR => "byte".to_string(),
             SizeType::WORD => "word".to_string(),
             SizeType::DWORD => "dword".to_string(),
-            SizeType::QWORD | SizeType::STRING => "qword".to_string(),
+            SizeType::QWORD | SizeType::STRING | SizeType::FLOAT => "qword".to_string(),
             _ => "".to_string()
         }
     }

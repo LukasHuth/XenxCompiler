@@ -54,7 +54,7 @@ pub fn get_name(register: Register, size: SizeType) -> String
             SizeType::WORD => name = name,
             SizeType::DWORD => name = "e".to_string() + name.as_str(),
             SizeType::QWORD => name = "r".to_string() + name.as_str(),
-            SizeType::FLOAT => name = name, // TODO: not implemented
+            SizeType::FLOAT => name = "r".to_string() + name.as_str(), // TODO: not implemented
             SizeType::DOUBLE => name = name, // TODO: not implemented
             SizeType::CHAR => name = name, // TODO: not implemented
             SizeType::STRING => name = "r".to_string() + name.as_str(),

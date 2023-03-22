@@ -215,6 +215,7 @@ impl Lexer
                 }
                 token = LexerToken::Literal;
                 text = self.input[start..self.position].to_string();
+                // println!("text: {}", text);
                 return Token::new(token, text, start, self.position-start);
             },
             '"' => {

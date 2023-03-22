@@ -284,6 +284,11 @@ pub fn parsebinary(statement: Statement, vars: &Vec<Variable>, bytecode: &mut By
             }
         }
         else
+        if statement.datatype.datatype == StatementDatatype::Float
+        {
+            bytecode.add_move_lit_to_reg(&statement.name, Register::RAX, SizeType::FLOAT);
+        }
+        else
         {
             panic!("Invalid literal type");
         }

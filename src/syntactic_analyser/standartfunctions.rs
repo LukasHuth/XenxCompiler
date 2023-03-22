@@ -35,7 +35,7 @@ pub fn is_std_function(name: &String) -> bool
 }
 fn get_print_variants() -> Vec<String>
 {
-    vec!["std::print_string".to_string(),"std::print_int".to_string(), "std::print_bool".to_string()]
+    vec!["std::print_string".to_string(),"std::print_int".to_string(), "std::print_bool".to_string(), "std::print_float".to_string()]
 }
 pub fn get_variants(name: &String) -> Vec<String>
 {
