@@ -3,6 +3,8 @@ use token::{
     LexerToken,
     Token,
 };
+
+use crate::naming_util;
 pub struct Lexer {
     input: String,
     position: usize,
@@ -229,15 +231,14 @@ impl Lexer
                 return Token::new(token, text, start, self.position-start);
             },
             'a'..='z' | 'A'..='Z' => {
-                while self.peek(0).is_alphanumeric()
+                while self.peek(0).is_alphanumeric() || self.peek(0) == '_' || self.peek(0) == '.'
                 {
                     self.next();
                 }
                 text = self.input[start..self.position].to_string();
-                if text == "return" || text == "float" || text == "int" || text == "func" || text == "bool" || text == "string"
-                    || text == "if" || text == "else" || text == "char" || text == "while" || text == "for" || text == "break"
-                    || text == "continue" || text == "struct" || text == "import" || text == "as" || text == "null"
+                if naming_util::get_keywords().contains(&text)
                 {
+                    println!("keyword found: {}", text);
                     token = LexerToken::Keyword;
                 }
                 else

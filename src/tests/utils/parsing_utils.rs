@@ -53,6 +53,6 @@ pub fn generate_assignment_tokens(name: String, value: String, datatype: &str) -
 fn parse_expressions(tokens: Vec<Token>) -> Vec<Expression>
 {
     let mut parser = Parser::new(tokens);
-    let ret = parser.parse();
+    let ret = parser.parse("");
     return ret;
 }

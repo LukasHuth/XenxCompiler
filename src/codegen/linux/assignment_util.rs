@@ -31,7 +31,9 @@ pub fn genassignment(statement: Statement, vars: &mut Vec<Variable>, mut used_po
     }
     else
     {
+        println!("used positions: {:?}", used_positions.clone());
         pos = utils::findemptyposition(&mut used_positions, &mut highest_position);
+        println!("pos: {}", pos);
         for i in pos..(pos+8)
         {
             used_positions.push(i);

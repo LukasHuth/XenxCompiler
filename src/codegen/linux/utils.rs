@@ -108,7 +108,7 @@ pub fn findemptyposition(used_positions: &mut Vec<usize>, highest_position: &mut
             continue;
         }
         *highest_position+=size;
-        return i;
+        return *highest_position;
     }
     *highest_position+=size;
     return *highest_position;

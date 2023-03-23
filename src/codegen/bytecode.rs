@@ -87,6 +87,11 @@ impl ByteArray{
         self.set_register_in_last_instruction(Register::RAX, 1);
         self.set_register_in_last_instruction(Register::RBX, 2);
     }
+    pub fn add_sub_reg(&mut self,to: Register, from: Register, size: SizeType){
+        self.add_byte(ByteInstruction::Sub, Vec::new(), size);
+        self.set_register_in_last_instruction(to, 1);
+        self.set_register_in_last_instruction(from, 2);
+    }
     pub fn add_mul(&mut self, size: SizeType){
         self.add_byte(ByteInstruction::Mul, Vec::new(), size);
         self.set_register_in_last_instruction(Register::RBX, 1);

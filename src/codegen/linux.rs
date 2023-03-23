@@ -71,6 +71,8 @@ pub fn generate_function(statement: super::Statement, args: Arguments, if_positi
     bytecode.add_move_reg_to_reg(Register::RSP, Register::RBP, SizeType::QWORD);
     let argument_regs = utils::get_argument_registers();
     let highest_position: usize = args.arguments.len().clone()*8; // 8 bytes per register
+    let highest_position = highest_position + highest_position % 16;
+    bytecode.add_sub_lit_reg(&highest_position.clone().to_string(), Register::RSP, SizeType::QWORD);
     for i in 0..args.arguments.len()
     {
         let arg = args.arguments[i].clone();
@@ -78,12 +80,14 @@ pub fn generate_function(statement: super::Statement, args: Arguments, if_positi
         let var = Variable::new(&name, (i+1)*8, true, arg.datatype.clone());
         vars.push(var);
         let register = register_util::get_register_by_name(argument_regs[i].clone());
-        bytecode.add_push_reg(register);
-        for j in (i*8)..((i+1)*8)
-        {
-            used_positions.push(j);
-        }
+        // bytecode.add_push_reg(register);
+        bytecode.add_move_reg_to_mem(register, &format!("-{}", (i+1)*8), Register::RBP, SizeType::QWORD);
     }
+    for i in 0..highest_position
+    {
+        used_positions.push(i);
+    }
+    println!("used positions: {:?}", used_positions);
     // */
     generate_body(statement.statements, vars, used_positions, highest_position, if_positions, bytecode);
     bytecode.add_move_reg_to_reg(Register::RBP, Register::RSP, SizeType::QWORD);

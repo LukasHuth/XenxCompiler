@@ -176,6 +176,7 @@ impl SyntaticAnalyser {
                 let datatype = util::get_datatype(variable_declaration.get_type(), false);
                 let value = variable_declaration.get_value();
                 let val = util::generate_binary(value.clone(), &variables, &self.functions);
+                println!("datatype: {} ,  {}", val.datatype.to_string(), datatype.is_array);
                 if !datatype.is_same(&val.datatype) && !(value.is_integer_literal() && value.syntax.get_integer_literal() == 0)
                 {
                     let err = util::get_line_of_position(self.context.clone(),statement.get_position() + 2);
@@ -186,7 +187,7 @@ impl SyntaticAnalyser {
                 // println!("variable declaration {} {} is valid", name, datatype.to_string());
                 variable.set_value(value.clone(), &variables, &self.functions);
                 body.push(variable.clone());
-                println!("variable: {}", variable.to_string());
+                // println!("variable: {}", variable.to_string());
                 variables.insert(name.clone(), datatype.clone()); // TODO: possible to fix with body variable
             }
             else

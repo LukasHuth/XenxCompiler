@@ -3,6 +3,7 @@ pub mod lexer;
 pub mod parser;
 pub mod syntactic_analyser;
 pub mod codegen;
+pub mod naming_util;
 #[path ="tests/test_utils.rs"]
 pub mod test_utils;
 #[allow(dead_code)]
@@ -51,7 +52,7 @@ fn main() {
     // let tokens = lexer.lex();
     // let mut parser = parser::Parser::new(tokens);
     // let statements = parser.parse();
-    let parsed_file = parse_file(filename);
+    let parsed_file = parse_file(filename, "");
     let statements = parsed_file.0;
     let include_std = parsed_file.1;
     let mut syntactic_analyser = syntactic_analyser::SyntaticAnalyser::new(statements, context.clone(), include_std);
@@ -65,8 +66,8 @@ fn main() {
     codegen.compile(outfile.as_str());
     // from here i can use _statements to generate code
 }
-fn parse_file(filename: &str) -> (Vec<parser::expression::Expression>, bool) {
-    let mut tokens = get_tokens_from_file(filename);
+fn parse_file(filename: &str, namespace_name: &str) -> (Vec<parser::expression::Expression>, bool) {
+    let mut tokens = get_tokens_from_file(filename, namespace_name);
     let mut filenames = Vec::<String>::new();
     let mut statements = Vec::<parser::expression::Expression>::new();
     let mut include_std = false;
@@ -77,6 +78,7 @@ fn parse_file(filename: &str) -> (Vec<parser::expression::Expression>, bool) {
             filename.push_str(tokens[0].text.as_str());
             tokens.drain(0..1);
         }
+        tokens.drain(0..1);
         filenames.push(filename);
     }
     for filename in filenames {
@@ -84,17 +86,28 @@ fn parse_file(filename: &str) -> (Vec<parser::expression::Expression>, bool) {
             include_std = true;
             continue;
         }
-        let res = parse_file(filename.as_str());
+        let namespace = filename.split("/").last().unwrap();
+        let fileending = filename.split(".").last().unwrap();
+        let namespace = namespace.replace(&format!(".{}", fileending), "");
+        let res = parse_file(filename.as_str(), &namespace);
         if res.1 { include_std = true; }
         let mut res = res.0;
+        println!("res: {:?}", res[0]);
         statements.append(&mut res);
     }
     let mut parser = parser::Parser::new(tokens);
-    statements.append(&mut parser.parse());
+    statements.append(&mut parser.parse(""));
     return ( statements, include_std );
 }
-fn get_tokens_from_file(filename: &str) -> Vec<lexer::token::Token> {
+fn get_tokens_from_file(filename: &str, namespace_name: &str) -> Vec<lexer::token::Token> {
     let context = std::fs::read_to_string(filename).expect("Unable to read file");
+    let edited_context: String;
+    if namespace_name == "" {
+        edited_context = context.clone();
+    } else {
+        edited_context = format!("namespace {} {{\n{}\n}}", namespace_name, context);
+    }
+    let context = edited_context;
     let mut lexer = lexer::Lexer::new(context.clone());
     let tokens = lexer.lex();
     return tokens;

@@ -63,7 +63,12 @@ pub fn generate_print(name: &str, bytecode: &mut ByteArray)
     generate_format(type_name, bytecode);
     bytecode.add_move_reg_to_reg(Register::RDI, Register::RSI, SizeType::QWORD);
     bytecode.add_move_reg_to_reg(Register::RAX, Register::RDI, SizeType::QWORD);
-    bytecode.add_xor_reg(Register::RAX, Register::RAX, SizeType::QWORD);
+    bytecode.add_move_reg_to_reg(Register::RSP, Register::RAX, SizeType::QWORD);
+    bytecode.add_move_lit_to_reg("16", Register::RBX, SizeType::QWORD);
+    bytecode.add_xor_reg(Register::RDX, Register::RDX, SizeType::QWORD);
+    bytecode.add_div(SizeType::QWORD);
+    bytecode.add_sub_reg(Register::RSP, Register::RDX, SizeType::QWORD);
+    bytecode.add_move_lit_to_reg("0", Register::RAX, SizeType::QWORD);
     bytecode.add_call("printf");
     bytecode.add_move_reg_to_reg(Register::RBP, Register::RSP, SizeType::QWORD);
     bytecode.add_pop(Register::RBP);

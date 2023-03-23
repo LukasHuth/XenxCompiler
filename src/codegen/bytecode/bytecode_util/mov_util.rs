@@ -26,6 +26,7 @@ pub fn mov_reg_to_mem(instruction: Instruction) -> String
     {
         offset = arguments[0].clone();
     }
+    println!("offset: {}", offset);
     let offset = offset.parse::<i32>();
     if offset.is_err()
     {
