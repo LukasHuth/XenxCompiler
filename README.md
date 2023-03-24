@@ -30,6 +30,12 @@ import <filename>;
 ```
 <name>: <datatype> = <value>;
 ```
+### shorterm binary operators
+```
+<name> <operator>= <value>;
+example with name a = a+5:
+a += 5;
+```
 ### return statement
 ```
 return <variable|literal>;
@@ -66,14 +72,14 @@ else
 std::print(<expression>);
 ```
 ## Known Bugs
-- no at the moment
+- print of float is not working
 ## TODO
 - support more datatypes
 - add support for multi dimensional arrays
 
 ## Done
 - int:
-    - binary operators
+    - binary operators (- + * / ^ & |)
     - unary operators 
     - return values
     - arguments

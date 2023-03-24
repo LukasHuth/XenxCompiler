@@ -354,7 +354,8 @@ fn generate_function_call(expression: Expression, vars: &HashMap<String, Datatyp
 fn get_datatype_by_datatype_and_operator(left: StatementDatatype, right: StatementDatatype, operator: String) -> StatementDatatype {
     if left == right && left == StatementDatatype::Int
     {
-        if operator == "+" || operator == "-" || operator == "*" || operator == "/" || operator == "%"
+        if operator == "+" || operator == "-" || operator == "*" || operator == "/" || operator == "%" || operator == "^"
+            || operator == "&" || operator == "|"
         {
             return StatementDatatype::Int;
         }

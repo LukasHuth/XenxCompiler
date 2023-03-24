@@ -67,6 +67,9 @@ impl Lexer
             '*' => {
                 token = LexerToken::Star;
             },
+            '^' => {
+                token = LexerToken::Caret;
+            },
             '/' => {
                 if self.peek(0) == '/'
                 {

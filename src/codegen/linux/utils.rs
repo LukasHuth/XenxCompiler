@@ -219,6 +219,21 @@ pub fn parsebinary(statement: Statement, vars: &Vec<Variable>, bytecode: &mut By
             bytecode.add_set_equal(Register::RAX);
         }
         else
+        if statement.name == "^"
+        {
+            bytecode.add_xor(SizeType::QWORD);
+        }
+        else
+        if statement.name == "&"
+        {
+            bytecode.add_and(SizeType::QWORD);
+        }
+        else
+        if statement.name == "|"
+        {
+            bytecode.add_or(SizeType::QWORD);
+        }
+        else
         {
             panic!("Invalid binary operator");
         }
