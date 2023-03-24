@@ -246,7 +246,7 @@ impl Lexer
         }
         else
         {
-            text = "\0".to_string();
+            text = self.input.chars().last().unwrap().to_string();
         }
         return Token::new(token, text, start, self.position-start);
     }
