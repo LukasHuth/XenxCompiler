@@ -22,6 +22,127 @@ impl Parser
             current: 0,
         }
     }
+    pub fn parse_identifier(&mut self, identifier: Token, statements: &mut Vec<Expression>, start: usize)
+    {
+        if self.peek().token == LexerToken::Colon
+        {
+            self.match_token(LexerToken::Colon);
+            let type_: Token;
+            type_ = self.match_token(LexerToken::Keyword);
+            if !type_.is_data_type()
+            {
+                panic!("Invalid type");
+            }
+            let mut datatype = type_.text;
+            while self.peek().token == LexerToken::OpenSquareBracket
+            {
+                self.match_token(LexerToken::OpenSquareBracket);
+                // println!("{}", self.peek().text);
+                let numer = self.match_token(LexerToken::Literal);
+                if !numer.text.parse::<i32>().is_ok()
+                {
+                    panic!("Invalid array size (Array size has to be i32 not '{}')", numer.text);
+                }
+                let numer = numer.text.parse::<i32>().unwrap();
+                self.match_token(LexerToken::CloseSquareBracket);
+                datatype = format!("{}[{}]", datatype, numer);
+            }
+            if self.peek().token != LexerToken::Equals
+            {
+                let new = Expression::new_integer_literal(0, start);
+                let text = String::from(&identifier.text).to_owned();
+                let variable_expr = Expression::new_variable_expr(text, start);
+                // let expression = Expression::new_assignment_expr(datatype.to_owned(), new, variable_expr, start);
+                let expression = Expression::new_assignment_expr(variable_expr, new, datatype.to_owned(), start);
+                statements.push(expression);
+            }
+            else
+            {
+                self.match_token(LexerToken::Equals);
+                let expr = self.parse_expression();
+                self.match_token(LexerToken::Semicolon);
+                let text = String::from(&identifier.text).to_owned();
+                let variable_expr = Expression::new_variable_expr(text, start);
+                // let expression = Expression::new_assignment_expr(datatype, expr, variable_expr, start);
+                let expression = Expression::new_assignment_expr(variable_expr, expr, datatype, start);
+                statements.push(expression);
+            }
+            return;
+        }
+        else
+        if self.peek().token == LexerToken::Openparenthesis
+        {
+            self.match_token(LexerToken::Openparenthesis);
+            let mut arguments = Vec::<Expression>::new();
+            while self.peek().token != LexerToken::Closeparenthesis
+            {
+                let argument = self.parse_expression();
+                arguments.push(argument);
+                if self.peek().token == LexerToken::Comma
+                {
+                    self.match_token(LexerToken::Comma);
+                }
+            }
+            self.match_token(LexerToken::Closeparenthesis);
+            if self.peek().token == LexerToken::Semicolon // Function call
+            {
+                self.match_token(LexerToken::Semicolon);
+                let function_call = Expression::new_call_expr(identifier.text, arguments, start);
+                statements.push(function_call);
+            }
+            return;
+        }
+        let mut square_brackets = Vec::<Expression>::new();
+        while self.peek().token == LexerToken::OpenSquareBracket
+        {
+            self.match_token(LexerToken::OpenSquareBracket);
+            let expr = self.parse_expression();
+            self.match_token(LexerToken::CloseSquareBracket);
+            square_brackets.push(expr);
+        }
+        if self.peek().token == LexerToken::Equals
+        {
+            self.match_token(LexerToken::Equals);
+            let value = self.parse_expression();
+            // println!("test 1");
+            self.match_token(LexerToken::Semicolon);
+            let text = String::from(&identifier.text).to_owned();
+            let expression: Expression;
+            if square_brackets.len() > 0
+            {
+                expression = Expression::new_array_overwrite_expr(text.clone(), square_brackets, value, start);
+            }
+            else
+            {
+                expression = Expression::new_overwrite_variable_expression(text.clone(), value, start);
+            }
+            statements.push(expression);
+        }
+        else
+        if (self.peek().token == LexerToken::Plus || self.peek().token == LexerToken::Minus || self.peek().token == LexerToken::Star ||
+            self.peek().token == LexerToken::Slash || self.peek().token == LexerToken::Percent || self.peek().token == LexerToken::Caret ||
+            self.peek().token == LexerToken::Ampersand || self.peek().token == LexerToken::Pipe)
+            && self.peek_off(1).token == LexerToken::Equals
+        {
+            let operator = self.next_token();
+            self.match_token(LexerToken::Equals);
+            let expr = self.parse_expression();
+            self.match_token(LexerToken::Semicolon);
+            let text = String::from(&identifier.text).to_owned();
+            let left = Expression::new_variable_expr(text.clone(), start);
+            let value = Expression::new_binary_expr(left, operator, expr, start);
+            let expression: Expression;
+            if square_brackets.len() > 0
+            {
+                expression = Expression::new_array_overwrite_expr(text.clone(), square_brackets, value, start);
+            }
+            else
+            {
+                expression = Expression::new_overwrite_variable_expression(text.clone(), value, start);
+            }
+            statements.push(expression);
+        }
+    }
     pub fn parse(&mut self, namespace_name: &str) -> Vec<Expression>
     {
         let mut statements = Vec::<Expression>::new();
@@ -32,124 +153,7 @@ impl Parser
             {
                 let identifier = self.match_token(LexerToken::Identifier);
                 let identifier = self.get_identifier(identifier);
-                if self.peek().token == LexerToken::Colon
-                {
-                    self.match_token(LexerToken::Colon);
-                    let type_: Token;
-                    type_ = self.match_token(LexerToken::Keyword);
-                    if !type_.is_data_type()
-                    {
-                        panic!("Invalid type");
-                    }
-                    let mut datatype = type_.text;
-                    while self.peek().token == LexerToken::OpenSquareBracket
-                    {
-                        self.match_token(LexerToken::OpenSquareBracket);
-                        // println!("{}", self.peek().text);
-                        let numer = self.match_token(LexerToken::Literal);
-                        if !numer.text.parse::<i32>().is_ok()
-                        {
-                            panic!("Invalid array size (Array size has to be i32 not '{}')", numer.text);
-                        }
-                        let numer = numer.text.parse::<i32>().unwrap();
-                        self.match_token(LexerToken::CloseSquareBracket);
-                        datatype = format!("{}[{}]", datatype, numer);
-                    }
-                    if self.peek().token != LexerToken::Equals
-                    {
-                        let new = Expression::new_integer_literal(0, start);
-                        let text = String::from(&identifier.text).to_owned();
-                        let variable_expr = Expression::new_variable_expr(text, start);
-                        // let expression = Expression::new_assignment_expr(datatype.to_owned(), new, variable_expr, start);
-                        let expression = Expression::new_assignment_expr(variable_expr, new, datatype.to_owned(), start);
-                        statements.push(expression);
-                    }
-                    else
-                    {
-                        self.match_token(LexerToken::Equals);
-                        let expr = self.parse_expression();
-                        self.match_token(LexerToken::Semicolon);
-                        let text = String::from(&identifier.text).to_owned();
-                        let variable_expr = Expression::new_variable_expr(text, start);
-                        // let expression = Expression::new_assignment_expr(datatype, expr, variable_expr, start);
-                        let expression = Expression::new_assignment_expr(variable_expr, expr, datatype, start);
-                        statements.push(expression);
-                    }
-                    continue;
-                }
-                else
-                if self.peek().token == LexerToken::Openparenthesis
-                {
-                    self.match_token(LexerToken::Openparenthesis);
-                    let mut arguments = Vec::<Expression>::new();
-                    while self.peek().token != LexerToken::Closeparenthesis
-                    {
-                        let argument = self.parse_expression();
-                        arguments.push(argument);
-                        if self.peek().token == LexerToken::Comma
-                        {
-                            self.match_token(LexerToken::Comma);
-                        }
-                    }
-                    self.match_token(LexerToken::Closeparenthesis);
-                    if self.peek().token == LexerToken::Semicolon // Function call
-                    {
-                        self.match_token(LexerToken::Semicolon);
-                        let function_call = Expression::new_call_expr(identifier.text, arguments, start);
-                        statements.push(function_call);
-                    }
-                    continue;
-                }
-                let mut square_brackets = Vec::<Expression>::new();
-                while self.peek().token == LexerToken::OpenSquareBracket
-                {
-                    self.match_token(LexerToken::OpenSquareBracket);
-                    let expr = self.parse_expression();
-                    self.match_token(LexerToken::CloseSquareBracket);
-                    square_brackets.push(expr);
-                }
-                if self.peek().token == LexerToken::Equals
-                {
-                    self.match_token(LexerToken::Equals);
-                    let value = self.parse_expression();
-                    // println!("test 1");
-                    self.match_token(LexerToken::Semicolon);
-                    let text = String::from(&identifier.text).to_owned();
-                    let expression: Expression;
-                    if square_brackets.len() > 0
-                    {
-                        expression = Expression::new_array_overwrite_expr(text.clone(), square_brackets, value, start);
-                    }
-                    else
-                    {
-                        expression = Expression::new_overwrite_variable_expression(text.clone(), value, start);
-                    }
-                    statements.push(expression);
-                }
-                else
-                if (self.peek().token == LexerToken::Plus || self.peek().token == LexerToken::Minus || self.peek().token == LexerToken::Star ||
-                    self.peek().token == LexerToken::Slash || self.peek().token == LexerToken::Percent || self.peek().token == LexerToken::Caret ||
-                    self.peek().token == LexerToken::Ampersand || self.peek().token == LexerToken::Pipe)
-                    && self.peek_off(1).token == LexerToken::Equals
-                {
-                    let operator = self.next_token();
-                    self.match_token(LexerToken::Equals);
-                    let expr = self.parse_expression();
-                    self.match_token(LexerToken::Semicolon);
-                    let text = String::from(&identifier.text).to_owned();
-                    let left = Expression::new_variable_expr(text.clone(), start);
-                    let value = Expression::new_binary_expr(left, operator, expr, start);
-                    let expression: Expression;
-                    if square_brackets.len() > 0
-                    {
-                        expression = Expression::new_array_overwrite_expr(text.clone(), square_brackets, value, start);
-                    }
-                    else
-                    {
-                        expression = Expression::new_overwrite_variable_expression(text.clone(), value, start);
-                    }
-                    statements.push(expression);
-                }
+                self.parse_identifier(identifier, &mut statements, start);
             }
             else
             if self.peek().token == LexerToken::Keyword
