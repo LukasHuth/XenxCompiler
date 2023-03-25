@@ -22,6 +22,22 @@ impl Parser
             current: 0,
         }
     }
+    pub fn parse_square_bracket(&mut self, datatype: &mut String)
+    {
+        while self.peek().token == LexerToken::OpenSquareBracket
+        {
+            self.match_token(LexerToken::OpenSquareBracket);
+            // println!("{}", self.peek().text);
+            let numer = self.match_token(LexerToken::Literal);
+            if !numer.text.parse::<i32>().is_ok()
+            {
+                panic!("Invalid array size (Array size has to be i32 not '{}')", numer.text);
+            }
+            let numer = numer.text.parse::<i32>().unwrap();
+            self.match_token(LexerToken::CloseSquareBracket);
+            *datatype = format!("{}[{}]", datatype, numer);
+        }
+    }
     pub fn parse_identifier(&mut self, identifier: Token, statements: &mut Vec<Expression>, start: usize)
     {
         if self.peek().token == LexerToken::Colon
@@ -34,19 +50,7 @@ impl Parser
                 panic!("Invalid type");
             }
             let mut datatype = type_.text;
-            while self.peek().token == LexerToken::OpenSquareBracket
-            {
-                self.match_token(LexerToken::OpenSquareBracket);
-                // println!("{}", self.peek().text);
-                let numer = self.match_token(LexerToken::Literal);
-                if !numer.text.parse::<i32>().is_ok()
-                {
-                    panic!("Invalid array size (Array size has to be i32 not '{}')", numer.text);
-                }
-                let numer = numer.text.parse::<i32>().unwrap();
-                self.match_token(LexerToken::CloseSquareBracket);
-                datatype = format!("{}[{}]", datatype, numer);
-            }
+            self.parse_square_bracket(&mut datatype);
             if self.peek().token != LexerToken::Equals
             {
                 let new = Expression::new_integer_literal(0, start);
@@ -242,6 +246,10 @@ impl Parser
                     self.match_token(LexerToken::Closebrace);
                     statements.append(&mut body);
                 }
+                else if key.text == "for"
+                {
+                    self.parse_for_definition(&mut statements, namespace_name);
+                }
             }
             else
             {
@@ -250,7 +258,23 @@ impl Parser
         }
         return statements;
     }
-
+    fn parse_for_definition(&mut self,statements: &mut Vec<Expression>, namespace_name: &str)
+    {
+        self.match_token(LexerToken::Openparenthesis);
+        let identifier = self.match_token(LexerToken::Identifier);
+        let start = identifier.pos;
+        self.parse_identifier(identifier, statements, start);
+        let start_expression = start;
+        let bool_expression = self.parse_expression();
+        let op_expression = self.parse_expression();
+        self.match_token(LexerToken::Closeparenthesis);
+        self.match_token(LexerToken::Arrow);
+        self.match_token(LexerToken::Openbrace);
+        let body = self.parse(namespace_name);
+        self.match_token(LexerToken::Closebrace);
+        // let for_expression = Expression::new_for_epxression(start_expression,bool_expression,op_expression,body);
+        // statements.push(for_expression);
+    }
     fn get_identifier(&mut self, identifier: Token) -> Token {
         if self.peek_off(0).token == LexerToken::Colon && self.peek_off(1).token == LexerToken::Colon && self.peek_off(2).token == LexerToken::Identifier
         {
