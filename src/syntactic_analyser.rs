@@ -283,6 +283,14 @@ impl SyntaticAnalyser {
                 statement.statements.append(&mut indices_statement);
                 body.push(statement);
             }
+            else if statement.is_for_expr()
+            {
+                let for_expr = statement.syntax.get_for_expr();
+                let init_expr = for_expr.get_init_expression();
+                let test_expr = for_expr.get_test_expression();
+                let update_expr = for_expr.get_update_expression();
+                // TODO: use the expressions
+            }
         }
         return body;
     }

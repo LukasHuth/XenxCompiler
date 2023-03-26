@@ -310,4 +310,12 @@ impl Syntax
         }
         self.overwrite_array_expr.as_ref().unwrap().clone()
     }
+    pub fn get_for_expr(&self) -> ForExpression
+    {
+        if self.for_expression.is_none()
+        {
+            panic!("for_expression is none");
+        }
+        self.for_expression.as_ref().unwrap().clone()
+    }
 }

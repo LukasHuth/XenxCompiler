@@ -165,66 +165,13 @@ impl Parser
                 let key = self.match_token(LexerToken::Keyword);
                 if key.text == "return"
                 {
-                    let expr = self.parse_expression();
-                    self.match_token(LexerToken::Semicolon);
-                    let expression = Expression::new_return_expr(expr, start);
-                    statements.push(expression);
+                    let return_expression = self.parse_return_expression();
+                    statements.push(return_expression);
                 }
                 else
                 if key.text == "func"
                 {
-                    let identifier = self.match_token(LexerToken::Identifier);
-                    self.match_token(LexerToken::Openparenthesis);
-                    let mut arguments = Vec::<Expression>::new();
-                    while self.peek().token != LexerToken::Closeparenthesis
-                    {
-                        let argument = self.match_token(LexerToken::Identifier);
-                        self.match_token(LexerToken::Colon);
-                        let type_ = self.match_token(LexerToken::Keyword);
-                        if !type_.is_data_type()
-                        {
-                            panic!("Invalid type");
-                        }
-                        let mut inside = String::new();
-                        if self.peek().token == LexerToken::OpenSquareBracket
-                        {
-                            while self.peek().token == LexerToken::OpenSquareBracket
-                            {
-                                self.match_token(LexerToken::OpenSquareBracket);
-                                self.match_token(LexerToken::CloseSquareBracket);
-                                inside.push_str("[]");
-                            }
-                        }
-                        arguments.push(Expression::new_arg_variable_expr(argument.text, type_.text + &inside, start));
-                        if self.peek().token != LexerToken::Closeparenthesis
-                        {
-                            self.match_token(LexerToken::Comma);
-                        }
-                    }
-                    self.match_token(LexerToken::Closeparenthesis);
-                    // println!("Expected ':'");
-                    self.match_token(LexerToken::Colon);
-                    // println!("Found!");
-                    let type_ = self.match_token(LexerToken::Keyword);
-                    if !type_.is_data_type()
-                    {
-                        panic!("Invalid type");
-                    }
-                    self.match_token(LexerToken::Arrow);
-                    self.match_token(LexerToken::Openbrace);
-                    let body = self.parse(namespace_name.clone());
-                    self.match_token(LexerToken::Closebrace);
-                    let name_str = identifier.text;
-                    let name: String;
-                    if namespace_name == ""
-                    {
-                        name = name_str;
-                    }
-                    else
-                    {
-                        name = namespace_name.to_owned()+"::"+&name_str;
-                    }
-                    let function_definition = Expression::new_function_expr(name, type_.text, arguments, body, start);
+                    let function_definition = self.parse_function_definition(namespace_name);
                     statements.push(function_definition);
                 }
                 else if key.text == "if"
@@ -234,21 +181,13 @@ impl Parser
                 }
                 else if key.text == "namespace"
                 {
-                    let namespace = self.match_token(LexerToken::Identifier);
-                    let name = namespace.text;
-                    let mut name = namespace_name.to_owned()+"::"+&name;
-                    if namespace_name == ""
-                    {
-                        name = name[2..].to_owned();
-                    }
-                    self.match_token(LexerToken::Openbrace);
-                    let mut body = self.parse(&name);
-                    self.match_token(LexerToken::Closebrace);
-                    statements.append(&mut body);
+                    let mut namespace_exprs = self.parse_namespace(namespace_name);
+                    statements.append(&mut namespace_exprs);
                 }
                 else if key.text == "for"
                 {
-                    self.parse_for_definition(&mut statements, namespace_name);
+                    let for_expr = self.parse_for_definition(namespace_name);
+                    statements.push(for_expr);
                 }
             }
             else
@@ -258,7 +197,88 @@ impl Parser
         }
         return statements;
     }
-    fn parse_for_definition(&mut self,statements: &mut Vec<Expression>, namespace_name: &str)
+    fn parse_return_expression(&mut self) -> Expression
+    {
+        let start = self.peek().pos;
+        let expr = self.parse_expression();
+        self.match_token(LexerToken::Semicolon);
+        let return_expression = Expression::new_return_expr(expr, start);
+        return return_expression;
+    }
+    fn parse_function_definition(&mut self, namespace_name: &str) -> Expression
+    {
+        let identifier = self.match_token(LexerToken::Identifier);
+        let start = identifier.pos.clone();
+        self.match_token(LexerToken::Openparenthesis);
+        let mut arguments = Vec::<Expression>::new();
+        while self.peek().token != LexerToken::Closeparenthesis
+        {
+            let argument = self.match_token(LexerToken::Identifier);
+            self.match_token(LexerToken::Colon);
+            let type_ = self.match_token(LexerToken::Keyword);
+            if !type_.is_data_type()
+            {
+                panic!("Invalid type");
+            }
+            let mut inside = String::new();
+            if self.peek().token == LexerToken::OpenSquareBracket
+            {
+                while self.peek().token == LexerToken::OpenSquareBracket
+                {
+                    self.match_token(LexerToken::OpenSquareBracket);
+                    self.match_token(LexerToken::CloseSquareBracket);
+                    inside.push_str("[]");
+                }
+            }
+            arguments.push(Expression::new_arg_variable_expr(argument.text, type_.text + &inside, start));
+            if self.peek().token != LexerToken::Closeparenthesis
+            {
+                self.match_token(LexerToken::Comma);
+            }
+        }
+        self.match_token(LexerToken::Closeparenthesis);
+        // println!("Expected ':'");
+        self.match_token(LexerToken::Colon);
+        // println!("Found!");
+        let type_ = self.match_token(LexerToken::Keyword);
+        if !type_.is_data_type()
+        {
+            panic!("Invalid type");
+        }
+        self.match_token(LexerToken::Arrow);
+        self.match_token(LexerToken::Openbrace);
+        let body = self.parse(namespace_name.clone());
+        self.match_token(LexerToken::Closebrace);
+        let name_str = identifier.text;
+        let name: String;
+        if namespace_name == ""
+        {
+            name = name_str;
+        }
+        else
+        {
+            name = namespace_name.to_owned()+"::"+&name_str;
+        }
+        let function_definition = Expression::new_function_expr(name, type_.text, arguments, body, start);
+        return function_definition;
+    }
+    fn parse_namespace(&mut self, namespace_name: &str) -> Vec<Expression>
+    {
+        let mut statements = Vec::<Expression>::new();
+        let namespace = self.match_token(LexerToken::Identifier);
+        let name = namespace.text;
+        let mut name = namespace_name.to_owned()+"::"+&name;
+        if namespace_name == ""
+        {
+            name = name[2..].to_owned();
+        }
+        self.match_token(LexerToken::Openbrace);
+        let mut body = self.parse(&name);
+        self.match_token(LexerToken::Closebrace);
+        statements.append(&mut body);
+        return statements;
+    }
+    fn parse_for_definition(&mut self, namespace_name: &str) -> Expression
     {
         self.match_token(LexerToken::Openparenthesis);
         let identifier = self.match_token(LexerToken::Identifier);
@@ -278,8 +298,7 @@ impl Parser
         let body = self.parse(namespace_name);
         self.match_token(LexerToken::Closebrace);
         let for_expression = Expression::new_for_expression(start_expression,bool_expression,op_statements,body,start);
-        // TODO: add expression function 
-        statements.push(for_expression);
+        return for_expression;
     }
     fn get_identifier(&mut self, identifier: Token) -> Token {
         if self.peek_off(0).token == LexerToken::Colon && self.peek_off(1).token == LexerToken::Colon && self.peek_off(2).token == LexerToken::Identifier
