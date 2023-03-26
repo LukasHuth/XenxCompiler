@@ -17,4 +17,5 @@ pub enum ExpressionTag
     FloatLiteral,
     OverwriteArrayExpr,
     ArrayExpr,
+    ForExpression,
 }

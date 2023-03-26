@@ -263,8 +263,10 @@ impl Parser
         self.match_token(LexerToken::Openparenthesis);
         let identifier = self.match_token(LexerToken::Identifier);
         let start = identifier.pos;
-        self.parse_identifier(identifier, statements, start);
-        let start_expression = start;
+        let mut start_statements = Vec::<Expression>::new();
+        self.parse_identifier(identifier, &mut start_statements, start);
+        let start_expression = start_statements;
+        // let start_expression = start;
         let bool_expression = self.parse_expression();
         let op_expression = self.parse_expression();
         self.match_token(LexerToken::Closeparenthesis);
@@ -272,9 +274,9 @@ impl Parser
         self.match_token(LexerToken::Openbrace);
         let body = self.parse(namespace_name);
         self.match_token(LexerToken::Closebrace);
-        // let for_expression = Expression::new_for_epxression(start_expression,bool_expression,op_expression,body);
+        let for_expression = Expression::new_for_expression(start_expression,bool_expression,op_expression,body,start);
         // TODO: add expression function 
-        // statements.push(for_expression);
+        statements.push(for_expression);
     }
     fn get_identifier(&mut self, identifier: Token) -> Token {
         if self.peek_off(0).token == LexerToken::Colon && self.peek_off(1).token == LexerToken::Colon && self.peek_off(2).token == LexerToken::Identifier

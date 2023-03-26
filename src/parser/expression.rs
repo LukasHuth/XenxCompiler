@@ -9,6 +9,7 @@ mod overwrite_variable_expression;
 mod arg_variable_expression;
 mod function_declaration_expression;
 mod variable_expression;
+mod for_expression;
 
 pub use binary_expression::BinaryExpression;
 pub use unary_expression::UnaryExpression;
@@ -22,6 +23,7 @@ pub use arg_variable_expression::ArgVariableExpression;
 pub use function_declaration_expression::FunctionDeclarationExpression;
 pub use variable_expression::VariableExpression;
 pub use variable_expression::ArrayExpression;
+pub use for_expression::ForExpression;
 
 use std::fmt::{
     Debug,
@@ -223,6 +225,14 @@ impl Expression
             _ => false,
         }
     }
+    pub fn is_for_expr(&self) -> bool
+    {
+        match self.tag
+        {
+            ExpressionTag::ForExpression => true,
+            _ => false,
+        }
+    }
     pub fn new_integer_literal(lit: i32, start: usize) -> Expression
     {
         Expression
@@ -381,6 +391,18 @@ impl Expression
         Expression
         {
             tag: ExpressionTag::OverwriteArrayExpr,
+            syntax,
+            start,
+        }
+    }
+    pub fn new_for_expression(start_expression:Vec<Expression>,bool_expression:Expression,op_expression:Expression,body:Vec<Expression>, start: usize) -> Expression
+    {
+        let for_expression = ForExpression::new(start_expression,bool_expression,op_expression,body);
+        let syntax = Syntax::new_for_expr(for_expression);
+        let syntax = Box::new(syntax);
+        Expression
+        {
+            tag: ExpressionTag::ForExpression,
             syntax,
             start,
         }

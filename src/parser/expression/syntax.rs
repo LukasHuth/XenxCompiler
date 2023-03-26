@@ -11,6 +11,7 @@ use super::{
     VariableExpression,
     ArrayExpression,
     OverwriteArrayExpression,
+    ForExpression,
 };
 #[derive(PartialEq)]
 pub struct Syntax
@@ -31,6 +32,7 @@ pub struct Syntax
     pub overwrite_variable_expr: Option<OverwriteVariableExpression>,
     pub overwrite_array_expr: Option<OverwriteArrayExpression>,
     pub array_expr: Option<ArrayExpression>,
+    pub for_expression: Option<ForExpression>,
     pub type_: SyntaxType,
 }
 #[derive(Clone, Copy, PartialEq)]
@@ -52,11 +54,31 @@ pub enum SyntaxType
     OverwriteVariableExpression,
     OverwriteArrayExpression,
     ArrayExpression,
+    ForExpression,
 }
 #[allow(unreachable_patterns)]
 impl Clone for Syntax {
     fn clone(&self) -> Self {
-        Self::new(self.type_.clone(), self.integer_literal.clone(), self.boolean_literal.clone(), self.float_literal.clone(), self.string_literal.clone(), self.variable_expr.clone(), self.binary_expr.clone(), self.unary_expr.clone(), self.call_expr.clone(), self.assignment_expr.clone(), self.return_expr.clone(), self.arg_variable_expr.clone(), self.function_declaration_expr.clone(), self.if_expr.clone(), self.overwrite_variable_expr.clone(), self.overwrite_array_expr.clone(), self.array_expr.clone())
+        Self::new(
+            self.type_.clone(),
+            self.integer_literal.clone(),
+            self.boolean_literal.clone(),
+            self.float_literal.clone(),
+            self.string_literal.clone(),
+            self.variable_expr.clone(),
+            self.binary_expr.clone(),
+            self.unary_expr.clone(),
+            self.call_expr.clone(),
+            self.assignment_expr.clone(),
+            self.return_expr.clone(),
+            self.arg_variable_expr.clone(),
+            self.function_declaration_expr.clone(),
+            self.if_expr.clone(),
+            self.overwrite_variable_expr.clone(),
+            self.overwrite_array_expr.clone(),
+            self.array_expr.clone(),
+            self.for_expression.clone()
+        )
     }
 }
 impl Syntax
@@ -65,7 +87,7 @@ impl Syntax
         variable_expr: Option<VariableExpression>, binary_expr: Option<BinaryExpression>, unary_expr: Option<UnaryExpression>, call_expr: Option<CallExpression>, assignment_expr: Option<AssignmentExpression>,
         return_expr: Option<ReturnExpression>, arg_variable_expr: Option<ArgVariableExpression>, function_declaration_expr: Option<FunctionDeclarationExpression>,
         if_expr: Option<IfExpression>, overwrite_variable_expr: Option<OverwriteVariableExpression>, overwrite_array_expr: Option<OverwriteArrayExpression>,
-        array_expr: Option<ArrayExpression>) -> Syntax
+        array_expr: Option<ArrayExpression>,for_expression: Option<ForExpression>) -> Syntax
     {
         Syntax {
             integer_literal,
@@ -84,71 +106,76 @@ impl Syntax
             overwrite_variable_expr,
             overwrite_array_expr,
             array_expr,
+            for_expression,
             type_,
         }
     }
     pub fn new_integer_literal(integer_literal: i32) -> Syntax
     {
-        Syntax::new(SyntaxType::IntegerLiteral, Some(integer_literal), None, None, None, None, None, None, None, None, None, None, None, None, None, None, None)
+        Syntax::new(SyntaxType::IntegerLiteral, Some(integer_literal), None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None)
     }
     pub fn new_boolean_literal(boolean_literal: bool) -> Syntax
     {
-        Syntax::new(SyntaxType::BooleanLiteral, None, Some(boolean_literal), None, None, None, None, None, None, None, None, None, None, None, None, None, None)
+        Syntax::new(SyntaxType::BooleanLiteral, None, Some(boolean_literal), None, None, None, None, None, None, None, None, None, None, None, None, None, None, None)
     }
     pub fn new_float_literal(float_literal: f32) -> Syntax
     {
-        Syntax::new(SyntaxType::FloatLiteral, None, None, Some(float_literal), None, None, None, None, None, None, None, None, None, None, None, None, None)
+        Syntax::new(SyntaxType::FloatLiteral, None, None, Some(float_literal), None, None, None, None, None, None, None, None, None, None, None, None, None, None)
     }
     pub fn new_string_literal(string_literal: String) -> Syntax
     {
-        Syntax::new(SyntaxType::StringLiteral, None, None, None, Some(string_literal), None, None, None, None, None, None, None, None, None, None, None, None)
+        Syntax::new(SyntaxType::StringLiteral, None, None, None, Some(string_literal), None, None, None, None, None, None, None, None, None, None, None, None, None)
     }
     pub fn new_variable_expr(variable_expr: VariableExpression) -> Syntax
     {
-        Syntax::new(SyntaxType::VariableExpression, None, None, None, None, Some(variable_expr), None, None, None, None, None, None, None, None, None, None, None)
+        Syntax::new(SyntaxType::VariableExpression, None, None, None, None, Some(variable_expr), None, None, None, None, None, None, None, None, None, None, None, None)
     }
     pub fn new_binary_expr(binary_expr: BinaryExpression) -> Syntax
     {
-        Syntax::new(SyntaxType::BinaryExpression, None, None, None, None, None, Some(binary_expr), None, None, None, None, None, None, None, None, None, None)
+        Syntax::new(SyntaxType::BinaryExpression, None, None, None, None, None, Some(binary_expr), None, None, None, None, None, None, None, None, None, None, None)
     }
     pub fn new_unary_expr(unary_expr: UnaryExpression) -> Syntax
     {
-        Syntax::new(SyntaxType::UnaryExpression, None, None, None, None, None, None, Some(unary_expr), None, None, None, None, None, None, None, None, None)
+        Syntax::new(SyntaxType::UnaryExpression, None, None, None, None, None, None, Some(unary_expr), None, None, None, None, None, None, None, None, None, None)
     }
     pub fn new_call_expr(call_expr: CallExpression) -> Syntax
     {
-        Syntax::new(SyntaxType::CallExpression, None, None, None, None, None, None, None, Some(call_expr), None, None, None, None, None, None, None, None)
+        Syntax::new(SyntaxType::CallExpression, None, None, None, None, None, None, None, Some(call_expr), None, None, None, None, None, None, None, None, None)
     }
     pub fn new_assignment_expr(assignment_expr: AssignmentExpression) -> Syntax
     {
-        Syntax::new(SyntaxType::AssignmentExpression, None, None, None, None, None, None, None, None, Some(assignment_expr), None, None, None, None, None, None, None)
+        Syntax::new(SyntaxType::AssignmentExpression, None, None, None, None, None, None, None, None, Some(assignment_expr), None, None, None, None, None, None, None, None)
     }
     pub fn new_return_expr(return_expr: ReturnExpression) -> Syntax
     {
-        Syntax::new(SyntaxType::ReturnExpression, None, None, None, None, None, None, None, None, None, Some(return_expr), None, None, None, None, None, None)
+        Syntax::new(SyntaxType::ReturnExpression, None, None, None, None, None, None, None, None, None, Some(return_expr), None, None, None, None, None, None, None)
     }
     pub fn new_arg_variable_expr(arg_variable_expr: ArgVariableExpression) -> Syntax
     {
-        Syntax::new(SyntaxType::ArgVariableExpression, None, None, None, None, None, None, None, None, None, None, Some(arg_variable_expr), None, None, None, None, None)
+        Syntax::new(SyntaxType::ArgVariableExpression, None, None, None, None, None, None, None, None, None, None, Some(arg_variable_expr), None, None, None, None, None, None)
     }
     pub fn new_function_declaration_expr(function_declaration_expr: FunctionDeclarationExpression) -> Syntax
     {
-        Syntax::new(SyntaxType::FunctionDeclarationExpression, None, None, None, None, None, None, None, None, None, None, None, Some(function_declaration_expr), None, None, None, None)
+        Syntax::new(SyntaxType::FunctionDeclarationExpression, None, None, None, None, None, None, None, None, None, None, None, Some(function_declaration_expr), None, None, None, None, None)
     }
     pub fn new_if_expr(if_expr: IfExpression) -> Syntax
     {
-        Syntax::new(SyntaxType::IfExpression, None, None, None, None, None, None, None, None, None, None, None, None, Some(if_expr), None, None, None)
+        Syntax::new(SyntaxType::IfExpression, None, None, None, None, None, None, None, None, None, None, None, None, Some(if_expr), None, None, None, None)
     }
     pub fn new_overwrite_variable_expr(overwrite_variable_expr: OverwriteVariableExpression) -> Syntax
     {
-        Syntax::new(SyntaxType::OverwriteVariableExpression, None, None, None, None, None, None, None, None, None, None, None, None, None, Some(overwrite_variable_expr), None, None)
+        Syntax::new(SyntaxType::OverwriteVariableExpression, None, None, None, None, None, None, None, None, None, None, None, None, None, Some(overwrite_variable_expr), None, None, None)
     }
     pub fn new_overwrite_array_expr(overwrite_variable_expr: OverwriteArrayExpression) -> Syntax {
-        Syntax::new(SyntaxType::OverwriteArrayExpression, None, None, None, None, None, None, None, None, None, None, None, None, None, None, Some(overwrite_variable_expr), None)
+        Syntax::new(SyntaxType::OverwriteArrayExpression, None, None, None, None, None, None, None, None, None, None, None, None, None, None, Some(overwrite_variable_expr), None, None)
     }
     pub fn new_array_expr(arr_expr: ArrayExpression) -> Syntax
     {
-        Syntax::new(SyntaxType::ArrayExpression, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, Some(arr_expr))
+        Syntax::new(SyntaxType::ArrayExpression, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, Some(arr_expr), None)
+    }
+    pub fn new_for_expr(for_expression: ForExpression) -> Syntax
+    {
+        Syntax::new(SyntaxType::ForExpression, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, Some(for_expression))
     }
     pub fn get_type(&self) -> SyntaxType
     {
