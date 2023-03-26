@@ -164,33 +164,6 @@ impl SyntaticAnalyser {
                 }
             }
             else
-            if statement.is_variable_declaration()
-            {
-                let variable_declaration = statement.syntax.get_assignment_expr();
-                let name = variable_declaration.get_name().syntax.get_variable_expr().get_name();
-                if variables.contains_key(&name)
-                {
-                    let err = util::get_line_of_position(self.context.clone(),statement.get_position() + 2);
-                    panic!("variable {} already exists at {}:{}", name, err.0, err.1);
-                }
-                let datatype = util::get_datatype(variable_declaration.get_type(), false);
-                let value = variable_declaration.get_value();
-                let val = util::generate_binary(value.clone(), &variables, &self.functions);
-                println!("datatype: {} ,  {}", val.datatype.to_string(), datatype.is_array);
-                if !datatype.is_same(&val.datatype) && !(value.is_integer_literal() && value.syntax.get_integer_literal() == 0)
-                {
-                    let err = util::get_line_of_position(self.context.clone(),statement.get_position() + 2);
-                    println!("{}{}", datatype.clone().to_string(), "");
-                    panic!("variable declaration {} {} is not valid at {}:{}", name, datatype.to_string(), err.0, err.1);
-                }
-                let mut variable = Statement::new(name.clone(), statement::StatementType::Variable, datatype.datatype, datatype.clone().array_bounds, datatype.clone().is_array);
-                // println!("variable declaration {} {} is valid", name, datatype.to_string());
-                variable.set_value(value.clone(), &variables, &self.functions);
-                body.push(variable.clone());
-                // println!("variable: {}", variable.to_string());
-                variables.insert(name.clone(), datatype.clone()); // TODO: possible to fix with body variable
-            }
-            else
             if statement.is_return()
             {
                 // println!("return statement");
@@ -211,31 +184,9 @@ impl SyntaticAnalyser {
                 returned = true;
             }
             else
-            if statement.is_variable_overwrite()
+            if statement.is_variable_overwrite() || statement.is_variable_declaration()
             {
-                let variable_overwrite = statement.syntax.get_overwrite_variable_expr();
-                let name = variable_overwrite.get_name();
-                if !variables.contains_key(&name) // TODO: possible to fix with body variable
-                {
-                    let err = util::get_line_of_position(self.context.clone(),statement.get_position() + 2);
-                    panic!("variable overwrite {} is not valid at {}:{}, because variable is not declared!", name, err.0, err.1);
-                }
-                // println!("variable overwrite {}", name);
-                let datatype = util::get_variable(name.clone(), &variables);
-                let value = variable_overwrite.get_value();
-                // println!("value:|: {}", value.to_string());
-                let value = util::generate_binary(value.clone(), &variables, &self.functions);
-                if !datatype.is_same(&value.datatype)
-                {
-                    let err = util::get_line_of_position(self.context.clone(),statement.get_position() + 2);
-                    panic!("variable overwrite {} {} is not valid at {}:{}", name, datatype.to_string(), err.0, err.1);
-                }
-                let mut variable = Statement::new(name.clone(), statement::StatementType::Variable, datatype.datatype, datatype.clone().array_bounds, datatype.clone().is_array);
-                // println!("variable overwrite {} {} is valid", name, datatype.to_string());
-                
-                variable.statements.push(value.clone());
-                body.push(variable.clone());
-                println!("variable: {}", variable.to_string());
+                self.analyse_variable(&statement, &mut variables, &mut body);
             }
             else
             if statement.is_if()
@@ -289,12 +240,85 @@ impl SyntaticAnalyser {
                 let init_expr = for_expr.get_init_expression();
                 let test_expr = for_expr.get_test_expression();
                 let update_expr = for_expr.get_update_expression();
+                let init_expr = init_expr.get(0);
+                if init_expr.is_none()
+                {
+                    panic!("Init Expression is None");
+                }
+                let init_expr = init_expr.unwrap();
+                let init_expr = self.analyse_variable(init_expr, &mut variables, &mut body);
                 // TODO: use the expressions
             }
         }
         return body;
     }
+    fn analyse_variable(&mut self, statement: &Expression, variables: &mut HashMap<String,Datatype>, body: &mut Vec<Statement>)
+    {
+        if statement.is_variable_overwrite()
+        {
+            self.analyse_overwrite(statement,variables, body);
+        }
+        else if statement.is_variable_declaration()
+        {
+            self.analyse_declaration(statement, variables, body);
+        }
+        else
+        {
+            panic!("Expression is not regarding variables");
+        }
+    }
+    fn analyse_declaration(&mut self, statement: &Expression, variables: &mut HashMap<String,Datatype>, body: &mut Vec<Statement>)
+    {
+        let variable_declaration = statement.syntax.get_assignment_expr();
+        let name = variable_declaration.get_name().syntax.get_variable_expr().get_name();
+        if variables.contains_key(&name)
+        {
+            let err = util::get_line_of_position(self.context.clone(),statement.get_position() + 2);
+            panic!("variable {} already exists at {}:{}", name, err.0, err.1);
+        }
+        let datatype = util::get_datatype(variable_declaration.get_type(), false);
+        let value = variable_declaration.get_value();
+        let val = util::generate_binary(value.clone(), &variables, &self.functions);
+        println!("datatype: {} ,  {}", val.datatype.to_string(), datatype.is_array);
+        if !datatype.is_same(&val.datatype) && !(value.is_integer_literal() && value.syntax.get_integer_literal() == 0)
+        {
+            let err = util::get_line_of_position(self.context.clone(),statement.get_position() + 2);
+            println!("{}{}", datatype.clone().to_string(), "");
+            panic!("variable declaration {} {} is not valid at {}:{}", name, datatype.to_string(), err.0, err.1);
+        }
+        let mut variable = Statement::new(name.clone(), statement::StatementType::Variable, datatype.datatype, datatype.clone().array_bounds, datatype.clone().is_array);
+        // println!("variable declaration {} {} is valid", name, datatype.to_string());
+        variable.set_value(value.clone(), &variables, &self.functions);
+        body.push(variable.clone());
+        // println!("variable: {}", variable.to_string());
+        variables.insert(name.clone(), datatype.clone()); // TODO: possible to fix with body variable
+    }
+    fn analyse_overwrite(&mut self, statement: &Expression, variables: &mut HashMap<String,Datatype>, body: &mut Vec<Statement>)
+    {
+        let variable_overwrite = statement.syntax.get_overwrite_variable_expr();
+        let name = variable_overwrite.get_name();
+        if !variables.contains_key(&name) // TODO: possible to fix with body variable
+        {
+            let err = util::get_line_of_position(self.context.clone(),statement.get_position() + 2);
+            panic!("variable overwrite {} is not valid at {}:{}, because variable is not declared!", name, err.0, err.1);
+        }
+        // println!("variable overwrite {}", name);
+        let datatype = util::get_variable(name.clone(), &variables);
+        let value = variable_overwrite.get_value();
+        // println!("value:|: {}", value.to_string());
+        let value = util::generate_binary(value.clone(), &variables, &self.functions);
+        if !datatype.is_same(&value.datatype)
+        {
+            let err = util::get_line_of_position(self.context.clone(),statement.get_position() + 2);
+            panic!("variable overwrite {} {} is not valid at {}:{}", name, datatype.to_string(), err.0, err.1);
+        }
+        let mut variable = Statement::new(name.clone(), statement::StatementType::Variable, datatype.datatype, datatype.clone().array_bounds, datatype.clone().is_array);
+        // println!("variable overwrite {} {} is valid", name, datatype.to_string());
 
+        variable.statements.push(value.clone());
+        body.push(variable.clone());
+        println!("variable: {}", variable.to_string());
+    }
     fn generate_call(&mut self, name: String, call: parser::expression::CallExpression, statement: &Expression, variables: &HashMap<String, Datatype>, body: &mut Vec<Statement>) {
         let mut arguments = Vec::<Statement>::new();
         let function = &self.functions.get(&name).unwrap().1;
