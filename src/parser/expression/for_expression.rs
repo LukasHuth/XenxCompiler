@@ -5,13 +5,13 @@ pub struct ForExpression
 {
     initialization_expression: Vec<Expression>,
     test_expression: Expression,
-    update_expression:Expression,
+    update_expression:Vec<Expression>,
     body:Vec<Expression>,
 }
 
 impl ForExpression
 {
-    pub fn new(initialization_expression: Vec<Expression>, test_expression: Expression, update_expression: Expression, body: Vec<Expression>) -> ForExpression
+    pub fn new(initialization_expression: Vec<Expression>, test_expression: Expression, update_expression: Vec<Expression>, body: Vec<Expression>) -> ForExpression
     {
         ForExpression {
             initialization_expression,
@@ -28,7 +28,7 @@ impl ForExpression
     {
         self.test_expression.clone()
     }
-    pub fn get_update_expression(&self) -> Expression
+    pub fn get_update_expression(&self) -> Vec<Expression>
     {
         self.update_expression.clone()
     }

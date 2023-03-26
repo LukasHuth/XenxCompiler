@@ -67,6 +67,12 @@ else
     <body>
 }
 ```
+### for loop
+```
+for (<declaration, initialization>, <bool binary expression>, <operation on the counter variable>) => {
+    <body>
+}
+```
 ### using standard functions
 ```
 std::print(<expression>);

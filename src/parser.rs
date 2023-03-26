@@ -38,7 +38,7 @@ impl Parser
             *datatype = format!("{}[{}]", datatype, numer);
         }
     }
-    pub fn parse_identifier(&mut self, identifier: Token, statements: &mut Vec<Expression>, start: usize)
+    pub fn parse_identifier(&mut self, identifier: Token, statements: &mut Vec<Expression>, start: usize, closing_token: LexerToken)
     {
         if self.peek().token == LexerToken::Colon
         {
@@ -64,7 +64,7 @@ impl Parser
             {
                 self.match_token(LexerToken::Equals);
                 let expr = self.parse_expression();
-                self.match_token(LexerToken::Semicolon);
+                self.match_token(closing_token);
                 let text = String::from(&identifier.text).to_owned();
                 let variable_expr = Expression::new_variable_expr(text, start);
                 // let expression = Expression::new_assignment_expr(datatype, expr, variable_expr, start);
@@ -88,9 +88,9 @@ impl Parser
                 }
             }
             self.match_token(LexerToken::Closeparenthesis);
-            if self.peek().token == LexerToken::Semicolon // Function call
+            if self.peek().token == closing_token // Function call
             {
-                self.match_token(LexerToken::Semicolon);
+                self.match_token(closing_token);
                 let function_call = Expression::new_call_expr(identifier.text, arguments, start);
                 statements.push(function_call);
             }
@@ -109,7 +109,7 @@ impl Parser
             self.match_token(LexerToken::Equals);
             let value = self.parse_expression();
             // println!("test 1");
-            self.match_token(LexerToken::Semicolon);
+            self.match_token(closing_token);
             let text = String::from(&identifier.text).to_owned();
             let expression: Expression;
             if square_brackets.len() > 0
@@ -131,7 +131,7 @@ impl Parser
             let operator = self.next_token();
             self.match_token(LexerToken::Equals);
             let expr = self.parse_expression();
-            self.match_token(LexerToken::Semicolon);
+            self.match_token(closing_token);
             let text = String::from(&identifier.text).to_owned();
             let left = Expression::new_variable_expr(text.clone(), start);
             let value = Expression::new_binary_expr(left, operator, expr, start);
@@ -157,7 +157,7 @@ impl Parser
             {
                 let identifier = self.match_token(LexerToken::Identifier);
                 let identifier = self.get_identifier(identifier);
-                self.parse_identifier(identifier, &mut statements, start);
+                self.parse_identifier(identifier, &mut statements, start, LexerToken::Semicolon);
             }
             else
             if self.peek().token == LexerToken::Keyword
@@ -264,17 +264,20 @@ impl Parser
         let identifier = self.match_token(LexerToken::Identifier);
         let start = identifier.pos;
         let mut start_statements = Vec::<Expression>::new();
-        self.parse_identifier(identifier, &mut start_statements, start);
+        self.parse_identifier(identifier, &mut start_statements, start, LexerToken::Semicolon);
         let start_expression = start_statements;
         // let start_expression = start;
         let bool_expression = self.parse_expression();
-        let op_expression = self.parse_expression();
-        self.match_token(LexerToken::Closeparenthesis);
+        self.match_token(LexerToken::Semicolon);
+        let op_identifier = self.match_token(LexerToken::Identifier);
+        let op_start = op_identifier.pos;
+        let mut op_statements = Vec::<Expression>::new();
+        self.parse_identifier(op_identifier, &mut op_statements, op_start, LexerToken::Closeparenthesis);
         self.match_token(LexerToken::Arrow);
         self.match_token(LexerToken::Openbrace);
         let body = self.parse(namespace_name);
         self.match_token(LexerToken::Closebrace);
-        let for_expression = Expression::new_for_expression(start_expression,bool_expression,op_expression,body,start);
+        let for_expression = Expression::new_for_expression(start_expression,bool_expression,op_statements,body,start);
         // TODO: add expression function 
         statements.push(for_expression);
     }
