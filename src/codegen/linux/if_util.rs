@@ -14,7 +14,8 @@ use super::{
     generate_body,
     super::StatementDatatype,
 };
-pub fn genif(statement: Statement, vars: &Vec<Variable>, used_positions: &Vec<usize>, highest_position: &usize, if_points: &mut usize, bytecode: &mut ByteArray)
+pub fn genif(statement: Statement, vars: &Vec<Variable>, used_positions: &Vec<usize>, highest_position: &usize, if_points: &mut usize,
+             for_points: &mut usize, bytecode: &mut ByteArray)
 {
     *if_points += 1;
     if statement.statements.len() == 0
@@ -38,8 +39,8 @@ pub fn genif(statement: Statement, vars: &Vec<Variable>, used_positions: &Vec<us
     let mut else_branch_bytecode = ByteArray::new();
     utils::parsebinary(condition, vars, &mut condition_bytecode);
     let points = if_points.clone();
-    generate_body(if_branch.statements, vars.clone(), used_positions.clone(), highest_position.clone(), if_points, &mut if_branch_bytecode);
-    generate_body(else_branch.statements, vars.clone(), used_positions.clone(), highest_position.clone(), if_points, &mut else_branch_bytecode);
+    generate_body(if_branch.statements, vars.clone(), used_positions.clone(), highest_position.clone(), if_points, for_points, &mut if_branch_bytecode);
+    generate_body(else_branch.statements, vars.clone(), used_positions.clone(), highest_position.clone(), if_points, for_points, &mut else_branch_bytecode);
     bytecode.add_array(&condition_bytecode);
     bytecode.add_cmp_let("0".to_string(), Register::RAX, SizeType::BYTE); // 1 = true
     bytecode.add_jmp_if_eq(&format!(".Lelse{}", points));

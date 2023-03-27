@@ -90,7 +90,8 @@ pub fn generate_function(statement: super::Statement, args: Arguments, if_positi
     }
     println!("used positions: {:?}", used_positions);
     // */
-    generate_body(statement.statements, vars, used_positions, highest_position, if_positions, bytecode);
+    let mut for_positions:usize = 0;
+    generate_body(statement.statements, vars, used_positions, highest_position, if_positions, &mut for_positions, bytecode);
     bytecode.add_move_reg_to_reg(Register::RBP, Register::RSP, SizeType::QWORD);
     bytecode.add_pop(Register::RSI);
     bytecode.add_pop(Register::RDI);
@@ -98,7 +99,8 @@ pub fn generate_function(statement: super::Statement, args: Arguments, if_positi
     bytecode.add_pop(Register::RBP);
     bytecode.add_ret();
 }
-pub fn generate_body(statements: Vec<Statement>, vars: Vec<Variable>, used_positions: Vec<usize>, highest_position: usize, if_points: &mut usize, bytecode: &mut ByteArray)
+pub fn generate_body(statements: Vec<Statement>, vars: Vec<Variable>, used_positions: Vec<usize>, highest_position: usize, if_points: &mut usize,
+                     for_count: &mut usize, bytecode: &mut ByteArray)
 {
     let old_vars = vars.clone();
     let mut vars = vars.clone();
@@ -123,7 +125,7 @@ pub fn generate_body(statements: Vec<Statement>, vars: Vec<Variable>, used_posit
         }
         if expr.type_ == StatementType::If
         {
-            if_util::genif(expr.clone(), &vars, &used_positions, &highest_position, if_points, bytecode);
+            if_util::genif(expr.clone(), &vars, &used_positions, &highest_position, if_points, for_count, bytecode);
         }
         if expr.type_ == StatementType::ArrayOverwrite
         {
@@ -131,7 +133,7 @@ pub fn generate_body(statements: Vec<Statement>, vars: Vec<Variable>, used_posit
         }
         if expr.type_ == StatementType::For
         {
-            for_util::genfor(expr.clone(), &vars, &used_positions, &highest_position, bytecode);
+            for_util::genfor(expr.clone(), &mut vars, &mut used_positions, &mut highest_position, bytecode, for_count, if_points);
         }
     }
     bytecode.add_push();

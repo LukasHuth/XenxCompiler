@@ -250,6 +250,10 @@ impl ByteArray{
         self.add_byte(ByteInstruction::Sete, Vec::new(), SizeType::QWORD);
         self.set_register_in_last_instruction(reg, 1);
     }
+    pub fn add_set_if_less_that(&mut self, reg: Register){
+        self.add_byte(ByteInstruction::Slt, Vec::new(), SizeType::QWORD);
+        self.set_register_in_last_instruction(reg, 1);
+    }
     pub fn add_neg(&mut self, reg: Register){
         self.add_byte(ByteInstruction::Neg, Vec::new(), SizeType::QWORD);
         self.set_register_in_last_instruction(reg, 1);

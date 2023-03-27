@@ -233,9 +233,15 @@ pub fn parsebinary(statement: Statement, vars: &Vec<Variable>, bytecode: &mut By
         {
             bytecode.add_or(SizeType::QWORD);
         }
+        else 
+        if statement.name == "<" {
+           bytecode.add_move_reg_to_reg(Register::RAX, Register::RCX, SizeType::QWORD); 
+           bytecode.add_move_lit_to_reg("1", Register::RAX, SizeType::QWORD);
+           bytecode.add_set_if_less_that(Register::RAX);
+        }
         else
         {
-            panic!("Invalid binary operator");
+            panic!("Invalid binary operator {}", statement.name);
         }
         return;
     }
