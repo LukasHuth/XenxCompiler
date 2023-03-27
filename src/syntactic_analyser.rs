@@ -246,7 +246,33 @@ impl SyntaticAnalyser {
                     panic!("Init Expression is None");
                 }
                 let init_expr = init_expr.unwrap();
-                let init_expr = self.analyse_variable(init_expr, &mut variables, &mut body);
+                let mut init_expr_vec = Vec::<Statement>::new();
+                self.analyse_variable(init_expr, &mut variables, &mut init_expr_vec);
+                let test_datatype = Datatype::new(StatementDatatype::Bool, vec![], false);
+                let test_expr = util::generate_binary(test_expr, &variables, &self.functions);
+                if !test_expr.datatype.is_same(&test_datatype)
+                {
+                    panic!("The test condition is not of type bool");
+                }
+                let update_expr = update_expr.get(0);
+                if update_expr.is_none()
+                {
+                    panic!("Update Expression is None");
+                }
+                let update_expr = update_expr.unwrap();
+                let mut update_expr_vec = Vec::<Statement>::new();
+                self.analyse_variable(update_expr, &mut variables, &mut update_expr_vec);
+                let datatype = Datatype::new(StatementDatatype::Void, vec![], false);
+                let mut statement = Statement::new("for".to_string(), statement::StatementType::For, datatype.clone().datatype, datatype.clone().array_bounds, datatype.clone().is_array);
+                let mut head_statement = Statement::new("head".to_string(), statement::StatementType::Head, datatype.clone().datatype, datatype.clone().array_bounds, datatype.clone().is_array);
+                head_statement.statements.append(&mut init_expr_vec);
+                head_statement.statements.push(test_expr);
+                head_statement.statements.append(&mut update_expr_vec);
+                statement.statements.push(head_statement);
+                let for_body = for_expr.get_body();
+                let mut for_body = self.get_body(for_body, variables.clone(), functiondatatype.clone(), args.clone(), false);
+                statement.statements.append(&mut for_body);
+                body.push(statement);
                 // TODO: use the expressions
             }
         }

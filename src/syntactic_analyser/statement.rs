@@ -136,6 +136,8 @@ pub enum StatementType
     ArrayIndices,
     ArrayOverwrite,
     Array,
+    For,
+    Head,
 }
 impl StatementType
 {
@@ -160,6 +162,8 @@ impl StatementType
             StatementType::ArrayIndices => string.push_str("ArrayIndices"),
             StatementType::ArrayOverwrite => string.push_str("ArrayOverwrite"),
             StatementType::Array => string.push_str("Array"),
+            StatementType::For => string.push_str("For"),
+            StatementType::Head => string.push_str("Head"),
         }
         return string;
     }

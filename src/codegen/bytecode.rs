@@ -8,6 +8,7 @@ pub use instruction::{
     SizeType::None,
     Register,
 };
+mod optimizer;
 #[derive(Clone, Debug)]
 pub struct ByteArray{
     data: Vec<Instruction>,
@@ -22,6 +23,9 @@ impl ByteArray{
         for i in 0..array.data.len(){
             self.data.push(array.data[i].clone());
         }
+    }
+    pub fn optimize(&mut self){
+        optimizer::optimize(self);
     }
     pub fn is_same(&self, other: &ByteArray) -> bool{
         if self.data.len() != other.data.len(){
@@ -265,6 +269,12 @@ impl ByteArray{
     }
     pub fn get_data(&self) -> Vec<Instruction>{
         self.data.clone()
+    }
+    pub fn get_instruction_at(&self, index: usize) -> Instruction{
+        self.data[index].clone()
+    }
+    pub fn remove_instruction_at(&mut self, index: usize){
+        self.data.remove(index);
     }
     pub fn generate(&self, os: super::OS, comments: bool) -> String
     {

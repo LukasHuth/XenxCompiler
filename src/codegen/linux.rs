@@ -7,6 +7,7 @@ pub mod utils;
 pub mod call_util;
 pub mod basic_functions;
 pub mod if_util;
+pub mod for_util;
 mod constant_util;
 use super::{
     Arguments,
@@ -127,6 +128,10 @@ pub fn generate_body(statements: Vec<Statement>, vars: Vec<Variable>, used_posit
         if expr.type_ == StatementType::ArrayOverwrite
         {
             assignment_util::genoverwrite_array(expr.clone(), &mut vars, bytecode);
+        }
+        if expr.type_ == StatementType::For
+        {
+            for_util::genfor(expr.clone(), &vars, &used_positions, &highest_position, bytecode);
         }
     }
     bytecode.add_push();

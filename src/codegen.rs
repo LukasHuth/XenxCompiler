@@ -43,6 +43,7 @@ impl Codegen
                 linux::basic_functions::generate_print(&name, &mut bytecode);
             }
         }
+        bytecode.optimize();
         let result = bytecode.generate(self.os, self.comments);
         self.data = result;
     }
