@@ -18,4 +18,5 @@ pub enum ExpressionTag
     OverwriteArrayExpr,
     ArrayExpr,
     ForExpression,
+    WhileExpression,
 }

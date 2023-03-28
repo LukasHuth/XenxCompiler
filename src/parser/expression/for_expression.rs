@@ -36,4 +36,22 @@ impl ForExpression
     {
         self.body.clone()
     }
+    pub fn to_string(&self) -> String
+    {
+        let mut str = String::new();
+        for expr in self.initialization_expression.clone()
+        {
+            str.push_str(&expr.to_string());
+        }
+        str.push_str(&self.test_expression.to_string());
+        for expr in self.update_expression.clone()
+        {
+            str.push_str(&expr.to_string());
+        }
+        for expr in self.body.clone()
+        {
+            str.push_str(&expr.to_string());
+        }
+        return str;
+    }
 }

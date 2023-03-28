@@ -11,7 +11,7 @@ use super::{
     VariableExpression,
     ArrayExpression,
     OverwriteArrayExpression,
-    ForExpression,
+    ForExpression, WhileExpression,
 };
 #[derive(PartialEq)]
 pub struct Syntax
@@ -33,6 +33,7 @@ pub struct Syntax
     pub overwrite_array_expr: Option<OverwriteArrayExpression>,
     pub array_expr: Option<ArrayExpression>,
     pub for_expression: Option<ForExpression>,
+    pub while_expression: Option<WhileExpression>,
     pub type_: SyntaxType,
 }
 #[derive(Clone, Copy, PartialEq)]
@@ -55,11 +56,12 @@ pub enum SyntaxType
     OverwriteArrayExpression,
     ArrayExpression,
     ForExpression,
+    WhileExpression,
 }
 #[allow(unreachable_patterns)]
 impl Clone for Syntax {
     fn clone(&self) -> Self {
-        Self::new(
+        let mut temp = Self::new(
             self.type_.clone(),
             self.integer_literal.clone(),
             self.boolean_literal.clone(),
@@ -78,7 +80,9 @@ impl Clone for Syntax {
             self.overwrite_array_expr.clone(),
             self.array_expr.clone(),
             self.for_expression.clone()
-        )
+        );
+        temp.while_expression = self.while_expression.clone();
+        return temp;
     }
 }
 impl Syntax
@@ -89,6 +93,7 @@ impl Syntax
         if_expr: Option<IfExpression>, overwrite_variable_expr: Option<OverwriteVariableExpression>, overwrite_array_expr: Option<OverwriteArrayExpression>,
         array_expr: Option<ArrayExpression>,for_expression: Option<ForExpression>) -> Syntax
     {
+        let while_expression: Option<WhileExpression> = None;
         Syntax {
             integer_literal,
             boolean_literal,
@@ -107,8 +112,19 @@ impl Syntax
             overwrite_array_expr,
             array_expr,
             for_expression,
+            while_expression,
             type_,
         }
+    }
+    pub fn new_two_so_the_argument_list_is_not_that_long(type_: SyntaxType,while_expr: Option<WhileExpression>) -> Syntax
+    {
+        let mut temp = Self::new(type_.clone(), None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None);
+        temp.while_expression = while_expr;
+        return temp;
+    }
+    pub fn new_while_expr(while_expr: WhileExpression) -> Syntax
+    {
+        Syntax::new_two_so_the_argument_list_is_not_that_long(SyntaxType::WhileExpression, Some(while_expr))
     }
     pub fn new_integer_literal(integer_literal: i32) -> Syntax
     {

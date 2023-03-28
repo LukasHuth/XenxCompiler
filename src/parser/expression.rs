@@ -10,6 +10,7 @@ mod arg_variable_expression;
 mod function_declaration_expression;
 mod variable_expression;
 mod for_expression;
+mod while_expression;
 
 pub use binary_expression::BinaryExpression;
 pub use unary_expression::UnaryExpression;
@@ -24,6 +25,7 @@ pub use function_declaration_expression::FunctionDeclarationExpression;
 pub use variable_expression::VariableExpression;
 pub use variable_expression::ArrayExpression;
 pub use for_expression::ForExpression;
+pub use while_expression::WhileExpression;
 
 use std::fmt::{
     Debug,
@@ -87,6 +89,8 @@ impl Expression
             ExpressionTag::OverwriteVariableExpr => syntax.overwrite_variable_expr.as_ref().unwrap().to_string(),
             ExpressionTag::OverwriteArrayExpr => syntax.overwrite_array_expr.as_ref().unwrap().to_string(),
             ExpressionTag::ArrayExpr => syntax.array_expr.as_ref().unwrap().to_string(),
+            ExpressionTag::ForExpression => syntax.for_expression.as_ref().unwrap().to_string(),
+            ExpressionTag::WhileExpression => syntax.while_expression.as_ref().unwrap().to_string(),
             _ => String::new(),
         }
     }
@@ -403,6 +407,18 @@ impl Expression
         Expression
         {
             tag: ExpressionTag::ForExpression,
+            syntax,
+            start,
+        }
+    }
+    pub fn new_while_expr(bool_expression: Expression, body: Vec<Expression>, start: usize) -> Expression
+    {
+        let while_expression = WhileExpression::new(bool_expression, body);
+        let syntax = Syntax::new_while_expr(while_expression);
+        let syntax = Box::new(syntax);
+        Expression
+        {
+            tag: ExpressionTag::WhileExpression,
             syntax,
             start,
         }

@@ -189,6 +189,11 @@ impl Parser
                     let for_expr = self.parse_for_definition(namespace_name);
                     statements.push(for_expr);
                 }
+                else if key.text == "while"
+                {
+                    let while_expr = self.parse_while_definition(namespace_name);
+                    statements.push(while_expr);
+                }
             }
             else
             {
@@ -196,6 +201,19 @@ impl Parser
             }
         }
         return statements;
+    }
+    fn parse_while_definition(&mut self, namespace_name: &str) -> Expression
+    {
+        let start = self.peek().pos;
+        self.match_token(LexerToken::Openparenthesis);
+        let expression = self.parse_expression();
+        self.match_token(LexerToken::Closeparenthesis);
+        self.match_token(LexerToken::Arrow);
+        self.match_token(LexerToken::Openbrace);
+        let body = self.parse(namespace_name);
+        self.match_token(LexerToken::Closebrace);
+        let expr = Expression::new_while_expr(expression, body, start);
+        return expr;
     }
     fn parse_return_expression(&mut self) -> Expression
     {
