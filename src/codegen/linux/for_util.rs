@@ -41,11 +41,11 @@ pub fn genfor(expr: Statement, vars: &mut Vec<Variable>, used_positions: &mut Ve
     {
         super::assignment_util::genassignment(start_expr_element, vars, used_positions, highest_position, bytecode);
     }
+    *for_count+=1;
     bytecode.add_entry(&format!("for_begin{}", for_count));
     super::utils::parsebinary(binary_expr, vars, bytecode);
-    bytecode.add_cmp_let("0".to_string(), Register::RAX, SizeType::QWORD);
+    bytecode.add_cmp_reg(Register::RCX,Register::RBX, SizeType::BYTE);
     bytecode.add_jmp_if_eq(&format!("for_end{}", for_count));
-    *for_count+=1;
     let immut_vars = vars.clone();
     let immut_used_positions = used_positions.clone();
     let immut_highest_position = highest_position.clone();
