@@ -442,4 +442,12 @@ impl Expression
             _ => false,
         }
     }
+    pub fn is_while_expr(&self) -> bool
+    {
+        match self.tag
+        {
+            ExpressionTag::WhileExpression => true,
+            _ => false,
+        }
+    }
 }
