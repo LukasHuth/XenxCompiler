@@ -93,6 +93,7 @@ fn insert_keyword(map: &mut HashMap<String, LexerToken>) {
     map.insert("return".to_string(), LexerToken::Keyword);
     map.insert("import".to_string(), LexerToken::Keyword);
     map.insert("func".to_string(), LexerToken::Keyword);
+    map.insert("for".to_string(), LexerToken::Keyword);
 }
 
 fn insert_identifier(map: &mut HashMap<String, LexerToken>) {
