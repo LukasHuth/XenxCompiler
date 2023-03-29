@@ -73,6 +73,13 @@ for (<declaration, initialization>, <bool binary expression>, <operation on the 
     <body>
 }
 ```
+### while loop
+```
+while (<bool binary expression>)
+{
+    <body>
+}
+```
 ### using standard functions
 ```
 std::print(<expression>);
