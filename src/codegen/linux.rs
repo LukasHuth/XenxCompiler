@@ -140,6 +140,11 @@ pub fn generate_body(statements: Vec<Statement>, vars: Vec<Variable>, used_posit
         {
             while_util::genwhile(expr.clone(), &mut vars, &mut used_positions, &mut highest_position, bytecode, for_count, if_points);
         }
+        if expr.type_ == StatementType::Continue
+        {
+            println!("!!!!!!!continue");
+            generate_continue(expr.clone(), for_count, bytecode);
+        }
     }
     bytecode.add_push();
     for i in old_vars.len()..vars.len()
@@ -162,4 +167,10 @@ pub fn generate_body(statements: Vec<Statement>, vars: Vec<Variable>, used_posit
         bytecode.add_call("free");
     }
     bytecode.add_pop(Register::RAX);
+}
+fn generate_continue(expression: Statement, for_count: &mut usize, bytecode: &mut ByteArray)
+{
+    let name = expression.name.clone();
+    let count = *for_count - 1;
+    bytecode.add_jmp(&format!("{}_start{}",name, count));
 }

@@ -434,6 +434,17 @@ impl Expression
             start,
         }
     }
+    pub fn new_continue_expr(start: usize) -> Expression
+    {
+        let syntax = Syntax::new_empty(syntax::SyntaxType::Empty);
+        let syntax = Box::new(syntax);
+        Expression
+        {
+            tag: ExpressionTag::ContinueExpression,
+            syntax,
+            start,
+        }
+    }
     pub fn is_array_overwrite(&self) -> bool
     {
         match self.tag
@@ -447,6 +458,14 @@ impl Expression
         match self.tag
         {
             ExpressionTag::WhileExpression => true,
+            _ => false,
+        }
+    }
+    pub fn is_continue_expression(&self) -> bool
+    {
+        match self.tag
+        {
+            ExpressionTag::ContinueExpression => true,
             _ => false,
         }
     }

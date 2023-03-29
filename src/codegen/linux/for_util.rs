@@ -42,7 +42,7 @@ pub fn genfor(expr: Statement, vars: &mut Vec<Variable>, used_positions: &mut Ve
         super::assignment_util::genassignment(start_expr_element, vars, used_positions, highest_position, bytecode);
     }
     *for_count+=1;
-    bytecode.add_entry(&format!("for_begin{}", for_count));
+    bytecode.add_entry(&format!("for_start{}", for_count));
     super::utils::parsebinary(binary_expr, vars, bytecode);
     bytecode.add_cmp_reg(Register::RCX,Register::RBX, SizeType::BYTE);
     bytecode.add_jmp_if_eq(&format!("for_end{}", for_count));
@@ -51,7 +51,7 @@ pub fn genfor(expr: Statement, vars: &mut Vec<Variable>, used_positions: &mut Ve
     let immut_highest_position = highest_position.clone();
     super::generate_body(body, immut_vars.clone(), immut_used_positions.clone(), immut_highest_position.clone(), if_points,for_count, bytecode);
     super::generate_body(head_expr, immut_vars.clone(), immut_used_positions.clone(), immut_highest_position.clone(), if_points, for_count, bytecode);
-    bytecode.add_jmp(&format!("for_begin{}", for_count));
+    bytecode.add_jmp(&format!("for_start{}", for_count));
     bytecode.add_entry(&format!("for_end{}", for_count))
 }
 fn is_variable(body: &mut Vec<Statement>) -> bool

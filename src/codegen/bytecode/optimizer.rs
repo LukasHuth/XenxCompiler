@@ -128,9 +128,13 @@ fn optimize_push_pop_simple(bytecode: &mut ByteArray)
         let previous = bytecode.data[i - 1].clone();
         if current.get_instruction() == ByteInstruction::Pop && previous.get_instruction() == ByteInstruction::Push
         {
-            bytecode.data.remove(i);
-            bytecode.data.remove(i-1);
-            bytecode.add_move_reg_to_reg(current.get_register(1).unwrap(), previous.get_register(1).unwrap(), super::SizeType::QWORD);
+            let before = bytecode.data.clone()[..(i-1)].to_vec();
+            let mut after = bytecode.data.clone()[(i+1)..].to_vec();
+            bytecode.data = before;
+            let start = previous.get_register(1).unwrap();
+            let end = current.get_register(1).unwrap();
+            bytecode.add_move_reg_to_reg(start, end, super::SizeType::QWORD);
+            bytecode.data.append(&mut after);
             i -= 1;
         }
         i -= 1;

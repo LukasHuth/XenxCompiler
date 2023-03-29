@@ -139,6 +139,7 @@ pub enum StatementType
     For,
     Head,
     While,
+    Continue,
 }
 impl StatementType
 {
@@ -166,6 +167,7 @@ impl StatementType
             StatementType::For => string.push_str("For"),
             StatementType::Head => string.push_str("Head"),
             StatementType::While => string.push_str("While"),
+            StatementType::Continue => string.push_str("Continue"),
         }
         return string;
     }
@@ -269,6 +271,15 @@ impl Statement
             type_: StatementType::ArrayIndices,
             datatype: Datatype::new(StatementDatatype::Void, Vec::<i32>::new(), false),
             statements: array_indices,
+        }
+    }
+    pub fn new_continue(name: &str) -> Statement
+    {
+        Statement {
+            name: String::from(name),
+            type_: StatementType::Continue,
+            datatype: Datatype::new(StatementDatatype::Void, Vec::<i32>::new(), false),
+            statements: vec![],
         }
     }
 }

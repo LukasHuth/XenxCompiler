@@ -19,4 +19,5 @@ pub enum ExpressionTag
     ArrayExpr,
     ForExpression,
     WhileExpression,
+    ContinueExpression,
 }

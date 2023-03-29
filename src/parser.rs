@@ -18,7 +18,7 @@ impl Parser
     {
         Parser
         {
-            tokens: tokens,
+            tokens,
             current: 0,
         }
     }
@@ -194,6 +194,11 @@ impl Parser
                     let while_expr = self.parse_while_definition(namespace_name);
                     statements.push(while_expr);
                 }
+                else if key.text == "continue"
+                {
+                    let while_expr = self.parse_continue(key.pos.clone());
+                    statements.push(while_expr);
+                }
             }
             else
             {
@@ -201,6 +206,12 @@ impl Parser
             }
         }
         return statements;
+    }
+    fn parse_continue(&mut self, start: usize) -> Expression
+    {
+        self.match_token(LexerToken::Semicolon);
+        let expr = Expression::new_continue_expr(start);
+        return expr;
     }
     fn parse_while_definition(&mut self, namespace_name: &str) -> Expression
     {

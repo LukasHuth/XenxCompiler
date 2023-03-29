@@ -309,7 +309,6 @@ fn generate_instruction_linux(instruction: Instruction, comments: bool) -> Strin
                 data.push_str(format!("{}: {} {}\n", name, size_name, value).as_str());
             }
         },
-        _ => print!("")//panic!("Instruction not supported"),
     }
     return data;
 }

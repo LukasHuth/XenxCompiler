@@ -57,6 +57,7 @@ pub enum SyntaxType
     ArrayExpression,
     ForExpression,
     WhileExpression,
+    Empty,
 }
 #[allow(unreachable_patterns)]
 impl Clone for Syntax {
@@ -118,9 +119,51 @@ impl Syntax
     }
     pub fn new_two_so_the_argument_list_is_not_that_long(type_: SyntaxType,while_expr: Option<WhileExpression>) -> Syntax
     {
-        let mut temp = Self::new(type_.clone(), None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None);
+        let mut temp = Self::new_empty(type_.clone());
         temp.while_expression = while_expr;
         return temp;
+    }
+    pub fn new_empty(type_: SyntaxType) -> Syntax
+    {
+        let integer_literal: Option<i32> = None;
+        let boolean_literal: Option<bool> = None;
+        let float_literal: Option<f32> = None;
+        let string_literal: Option<String> = None;
+        let variable_expr: Option<VariableExpression> = None;
+        let binary_expr: Option<BinaryExpression> = None;
+        let unary_expr: Option<UnaryExpression> = None;
+        let call_expr: Option<CallExpression> = None;
+        let assignment_expr: Option<AssignmentExpression> = None;
+        let return_expr: Option<ReturnExpression> = None;
+        let arg_variable_expr: Option<ArgVariableExpression> = None;
+        let function_declaration_expr: Option<FunctionDeclarationExpression> = None;
+        let if_expr: Option<IfExpression> = None;
+        let overwrite_variable_expr: Option<OverwriteVariableExpression> = None;
+        let overwrite_array_expr: Option<OverwriteArrayExpression> = None;
+        let array_expr: Option<ArrayExpression> = None;
+        let for_expression: Option<ForExpression> = None;
+        let while_expression: Option<WhileExpression> = None;
+        Syntax {
+            integer_literal,
+            boolean_literal,
+            float_literal,
+            string_literal,
+            variable_expr,
+            binary_expr,
+            unary_expr,
+            call_expr,
+            assignment_expr,
+            return_expr,
+            arg_variable_expr,
+            function_declaration_expr,
+            if_expr,
+            overwrite_variable_expr,
+            overwrite_array_expr,
+            array_expr,
+            for_expression,
+            while_expression,
+            type_,
+        }
     }
     pub fn new_while_expr(while_expr: WhileExpression) -> Syntax
     {
