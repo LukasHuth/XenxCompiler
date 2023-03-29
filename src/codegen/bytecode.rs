@@ -47,6 +47,14 @@ impl ByteArray{
     pub fn add_comment(&mut self, comment: &str){
         self.add_byte(ByteInstruction::Comment, vec![comment.to_string()], None);
     }
+    pub fn add_comment_at(&mut self, comment: &str, pos: usize)
+    {
+        let data = self.data.clone();
+        self.data = data[0..pos].to_vec();
+        self.add_comment(comment);
+        let mut d = data[pos..].to_vec();
+        self.data.append(&mut d);
+    }
     pub fn add_external(&mut self, name: &str){
         self.add_byte(ByteInstruction::External, vec![name.to_string()], None);
     }

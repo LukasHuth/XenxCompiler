@@ -1,3 +1,5 @@
+use crate::codegen::bytecode::util::register_util;
+
 #[derive(Clone, Debug)]
 pub struct Instruction
 {
@@ -120,6 +122,19 @@ impl Instruction
     {
         self.arguments.push(argument);
     }
+    pub fn to_string(&mut self) -> String
+    {
+        let mut str = String::new();
+        if self.register1.is_some()
+        {
+            str.push_str(&format!("r1: {}", register_util::get_name(self.register1.unwrap(), self.size_type)));
+        }
+        if self.register2.is_some()
+        {
+            str.push_str(&format!("r2: {}", register_util::get_name(self.register2.unwrap(), self.size_type)));
+        }
+        return str.clone();
+    }
     pub fn is_same(&self, other: &Instruction) -> bool
     {
         if self.instruction != other.instruction
@@ -151,8 +166,10 @@ impl Instruction
                     return false;
                 }
             }
-            return false;
+            println!("good");
+            return true;
         }
+        println!("good");
         return true;
     }
     pub fn set_register(&mut self, register: Register, pos: u32)
