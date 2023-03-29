@@ -275,6 +275,29 @@ impl SyntaticAnalyser {
                 body.push(statement);
                 // TODO: use the expressions
             }
+            else if statement.is_while_expr()
+            {
+                let while_expr = statement.syntax.get_while_expr();
+                let bool_expr = while_expr.get_bool_expr();
+                let while_body = while_expr.body();
+                let while_body = self.get_body(while_body, variables.clone(), functiondatatype.clone(), args.clone(), false);
+                let bool_expr = util::generate_binary(bool_expr, &variables, &self.functions);
+                if bool_expr.datatype.datatype != StatementDatatype::Bool
+                {
+                    panic!("while boolean expression should return bool");
+                }
+                if bool_expr.datatype.is_array
+                {
+                    panic!("while boolean expression should not be an array!");
+                }
+                // TODO: save in which while is operated for continue
+                let datatype = Datatype::new(StatementDatatype::Void, vec![], false);
+                let mut statement = Statement::new("while".to_string(), StatementType::While, datatype.clone().datatype, datatype.clone().array_bounds, datatype.clone().is_array);
+                let mut while_body = while_body.clone();
+                statement.statements.push(bool_expr);
+                statement.statements.append(&mut while_body);
+                body.push(statement);
+            }
         }
         return body;
     }

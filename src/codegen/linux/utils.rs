@@ -237,7 +237,8 @@ pub fn parsebinary(statement: Statement, vars: &Vec<Variable>, bytecode: &mut By
         if statement.name == "<" {
            bytecode.add_move_reg_to_reg(Register::RAX, Register::RCX, SizeType::QWORD); 
            bytecode.add_move_lit_to_reg("1", Register::RAX, SizeType::QWORD);
-           bytecode.add_set_if_less_that(Register::RAX);
+           bytecode.add_cmp_reg(Register::RCX, Register::RBX, SizeType::QWORD);
+           bytecode.add_set_if_less_than(Register::RAX);
         }
         else
         {

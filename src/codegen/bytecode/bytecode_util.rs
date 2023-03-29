@@ -105,6 +105,31 @@ fn generate_instruction_linux(instruction: Instruction, comments: bool) -> Strin
             let result = compare_util::set_equal(instruction);
             data.push_str(result.as_str());
         },
+        ByteInstruction::Setne =>
+        {
+            let result = compare_util::set_not_equal(instruction);
+            data.push_str(result.as_str());
+        },
+        ByteInstruction::Slt =>
+        {
+            let result = compare_util::set_less(instruction);
+            data.push_str(result.as_str());
+        },
+        ByteInstruction::Sle =>
+        {
+            let result = compare_util::set_less_equal(instruction);
+            data.push_str(result.as_str());
+        },
+        ByteInstruction::Sgt =>
+        {
+            let result = compare_util::set_greater(instruction);
+            data.push_str(result.as_str());
+        },
+        ByteInstruction::Sge =>
+        {
+            let result = compare_util::set_greater_equal(instruction);
+            data.push_str(result.as_str());
+        },
         ByteInstruction::LoadVariable =>
         {
             todo!();

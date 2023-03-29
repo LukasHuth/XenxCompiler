@@ -334,4 +334,12 @@ impl Syntax
         }
         self.for_expression.as_ref().unwrap().clone()
     }
+    pub fn get_while_expr(&self) -> WhileExpression
+    {
+        if self.while_expression.is_none()
+        {
+            panic!("while_expression is none");
+        }
+        self.while_expression.as_ref().unwrap().clone()
+    }
 }

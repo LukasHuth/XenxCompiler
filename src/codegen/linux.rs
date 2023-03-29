@@ -8,6 +8,7 @@ pub mod call_util;
 pub mod basic_functions;
 pub mod if_util;
 pub mod for_util;
+pub mod while_util;
 mod constant_util;
 use super::{
     Arguments,
@@ -134,6 +135,10 @@ pub fn generate_body(statements: Vec<Statement>, vars: Vec<Variable>, used_posit
         if expr.type_ == StatementType::For
         {
             for_util::genfor(expr.clone(), &mut vars, &mut used_positions, &mut highest_position, bytecode, for_count, if_points);
+        }
+        if expr.type_ == StatementType::While
+        {
+            while_util::genwhile(expr.clone(), &mut vars, &mut used_positions, &mut highest_position, bytecode, for_count, if_points);
         }
     }
     bytecode.add_push();

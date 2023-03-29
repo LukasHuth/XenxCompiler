@@ -138,6 +138,7 @@ pub enum StatementType
     Array,
     For,
     Head,
+    While,
 }
 impl StatementType
 {
@@ -164,6 +165,7 @@ impl StatementType
             StatementType::Array => string.push_str("Array"),
             StatementType::For => string.push_str("For"),
             StatementType::Head => string.push_str("Head"),
+            StatementType::While => string.push_str("While"),
         }
         return string;
     }
