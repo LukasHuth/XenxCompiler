@@ -234,6 +234,7 @@ pub fn generate_binary(expression: Expression, vars: &HashMap<String, Datatype>,
     }
     if expression.is_array()
     {
+        println!("generating array");
         return generate_array(expression, vars, functions);
     }
     if expression.is_variable()
