@@ -297,6 +297,7 @@ impl SyntaticAnalyser {
     }
     fn analyse_array_overwrite(&mut self, statement: &Expression,variables: &HashMap<String, Datatype>,body: &mut Vec<Statement>)
     {
+        println!("test");
         let var_expr = statement.syntax.get_overwrite_array_expr();
         let name = var_expr.get_name();
         let value = var_expr.get_value();
@@ -308,7 +309,9 @@ impl SyntaticAnalyser {
             let bin = util::generate_binary(index.clone(), &variables, &self.functions);
             indices_statement.push(bin);
         }
+        println!("datatype call");
         let datatype = util::get_variable(name.clone(), &variables);
+        println!("datatype call end");
         if !datatype.is_array
         {
             let err = util::get_line_of_position(self.context.clone(),statement.get_position() + 2);
@@ -426,6 +429,8 @@ impl SyntaticAnalyser {
         println!("datatype: {} ,  {}", val.datatype.to_string(), datatype.is_array);
         if !datatype.is_same(&val.datatype) && !(value.is_integer_literal() && value.syntax.get_integer_literal() == 0)
         {
+            println!("should be same:\n{}\n{}\n", datatype, val.datatype);
+            // TODO: val datatype = Void but should be String
             let err = util::get_line_of_position(self.context.clone(),statement.get_position() + 2);
             println!("{}{}", datatype.clone().to_string(), "");
             panic!("variable declaration {} {} is not valid at {}:{}", name, datatype.to_string(), err.0, err.1);
@@ -494,7 +499,9 @@ impl SyntaticAnalyser {
                 }
                 else
                 {
+                    println!("start1 begin");
                     let argname = arg.syntax.get_variable_expr().get_name();
+                    println!("start1 end");
                     let err = util::get_line_of_position(self.context.clone(), arg.get_position());
                     panic!("argument {} is not valid type at {}:{}", argname, err.0, err.1);
                 }
@@ -517,7 +524,16 @@ impl SyntaticAnalyser {
         }
         else
         {
+            println!("start2 begin");
+            println!("{}", arg.to_string());
+            if arg.is_array()
+            {
+                let array = arg.syntax.get_array();
+                let arg = util::get_variable(array.get_name().clone(), variables);
+                return util::same_datatype(farg.clone(), arg.clone());
+            }
             let argname = arg.syntax.get_variable_expr().get_name();
+            println!("start2 end");
             let arg = util::get_variable(argname.clone(), variables);
             return util::same_datatype(farg.clone(), arg.clone());
         }
