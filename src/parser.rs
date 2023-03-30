@@ -196,8 +196,13 @@ impl Parser
                 }
                 else if key.text == "continue"
                 {
-                    let while_expr = self.parse_continue(key.pos.clone());
-                    statements.push(while_expr);
+                    let continue_expr = self.parse_continue(key.pos.clone());
+                    statements.push(continue_expr);
+                }
+                else if key.text == "break"
+                {
+                    let break_expr = self.parse_break(key.pos.clone());
+                    statements.push(break_expr);
                 }
             }
             else
@@ -206,6 +211,12 @@ impl Parser
             }
         }
         return statements;
+    }
+    fn parse_break(&mut self, start: usize) -> Expression
+    {
+        self.match_token(LexerToken::Semicolon);
+        let expr = Expression::new_break_expr(start);
+        return expr;
     }
     fn parse_continue(&mut self, start: usize) -> Expression
     {

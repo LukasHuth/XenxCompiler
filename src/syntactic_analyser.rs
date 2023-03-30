@@ -145,8 +145,34 @@ impl SyntaticAnalyser {
             {
                 self.analyse_continue(&mut body);
             }
+            else if statement.is_break_expression()
+            {
+                self.analyse_break(&mut body);
+            }
         }
         return body;
+    }
+    fn analyse_break(&self, body: &mut Vec<Statement>)
+    {
+        if !self.in_while
+        {
+            panic!("continue while not in while or for");
+        }
+        let name: &str;
+        if self.last_thing == 1
+        {
+            name = "while";
+        }
+        else if self.last_thing == 2
+        {
+            name = "for";
+        }
+        else
+        {
+            panic!("continue is called, where it should not be called");
+        }
+        let expr = Statement::new_break(name);
+        body.push(expr);
     }
     fn analyse_continue(&self, body: &mut Vec<Statement>)
     {

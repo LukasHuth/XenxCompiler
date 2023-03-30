@@ -142,8 +142,11 @@ pub fn generate_body(statements: Vec<Statement>, vars: Vec<Variable>, used_posit
         }
         if expr.type_ == StatementType::Continue
         {
-            println!("!!!!!!!continue");
             generate_continue(expr.clone(), for_count, bytecode);
+        }
+        if expr.type_ == StatementType::Break
+        {
+            generate_break(expr.clone(), for_count, bytecode);
         }
     }
     bytecode.add_push();
@@ -173,4 +176,10 @@ fn generate_continue(expression: Statement, for_count: &mut usize, bytecode: &mu
     let name = expression.name.clone();
     let count = *for_count - 1;
     bytecode.add_jmp(&format!("{}_start{}",name, count));
+}
+fn generate_break(expression: Statement, for_count: &mut usize, bytecode: &mut ByteArray)
+{
+    let name = expression.name.clone();
+    let count = *for_count - 1;
+    bytecode.add_jmp(&format!("{}_end{}",name, count));
 }

@@ -140,6 +140,7 @@ pub enum StatementType
     Head,
     While,
     Continue,
+    Break,
 }
 impl StatementType
 {
@@ -168,6 +169,7 @@ impl StatementType
             StatementType::Head => string.push_str("Head"),
             StatementType::While => string.push_str("While"),
             StatementType::Continue => string.push_str("Continue"),
+            StatementType::Break => string.push_str("Break"),
         }
         return string;
     }
@@ -278,6 +280,15 @@ impl Statement
         Statement {
             name: String::from(name),
             type_: StatementType::Continue,
+            datatype: Datatype::new(StatementDatatype::Void, Vec::<i32>::new(), false),
+            statements: vec![],
+        }
+    }
+    pub fn new_break(name: &str) -> Statement
+    {
+        Statement {
+            name: String::from(name),
+            type_: StatementType::Break,
             datatype: Datatype::new(StatementDatatype::Void, Vec::<i32>::new(), false),
             statements: vec![],
         }

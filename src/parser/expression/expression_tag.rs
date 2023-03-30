@@ -20,4 +20,5 @@ pub enum ExpressionTag
     ForExpression,
     WhileExpression,
     ContinueExpression,
+    BreakExpression,
 }
