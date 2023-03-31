@@ -39,6 +39,7 @@ pub fn generate(statements: Vec<Statement>, functions: HashMap<String, (Datatype
     bytecode.add_entry("_start");
     // if linux:
     bytecode.add_pop(Register::RDI);
+    bytecode.add_sub_lit_reg("8", Register::RSP, SizeType::QWORD);
     bytecode.add_move_reg_to_reg(Register::RSP, Register::RSI, SizeType::QWORD);
     bytecode.add_call("main");
     bytecode.add_move_reg_to_reg(Register::RAX, Register::RDI, SizeType::QWORD);
@@ -89,7 +90,6 @@ pub fn generate_function(statement: super::Statement, args: Arguments, if_positi
     {
         used_positions.push(i);
     }
-    println!("used positions: {:?}", used_positions);
     // */
     let mut for_positions:usize = 0;
     generate_body(statement.statements, vars, used_positions, highest_position, if_positions, &mut for_positions, bytecode);

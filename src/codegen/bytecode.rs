@@ -1,6 +1,8 @@
 mod instruction;
+mod byte_error_function;
 pub mod bytecode_util;
 use bytecode_util as util;
+pub use byte_error_function::ErrorFunction;
 pub use instruction::{
     Instruction,
     ByteInstruction,
@@ -12,11 +14,13 @@ mod optimizer;
 #[derive(Clone, Debug)]
 pub struct ByteArray{
     data: Vec<Instruction>,
+    error_functions: Vec<ErrorFunction>,
 }
 impl ByteArray{
     pub fn new() -> ByteArray{
         ByteArray{
             data: Vec::new(),
+            error_functions: Vec::new(),
         }
     }
     pub fn add_array(&mut self, array: &ByteArray){
@@ -94,6 +98,11 @@ impl ByteArray{
         self.set_register_in_last_instruction(Register::RAX, 1);
         self.set_register_in_last_instruction(Register::RBX, 2);
     }
+    pub fn add_add_lit(&mut self,lit: &str, size: SizeType){
+        self.add_byte(ByteInstruction::Add, vec![lit.to_string()], size);
+        self.set_register_in_last_instruction(Register::RAX, 1);
+        self.set_register_in_last_instruction(Register::RBX, 2);
+    }
     pub fn add_sub(&mut self, size: SizeType){
         self.add_byte(ByteInstruction::Sub, Vec::new(), size);
         self.set_register_in_last_instruction(Register::RAX, 1);
@@ -166,10 +175,16 @@ impl ByteArray{
         self.set_register_in_last_instruction(from, 1);
         self.set_register_in_last_instruction(to, 2);
     }
-    pub fn add_move_mem_to_reg(&mut self, from: Register, offset: &str, to: Register, size: SizeType){ //////
+    pub fn add_move_mem_to_reg(&mut self, from: Register, offset: &str, to: Register, size: SizeType){
         self.add_byte(ByteInstruction::MovMemToReg, vec![offset.to_string()], size);
         self.set_register_in_last_instruction(from, 1);
         self.set_register_in_last_instruction(to, 2);
+    }
+    pub fn add_move_mem_regoff_to_reg(&mut self, from: Register, offset: Register, to: Register, size: SizeType){
+        self.add_byte(ByteInstruction::MovMemToReg, vec![], size);
+        self.set_register_in_last_instruction(from, 1);
+        self.set_register_in_last_instruction(to, 2);
+        self.set_register_in_last_instruction(offset, 3);
     }
     pub fn add_move_lit_to_reg(&mut self, value: &str, to: Register, size: SizeType){
         self.add_byte(ByteInstruction::MovLitToReg, vec![value.to_string()], size);
@@ -307,5 +322,31 @@ impl ByteArray{
     pub fn generate(&self, os: super::OS, comments: bool) -> String
     {
         util::generate(self.data.clone(), os, comments)
+    }
+    pub fn has_error_function(&self, error_func: ErrorFunction) -> bool
+    {
+        for err_func in self.error_functions.clone()
+        {
+            if err_func == error_func
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+    pub fn add_error_function(&mut self, error_func: ErrorFunction)
+    {
+        if self.has_error_function(error_func.clone())
+        {
+            return;
+        }
+        self.error_functions.push(error_func);
+    }
+    pub fn generate_error_functions(&mut self)
+    {
+        for err_func in self.error_functions.clone()
+        {
+            byte_error_function::generate(self, err_func);
+        }
     }
 }

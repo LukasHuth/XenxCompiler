@@ -8,6 +8,7 @@ pub struct Instruction
     size_type: SizeType,
     register1: Option<Register>,
     register2: Option<Register>,
+    offset_register: Option<Register>,
 }
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Register
@@ -116,7 +117,7 @@ impl Instruction
 {
     pub fn new(instruction: ByteInstruction, arguments: Vec<String>, size_type: SizeType) -> Instruction
     {
-        Instruction { instruction, arguments, size_type, register1: None, register2: None }
+        Instruction { instruction, arguments, size_type, register1: None, register2: None, offset_register: None }
     }
     pub fn push_argument(&mut self, argument: String)
     {
@@ -178,6 +179,7 @@ impl Instruction
         {
             1 => self.register1 = Some(register),
             2 => self.register2 = Some(register),
+            3 => self.offset_register = Some(register),
             _ => panic!("Invalid register position"),
         }
     }
@@ -199,6 +201,7 @@ impl Instruction
         {
             1 => self.register1,
             2 => self.register2,
+            3 => self.offset_register,
             _ => panic!("Invalid register position"),
         }
     }

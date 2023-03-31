@@ -63,6 +63,7 @@ pub fn generate_print(name: &str, bytecode: &mut ByteArray)
     generate_format(type_name, bytecode);
     bytecode.add_move_reg_to_reg(Register::RDI, Register::RSI, SizeType::QWORD);
     bytecode.add_move_reg_to_reg(Register::RAX, Register::RDI, SizeType::QWORD);
+    bytecode.add_comment("aligning the stack to 16bit");
     bytecode.add_move_reg_to_reg(Register::RSP, Register::RAX, SizeType::QWORD);
     bytecode.add_move_lit_to_reg("16", Register::RBX, SizeType::QWORD);
     bytecode.add_xor_reg(Register::RDX, Register::RDX, SizeType::QWORD);

@@ -78,6 +78,12 @@ pub fn mov_mem_to_reg(instruction: Instruction) -> String
     let offset: String;
     if arguments.len() < 1
     {
+        if instruction.get_register(3).is_some()
+        {
+            let register3 = instruction.get_register(3).unwrap();
+            let offset = register_util::get_name(register3, SizeType::QWORD);
+            return format!("mov {}, [{} + {}]\n", destination, source, offset);
+        }
         offset = "0".to_string();
     }
     else

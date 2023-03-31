@@ -174,10 +174,13 @@ pub fn remove_n_chars_from_behind(string: String, n: usize) -> String
 
 pub fn get_datatype_from_string(datastring: String) -> StatementDatatype
 {
+    println!("accessed this: {}", datastring);
     let mut datatype = StatementDatatype::Void;
     let datastring = datastring.clone();
     let datastring = datastring.to_lowercase();
     let datastring = datastring.trim();
+    let datastring = datastring.replace("[]", "");
+    println!("{}", datastring);
     if datastring == "int"
     {
         datatype = StatementDatatype::Int;
@@ -474,8 +477,6 @@ pub fn get_datatype(string: String, is_arg: bool) -> Datatype
         {
             dim.push(0);
         }
-        datatype = remove_n_chars_from_behind(datatype.clone(), 1);
-        // println!("datatype: {}", datatype);
         datatype = remove_n_chars_from_behind(datatype.clone(), 1);
     }
     let datatype = super::util::get_datatype_from_string(datatype);

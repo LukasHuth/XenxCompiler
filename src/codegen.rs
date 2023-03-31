@@ -28,7 +28,7 @@ impl Codegen
     pub fn new(statements: Vec<Statement>, functions: HashMap<String, (Datatype, Arguments, Vec::<Statement>)>,os: OS, std_functions: HashMap<String, usize>
         ,comments: bool) -> Codegen
     {
-        Codegen { statements: statements, functions, data: "".to_string(), os , std_functions, comments}
+        Codegen { statements, functions, data: "".to_string(), os , std_functions, comments}
     }
     pub fn generate(&mut self)
     {
@@ -43,6 +43,7 @@ impl Codegen
                 linux::basic_functions::generate_print(&name, &mut bytecode);
             }
         }
+        bytecode.generate_error_functions();
         bytecode.optimize();
         let result = bytecode.generate(self.os, self.comments);
         self.data = result;
